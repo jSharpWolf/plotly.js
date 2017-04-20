@@ -1810,13 +1810,44 @@ axes.doTicks = function(gd, axid, skipTitle) {
             return labelsReady.length && Promise.all(labelsReady);
         }
 
+        function resize(axis, textLength, autoangle) {
+			// Wenn der Winkel 30° ist, wird die Höhe mithilfe des Sinus berechnet
+			if (autoangle === 30) {
+				textLength = textLength * Math.sin(0.5235988) / Math.sin(1.5707963);
+			}
+            var maxSize = axletter === 'x' ? gd.clientHeight : gd.clientWidth;
+			var id = axis._id;
+			if (id.includes('x')) {
+				id = id.replace('x', 'y')
+			} else {
+				id = id.replace('y', 'x')
+			}
+			var scaleAxis = axes.getFromId(gd, id);
+			var leftPoint = (scaleAxis.orgDomain) ? scaleAxis.orgDomain[0] : scaleAxis.domain[0];
+            var newMinPoint = maxSize * leftPoint + textLength; // Neuer linkester Punkt in px von xaxis
+            var newSize = scaleAxis.domain[1] * maxSize - newMinPoint;
+            if (newSize > 100) {
+				if (!scaleAxis.orgDomain)
+					scaleAxis.orgDomain = [scaleAxis.domain[0], scaleAxis.domain[1]];
+                scaleAxis.domain[0] = newMinPoint / maxSize;
+                return true;
+            } else {
+				axis._categories.forEach(function (cat, index) {
+					var label = cat.substring(0,6);
+					label += '...';
+					axis._categories[index] = label;
+				});
+			}
+        }
+
         function fixLabelOverlaps() {
             positionLabels(tickLabels, ax.tickangle);
 
             // check for auto-angling if x labels overlap
             // don't auto-angle at all for log axes with
             // base and digit format
-            if(axletter === 'x' && !isNumeric(ax.tickangle) &&
+            var highestLabel = 0;
+            if(!isNumeric(ax.tickangle) &&
                     (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
                 var lbbArray = [];
                 tickLabels.each(function(d) {
@@ -1826,6 +1857,9 @@ axes.doTicks = function(gd, axid, skipTitle) {
                     if(thisLabel.empty()) thisLabel = s.select('text');
 
                     var bb = Drawing.bBox(thisLabel.node());
+                    if (bb.width > highestLabel) {
+                        highestLabel = bb.width;
+                    }
 
                     lbbArray.push({
                         // ignore about y, just deal with x overlaps
@@ -1838,23 +1872,30 @@ axes.doTicks = function(gd, axid, skipTitle) {
                         width: bb.width + 2
                     });
                 });
-                for(i = 0; i < lbbArray.length - 1; i++) {
-                    if(Lib.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
-                        // any overlap at all - set 30 degrees
-                        autoangle = 30;
-                        break;
+                if (axletter === 'x') {
+                    for (i = 0; i < lbbArray.length - 1; i++) {
+                        if (Lib.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
+                            // any overlap at all - set 30 degrees
+                            autoangle = 30;
+                            break;
+                        }
                     }
-                }
-                if(autoangle) {
-                    var tickspacing = Math.abs(
-                            (vals[vals.length - 1].x - vals[0].x) * ax._m
-                        ) / (vals.length - 1);
-                    if(tickspacing < maxFontSize * 2.5) {
-                        autoangle = 90;
+                    if (autoangle) {
+                        var tickspacing = Math.abs(
+                                (vals[vals.length - 1].x - vals[0].x) * ax._m
+                            ) / (vals.length - 1);
+                        if (tickspacing < maxFontSize * 2.5) {
+                            autoangle = 90;
+                        }
+                        positionLabels(tickLabels, autoangle);
                     }
-                    positionLabels(tickLabels, autoangle);
+                    ax._lastangle = autoangle;
                 }
-                ax._lastangle = autoangle;
+                
+            }
+
+            if ((axletter === 'x' && (autoangle === 90 || autoangle == 30)) || axletter === 'y') {
+                resize(ax, highestLabel, autoangle);
             }
 
             // update the axis title
