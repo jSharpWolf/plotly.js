@@ -1815,23 +1815,51 @@ axes.doTicks = function(gd, axid, skipTitle) {
 			if (autoangle === 30) {
 				textLength = textLength * Math.sin(0.5235988) / Math.sin(1.5707963);
 			}
-            var maxSize = axletter === 'x' ? gd.clientHeight : gd.clientWidth;
-			var id = axis._id;
-			if (id.includes('x')) {
-				id = id.replace('x', 'y')
+			// Padding
+			textLength += 5;
+            var maxSize;
+			if (axletter === 'x') {
+				maxSize = gd.clientHeight;
 			} else {
-				id = id.replace('y', 'x')
+				maxSize = gd.clientWidth;
 			}
+			var id = axis._id;
+			var idNumber;
+			if (id.includes('x')) {
+				idNumber = id.replace('x','') * 1;
+				id = 'y'
+			} else {
+				idNumber = id.replace('y','') * 1;
+				id = 'x'
+			}
+			if (idNumber === 0) idNumber = 1;
+			if (axis.side === 'top' || axis.side === 'right') {
+				idNumber -= 19937;
+			}
+			id += idNumber;
 			var scaleAxis = axes.getFromId(gd, id);
-			var leftPoint = (scaleAxis.orgDomain) ? scaleAxis.orgDomain[0] : scaleAxis.domain[0];
-            var newMinPoint = maxSize * leftPoint + textLength; // Neuer linkester Punkt in px von xaxis
-            var newSize = scaleAxis.domain[1] * maxSize - newMinPoint;
-            if (newSize > 100) {
+			
+			var newMinPoint;
+			var newSize;
+			var domainIndex;
+			
+			if (axis.side === 'top' || axis.side === 'right') {
+				var rightPoint = (scaleAxis.orgDomain) ? scaleAxis.orgDomain[1] : scaleAxis.domain[1];
+				newMinPoint = maxSize * rightPoint - textLength; // Neuer rechtester/ höchster Punkt in px
+				newSize = newMinPoint - scaleAxis.domain[0] * maxSize;
+				domainIndex = 1;
+			} else {
+				var leftPoint = (scaleAxis.orgDomain) ? scaleAxis.orgDomain[0] : scaleAxis.domain[0];
+				var newMinPoint = maxSize * leftPoint + textLength; // Neuer linkester / tiefster Punkt in px
+				var newSize = scaleAxis.domain[1] * maxSize - newMinPoint;
+				domainIndex = 0;
+			}
+			
+			if (newSize > 100) {
 				if (!scaleAxis.orgDomain)
 					scaleAxis.orgDomain = [scaleAxis.domain[0], scaleAxis.domain[1]];
-                scaleAxis.domain[0] = newMinPoint / maxSize;
-                return true;
-            } else {
+				scaleAxis.domain[domainIndex] = newMinPoint / maxSize;
+			} else {
 				axis._categories.forEach(function (cat, index) {
 					var label = cat.substring(0,6);
 					label += '...';
