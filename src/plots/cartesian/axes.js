@@ -1862,13 +1862,15 @@ axes.doTicks = function(gd, axid, skipTitle) {
 			} else {
 				axis._categories.forEach(function (cat, index) {
 					var label;
-					if (!Number.isNaN(cat)) {
+					if (!Number.isNaN(parseFloat(cat))) {
 						cat *= 100;
 						cat = Math.round(cat);
 						label = cat / 100;
 					} else {
-						label = cat.substring(0,6);
-						label += '...';
+						if (cat.substring) {
+							label = cat.substring(0,6);
+							label += '...';
+						}
 					}
 					axis._categories[index] = label;
 				});
