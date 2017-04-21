@@ -1861,8 +1861,15 @@ axes.doTicks = function(gd, axid, skipTitle) {
 				scaleAxis.domain[domainIndex] = newMinPoint / maxSize;
 			} else {
 				axis._categories.forEach(function (cat, index) {
-					var label = cat.substring(0,6);
-					label += '...';
+					var label;
+					if (!Number.isNaN(cat)) {
+						cat *= 100;
+						cat = Math.round(cat);
+						label = cat / 100;
+					} else {
+						label = cat.substring(0,6);
+						label += '...';
+					}
 					axis._categories[index] = label;
 				});
 			}
