@@ -1838,6 +1838,7 @@ axes.doTicks = function(gd, axid, skipTitle) {
 			}
 			id += idNumber;
 			var scaleAxis = axes.getFromId(gd, id);
+			if (!scaleAxis) return;
 			
 			var newMinPoint;
 			var newSize;
