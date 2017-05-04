@@ -1860,20 +1860,13 @@ axes.doTicks = function(gd, axid, skipTitle) {
 				if (!scaleAxis.orgDomain)
 					scaleAxis.orgDomain = [scaleAxis.domain[0], scaleAxis.domain[1]];
 				scaleAxis.domain[domainIndex] = newMinPoint / maxSize;
-			} else {
+			} else if (axis.type === 'category') {
 				axis._categories.forEach(function (cat, index) {
-					var label;
-					if (!Number.isNaN(parseFloat(cat))) {
-						cat *= 100;
-						cat = Math.round(cat);
-						label = cat / 100;
-					} else {
-						if (cat.substring) {
-							label = cat.substring(0,6);
-							label += '...';
-						}
+					if (cat.substring && cat.length > 6) {
+						var label = cat.substring(0,6);
+						label += '...';
+						axis._categories[index] = label;
 					}
-					axis._categories[index] = label;
 				});
 			}
         }
