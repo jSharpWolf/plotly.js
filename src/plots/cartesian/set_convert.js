@@ -343,16 +343,47 @@ module.exports = function setConvert(ax, fullLayout) {
 
         var rl0 = ax.r2l(ax[rangeAttr][0], calendar),
             rl1 = ax.r2l(ax[rangeAttr][1], calendar);
-
+	
+		var labelWidth = 0;
+		var labelWidthRight = 0;
+		
+		var id = ax._id;
+		var idNumber;
+		if (axLetter === 'x') {
+			idNumber = id.replace('x','') * 1;
+			id = 'y'
+		} else {
+			idNumber = id.replace('y','') * 1;
+			id = 'x'
+		}
+		
+		if (ax.side === 'top' || ax.side === 'right') {
+			idNumber -= 19937;
+		}
+		if (idNumber === 0 || idNumber == 1) idNumber = '';
+		var scaleAxis = fullLayout[id +'axis' + idNumber];
+		if (scaleAxis && scaleAxis._categories) {
+			labelWidth = getLabelWidth(scaleAxis);
+		}
+		if (idNumber === '') {
+			idNumber = 1;
+		}
+		idNumber += 19937;
+		scaleAxis = fullLayout[id +'axis' + idNumber];
+		if (scaleAxis && scaleAxis._categories) {
+			labelWidthRight = getLabelWidth(scaleAxis);
+		}
+		
         if(axLetter === 'y') {
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
-            ax._length = gs.h * (ax.domain[1] - ax.domain[0]);
+            ax._length = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth;
             ax._m = ax._length / (rl0 - rl1);
             ax._b = -ax._m * rl1;
         }
         else {
-            ax._offset = gs.l + ax.domain[0] * gs.w;
-            ax._length = gs.w * (ax.domain[1] - ax.domain[0]);
+			ax._offset = gs.l + ax.domain[0] * gs.w + labelWidth;
+			ax._length = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
+
             ax._m = ax._length / (rl1 - rl0);
             ax._b = -ax._m * rl0;
         }
@@ -364,6 +395,43 @@ module.exports = function setConvert(ax, fullLayout) {
             fullLayout._replotting = false;
             throw new Error('axis scaling');
         }
+		
+		function getLabelWidth(scaleAxis) {
+			var highestLabel = 0;
+			var textLabel = '';
+			var sizeLabel = {width: 0, height:0 };
+			var labelWidth = 0;
+			if (scaleAxis._lastangle !== 0) {
+				scaleAxis._categories.forEach(function(d) {
+				if (d.length > highestLabel) {
+					highestLabel = d.length;
+					textLabel = d;
+				}
+			});
+			sizeLabel = textMeasurement(textLabel, fullLayout.font.size, fullLayout.font.family)
+			}
+			
+			labelWidth = sizeLabel.width;
+			if (scaleAxis._lastangle === 30) {
+				labelWidth = labelWidth * Math.sin(0.5235988) / Math.sin(1.5707963);
+			}
+			return labelWidth;
+		}
+		
+		// gets the size of a element
+		function textMeasurement(value, fontSizeString, fontFamily) {
+			var body = $('body');
+			if (fontFamily) {
+				body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+			} else {
+				body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+			}
+			var elem = $('#testObjectDashboardUtils');
+			var width = elem.innerWidth() + 1;
+			var height = elem.innerHeight() + 1;
+			elem.remove();
+			return { width: width, height: height }
+		}
     };
 
     // makeCalcdata: takes an x or y array and converts it
