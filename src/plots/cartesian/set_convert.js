@@ -377,7 +377,7 @@ module.exports = function setConvert(ax, fullLayout) {
 		// TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier wie noch angepasst werden
         if(axLetter === 'y') {
 			var axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth;
-			if (axLength < 100) {
+			if (axLength < 100 && labelWidth > 0) {
 				labelWidth = 0;
 				scaleAxis._shortLabel = true;
 			} else if (scaleAxis) {
@@ -397,7 +397,7 @@ module.exports = function setConvert(ax, fullLayout) {
 				scaleAxisRight._shortLabel = false;
 			}
 			axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
-			if (axLength < 100) {
+			if (axLength < 100 && labelWidth > 0) {
 				labelWidth = 0;
 				scaleAxis._shortLabel = true;
 			} else if (scaleAxis) {
