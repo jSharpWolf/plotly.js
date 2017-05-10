@@ -380,7 +380,7 @@ module.exports = function setConvert(ax, fullLayout) {
 			if (axLength < 100) {
 				labelWidth = 0;
 				scaleAxis._shortLabel = true;
-			} else {
+			} else if (scaleAxis) {
 				scaleAxis._shortLabel = false;
 			}
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
@@ -393,14 +393,14 @@ module.exports = function setConvert(ax, fullLayout) {
 			if (axLength < 100 && labelWidthRight > 0) {
 				labelWidthRight = 0;
 				scaleAxisRight._shortLabel = true;
-			} else {
+			} else if (scaleAxisRight) {
 				scaleAxisRight._shortLabel = false;
 			}
 			axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
 			if (axLength < 100) {
 				labelWidth = 0;
 				scaleAxis._shortLabel = true;
-			} else {
+			} else if (scaleAxis) {
 				scaleAxis._shortLabel = false;
 			}
 			ax._offset = gs.l + ax.domain[0] * gs.w + labelWidth;
