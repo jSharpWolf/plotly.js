@@ -344,6 +344,7 @@ module.exports = function setConvert(ax, fullLayout) {
         var rl0 = ax.r2l(ax[rangeAttr][0], calendar),
             rl1 = ax.r2l(ax[rangeAttr][1], calendar);
 	
+	
 		var labelWidth = 0;
 		var labelWidthRight = 0;
 		
@@ -369,18 +370,39 @@ module.exports = function setConvert(ax, fullLayout) {
 			idNumber = 1;
 		}
 		idNumber += 19937;
-		scaleAxis = fullLayout[id +'axis' + idNumber];
-		if (scaleAxis && scaleAxis._categories) {
-			labelWidthRight = getLabelWidth(scaleAxis);
+		var scaleAxisRight = fullLayout[id +'axis' + idNumber];
+		if (scaleAxisRight && scaleAxisRight._categories) {
+			labelWidthRight = getLabelWidth(scaleAxisRight);
 		}
-		
+		// TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier wie noch angepasst werden
         if(axLetter === 'y') {
+			var axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth;
+			if (axLength < 100) {
+				labelWidth = 0;
+				scaleAxis._shortLabel = true;
+			} else {
+				scaleAxis._shortLabel = false;
+			}
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
             ax._length = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth;
             ax._m = ax._length / (rl0 - rl1);
             ax._b = -ax._m * rl1;
         }
         else {
+			var axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
+			if (axLength < 100 && labelWidthRight > 0) {
+				labelWidthRight = 0;
+				scaleAxisRight._shortLabel = true;
+			} else {
+				scaleAxisRight._shortLabel = false;
+			}
+			axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
+			if (axLength < 100) {
+				labelWidth = 0;
+				scaleAxis._shortLabel = true;
+			} else {
+				scaleAxis._shortLabel = false;
+			}
 			ax._offset = gs.l + ax.domain[0] * gs.w + labelWidth;
 			ax._length = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
 
@@ -395,25 +417,30 @@ module.exports = function setConvert(ax, fullLayout) {
             fullLayout._replotting = false;
             throw new Error('axis scaling');
         }
+
+		if (labelWidth + labelWidthRight !== ax._lastLabelWidth) {
+		}
 		
+		ax._lastLabelWidth = labelWidth + labelWidthRight;	
+			
 		function getLabelWidth(scaleAxis) {
 			var highestLabel = 0;
 			var textLabel = '';
 			var sizeLabel = {width: 0, height:0 };
 			var labelWidth = 0;
-			if (scaleAxis._lastangle !== 0) {
-				scaleAxis._categories.forEach(function(d) {
+			scaleAxis._categories.forEach(function(d) {
 				if (d.length > highestLabel) {
 					highestLabel = d.length;
 					textLabel = d;
 				}
 			});
 			sizeLabel = textMeasurement(textLabel, fullLayout.font.size, fullLayout.font.family)
-			}
 			
 			labelWidth = sizeLabel.width;
 			if (scaleAxis._lastangle === 30) {
 				labelWidth = labelWidth * Math.sin(0.5235988) / Math.sin(1.5707963);
+			} else if (scaleAxis._lastangle === 0) {
+				labelWidth = 0;
 			}
 			return labelWidth;
 		}
