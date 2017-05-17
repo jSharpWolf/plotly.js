@@ -376,15 +376,23 @@ module.exports = function setConvert(ax, fullLayout) {
 		}
 		// TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier wie noch angepasst werden
         if(axLetter === 'y') {
-			var axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth;
+			if (scaleAxis._lastLabel && (scaleAxis._lastLabel.autoangle === scaleAxis._lastangle || !scaleAxis._lastLabel.autoangle)) {
+				if (scaleAxis._lastLabel && labelWidth < scaleAxis._lastLabel.lastLabelWidth) {
+					labelWidth = scaleAxis._lastLabel.lastLabelWidth;
+				}
+			}
+			if (labelWidth === 0) labelWidth = gs.b*0.7;
+			var marginBottom = gs.b*0.7;
+			if (scaleAxis._lastangle === 30) marginBottom = gs.b*0.5;
+			var axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + gs.b*0.7;
 			if (axLength < 100 && labelWidth > 0) {
-				labelWidth = 0;
+				labelWidth = gs.b*0.8;
 				scaleAxis._shortLabel = true;
 			} else if (scaleAxis) {
 				scaleAxis._shortLabel = false;
 			}
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
-            ax._length = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth;
+            ax._length = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + gs.b*0.7;
             ax._m = ax._length / (rl0 - rl1);
             ax._b = -ax._m * rl1;
         }
@@ -418,10 +426,13 @@ module.exports = function setConvert(ax, fullLayout) {
             throw new Error('axis scaling');
         }
 
-		if (labelWidth + labelWidthRight !== ax._lastLabelWidth) {
-		}
-		
-		ax._lastLabelWidth = labelWidth + labelWidthRight;	
+		var lastLabel = {};
+		if (labelWidth > 1)
+			lastLabel.lastLabelWidth = labelWidth;
+		if (labelWidthRight > 1)
+			lastLabel.lastLabelWidthRight = labelWidthRight;
+		lastLabel.autoangle = scaleAxis._lastangle;
+		scaleAxis._lastLabel = lastLabel;	
 			
 		function getLabelWidth(scaleAxis) {
 			var highestLabel = 0;
