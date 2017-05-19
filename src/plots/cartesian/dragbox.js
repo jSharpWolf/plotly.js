@@ -657,6 +657,9 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             axi.range = axi._input.range = axi._r.slice();
         }
 
+		pw = xa[0]._length;
+		ph = ya[0]._length;
+		
         updateSubplots([0, 0, pw, ph]);
         Plotly.relayout(gd, attrs);
     }
