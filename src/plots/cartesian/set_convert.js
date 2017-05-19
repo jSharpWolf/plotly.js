@@ -317,6 +317,38 @@ module.exports = function setConvert(ax, fullLayout) {
             }
         }
     };
+    /**
+     * 
+     * @param {} ax - Achse, welche gerade resized wird
+     * @param {} axLetter - Startbuchstabe der Achse
+     * @returns {} scaleAxes - Array mit Achsen, deren Labels relevant sind
+     */
+    function getScaleAxes(ax, axLetter) {
+        var scaleAxes = [];
+        var id = ax._id;
+        var idNumber;
+        if (axLetter === 'x') {
+            idNumber = id.replace('x', '') * 1;
+            id = 'y'
+        } else {
+            idNumber = id.replace('y', '') * 1;
+            id = 'x'
+        }
+
+        if (ax.side === 'top' || ax.side === 'right') {
+            idNumber -= 19937;
+        }
+        if (idNumber === 0 || idNumber == 1) idNumber = '';
+        var scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        if (idNumber === '') {
+            idNumber = 1;
+        }
+        idNumber += 19937;
+        scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        return scaleAxes;
+    }
 
     // set scaling to pixels
     ax.setScale = function(usePrivateRange) {
@@ -343,76 +375,83 @@ module.exports = function setConvert(ax, fullLayout) {
 
         var rl0 = ax.r2l(ax[rangeAttr][0], calendar),
             rl1 = ax.r2l(ax[rangeAttr][1], calendar);
-	
-	
-		var labelWidth = 0;
-		var labelWidthRight = 0;
-		
-		var id = ax._id;
-		var idNumber;
-		if (axLetter === 'x') {
-			idNumber = id.replace('x','') * 1;
-			id = 'y'
-		} else {
-			idNumber = id.replace('y','') * 1;
-			id = 'x'
-		}
-		
-		if (ax.side === 'top' || ax.side === 'right') {
-			idNumber -= 19937;
-		}
-		if (idNumber === 0 || idNumber == 1) idNumber = '';
-		var scaleAxis = fullLayout[id +'axis' + idNumber];
-		if (scaleAxis && scaleAxis._categories) {
-			labelWidth = getLabelWidth(scaleAxis);
-		}
-		if (idNumber === '') {
-			idNumber = 1;
-		}
-		idNumber += 19937;
-		var scaleAxisRight = fullLayout[id +'axis' + idNumber];
-		if (scaleAxisRight && scaleAxisRight._categories) {
-			labelWidthRight = getLabelWidth(scaleAxisRight);
-		}
-		// TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier wie noch angepasst werden
-        if(axLetter === 'y') {
-			if (scaleAxis._lastLabel && (scaleAxis._lastLabel.autoangle === scaleAxis._lastangle || !scaleAxis._lastLabel.autoangle)) {
-				if (scaleAxis._lastLabel && labelWidth < scaleAxis._lastLabel.lastLabelWidth) {
-					labelWidth = scaleAxis._lastLabel.lastLabelWidth;
-				}
-			}
-			if (labelWidth === 0) labelWidth = gs.b*0.7;
-			var marginBottom = gs.b*0.7;
-			if (scaleAxis._lastangle === 30) marginBottom = gs.b*0.5;
-			var axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + gs.b*0.7;
-			if (axLength < 100 && labelWidth > 0) {
-				labelWidth = gs.b*0.8;
-				scaleAxis._shortLabel = true;
-			} else if (scaleAxis) {
-				scaleAxis._shortLabel = false;
-			}
+
+        var labelWidth = 0;
+        var labelWidthRight = 0;
+
+        var scaleAxes = getScaleAxes(ax, axLetter);
+
+        // TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier noch angepasst werden
+        if (axLetter === 'y') {
+            var axLength;
+            if (scaleAxes[0]) {
+                var scaleAxis = scaleAxes[0];
+                labelWidth = getLabelWidth(scaleAxis);
+                // Sofern die LabelWidth bereits ermittelt wurde, wird diese verwendet (solange sie kleiner als die aktuelle ist)
+                // dies dient dazu, da ansonsten der Plot zu Beginn eine falsche Größe hat
+                if (scaleAxis._lastLabel && scaleAxis._lastLabel.autoangle === scaleAxis._lastangle) {
+                    if (scaleAxis._lastLabel && labelWidth < scaleAxis._lastLabel.lastLabelWidth) {
+                        labelWidth = scaleAxis._lastLabel.lastLabelWidth;
+                    }
+                }
+                var marginBottom = gs.b * 0.7;
+                if (labelWidth <= 1) labelWidth = marginBottom;
+
+                if (scaleAxis._lastangle === 30) marginBottom = gs.b * 0.5;
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + marginBottom;
+                scaleAxis._shortLabel = false;
+                if (!ax._lastangle || (ax._lastangle && ax._lastangle != 0)) {
+                    if (axLength < 100 && labelWidth > 0) {
+                        axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+                        scaleAxis._shortLabel = true;
+                    }
+                }
+            } else {
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+            }
+
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
-            ax._length = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + gs.b*0.7;
+            ax._length = axLength;
             ax._m = ax._length / (rl0 - rl1);
             ax._b = -ax._m * rl1;
         }
         else {
-			var axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
-			if (axLength < 100 && labelWidthRight > 0) {
-				labelWidthRight = 0;
-				scaleAxisRight._shortLabel = true;
-			} else if (scaleAxisRight) {
-				scaleAxisRight._shortLabel = false;
-			}
-			axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
-			if (axLength < 100 && labelWidth > 0) {
-				labelWidth = 0;
-				scaleAxis._shortLabel = true;
-			} else if (scaleAxis) {
-				scaleAxis._shortLabel = false;
-			}
-			ax._offset = gs.l + ax.domain[0] * gs.w + labelWidth;
-			ax._length = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight);
+            var axLength;
+            var axOffset;
+            if (scaleAxes.length > 0) {
+                var scaleAxis = scaleAxes[0];
+                var scaleAxisRight;
+                labelWidth = getLabelWidth(scaleAxis);
+                var marginLeft = gs.l * 0.5;
+                if (labelWidth <= 1) labelWidth = marginLeft;
+                if (scaleAxes.length > 1) {
+                    scaleAxisRight = scaleAxes[1];
+                    labelWidthRight = getLabelWidth(scaleAxisRight);
+                }
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight) + marginLeft;
+                axOffset = gs.l + ax.domain[0] * gs.w + labelWidth - marginLeft;
+                if (axLength < 100 && labelWidthRight > 0) {
+                    axLength += labelWidthRight;
+                    scaleAxisRight._shortLabel = true;
+                } else if (scaleAxisRight) {
+                    scaleAxisRight._shortLabel = false;
+                }
+                if (axLength < 100 && labelWidth > 0) {
+                    axLength += labelWidth;
+                    axLength -= marginLeft;
+                    axOffset -= labelWidth;
+                    axOffset += marginLeft;
+                    scaleAxis._shortLabel = true;
+                } else if (scaleAxis) {
+                    scaleAxis._shortLabel = false;
+                }
+            } else {
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]);
+                axOffset = gs.l + ax.domain[0] * gs.w;
+            }
+
+            ax._offset = axOffset;
+            ax._length = axLength;
 
             ax._m = ax._length / (rl1 - rl0);
             ax._b = -ax._m * rl0;
@@ -426,51 +465,61 @@ module.exports = function setConvert(ax, fullLayout) {
             throw new Error('axis scaling');
         }
 
-		var lastLabel = {};
-		if (labelWidth > 1)
-			lastLabel.lastLabelWidth = labelWidth;
-		if (labelWidthRight > 1)
-			lastLabel.lastLabelWidthRight = labelWidthRight;
-		lastLabel.autoangle = scaleAxis._lastangle;
-		scaleAxis._lastLabel = lastLabel;	
-			
-		function getLabelWidth(scaleAxis) {
-			var highestLabel = 0;
-			var textLabel = '';
-			var sizeLabel = {width: 0, height:0 };
-			var labelWidth = 0;
-			scaleAxis._categories.forEach(function(d) {
-				if (d.length > highestLabel) {
-					highestLabel = d.length;
-					textLabel = d;
-				}
-			});
-			sizeLabel = textMeasurement(textLabel, fullLayout.font.size, fullLayout.font.family)
-			
-			labelWidth = sizeLabel.width;
-			if (scaleAxis._lastangle === 30) {
-				labelWidth = labelWidth * Math.sin(0.5235988) / Math.sin(1.5707963);
-			} else if (scaleAxis._lastangle === 0) {
-				labelWidth = 0;
-			}
-			return labelWidth;
-		}
-		
-		// gets the size of a element
-		function textMeasurement(value, fontSizeString, fontFamily) {
-			var body = $('body');
-			if (fontFamily) {
-				body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
-			} else {
-				body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
-			}
-			var elem = $('#testObjectDashboardUtils');
-			var width = elem.innerWidth() + 1;
-			var height = elem.innerHeight() + 1;
-			elem.remove();
-			return { width: width, height: height }
-		}
-    };
+        if (scaleAxes.length > 0) {
+            scaleAxis = scaleAxes[0];
+            var lastLabel = {};
+            if (labelWidth > 1) {
+                lastLabel.lastLabelWidth = labelWidth;
+            }
+
+            if (labelWidthRight > 1) {
+                lastLabel.lastLabelWidthRight = labelWidthRight;
+            }
+
+            lastLabel.autoangle = scaleAxis._lastangle;
+            scaleAxis._lastLabel = lastLabel;
+        }
+
+        function getLabelWidth(scaleAxis) {
+            var highestLabel = 0;
+            var textLabel = '';
+            var sizeLabel = {width: 0, height:0 };
+            var labelWidth = 0;
+            if (scaleAxis._categories) {
+                scaleAxis._categories.forEach(function (d) {
+                    if (d.length > highestLabel) {
+                        highestLabel = d.length;
+                        textLabel = d;
+                    }
+                });
+                sizeLabel = textMeasurement(textLabel, fullLayout.font.size, fullLayout.font.family)
+
+                labelWidth = sizeLabel.width;
+                if (scaleAxis._lastangle === 30) {
+                    labelWidth = labelWidth * Math.sin(0.5235988) / Math.sin(1.5707963);
+                } else if (scaleAxis._lastangle === 0) {
+                    labelWidth = 0;
+                }
+            }
+            
+            return labelWidth;
+        }
+
+        // gets the size of a element
+        function textMeasurement(value, fontSizeString, fontFamily) {
+            var body = $('body');
+            if (fontFamily) {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            } else {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            }
+            var elem = $('#testObjectDashboardUtils');
+            var width = elem.innerWidth() + 1;
+            var height = elem.innerHeight() + 1;
+            elem.remove();
+            return { width: width, height: height }
+            }
+        };
 
     // makeCalcdata: takes an x or y array and converts it
     // to a position on the axis object "ax"
