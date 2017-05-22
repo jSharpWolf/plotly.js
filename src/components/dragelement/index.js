@@ -22,6 +22,7 @@ var doubleTouch;
 var doubleMove;
 var clickTimer = null;
 
+
 dragElement.align = require('./align');
 dragElement.getCursor = require('./cursor');
 
@@ -66,18 +67,24 @@ dragElement.init = function init(options) {
         initialOnMouseMove;
 
     if(!gd._mouseDownTime) gd._mouseDownTime = 0;
-    options.element.addEventListener('touchstart', touchstart);
-    options.element.addEventListener('touchmove', touchmove);
-    options.element.addEventListener('touchend', touchend);
+    var result = document.getElementsByClassName("nsewdrag");
+    for(var i = 0;i< result.length;i++){
+      if(!result[i].ontouchstart){
+        console.log('add');
+        options.element.addEventListener('touchstart', touchstart);
+        options.element.addEventListener('touchmove', touchmove);
+        options.element.addEventListener('touchend', touchend);
+        options.element.ontouchstart = touchstart;
+      }
+    }
 
     function touchstart(e) {
       if(!mousePos1){
         if (clickTimer == null) {
           clickTimer = setTimeout(function () {
-            console.log('mhhh');
               clickTimer = null;
 
-          }, 300)
+          }, 200)
         } else {
           clearTimeout(clickTimer);
           clickTimer = null;
