@@ -1,9 +1,3 @@
-/**
-* plotly.js (mapbox) v1.25.2
-* Copyright 2012-2017, Plotly, Inc.
-* All rights reserved.
-* Licensed under the MIT license
-*/
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Plotly = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
@@ -233,7 +227,7 @@ module.exports = Plotly;
 
 module.exports = require('../src/traces/scattermapbox');
 
-},{"../src/traces/scattermapbox":438}],6:[function(require,module,exports){
+},{"../src/traces/scattermapbox":442}],6:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -20874,60 +20868,60 @@ var path = require('path');
 // readFileSync calls must be written out long-form for brfs.
 module.exports = {
   debug: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform lowp vec4 u_color;\n\nvoid main() {\n    gl_FragColor = u_color;\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nattribute vec2 a_pos;\n\nuniform mat4 u_matrix;\n\nvoid main() {\n    gl_Position = u_matrix * vec4(a_pos, step(32767.0, a_pos.x), 1);\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform lowp vec4 u_color;\r\n\r\nvoid main() {\r\n    gl_FragColor = u_color;\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nattribute vec2 a_pos;\r\n\r\nuniform mat4 u_matrix;\r\n\r\nvoid main() {\r\n    gl_Position = u_matrix * vec4(a_pos, step(32767.0, a_pos.x), 1);\r\n}\r\n"
   },
   fill: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\n#pragma mapbox: define lowp vec4 color\n#pragma mapbox: define lowp float opacity\n\nvoid main() {\n    #pragma mapbox: initialize lowp vec4 color\n    #pragma mapbox: initialize lowp float opacity\n\n    gl_FragColor = color * opacity;\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nattribute vec2 a_pos;\n\nuniform mat4 u_matrix;\n\n#pragma mapbox: define lowp vec4 color\n#pragma mapbox: define lowp float opacity\n\nvoid main() {\n    #pragma mapbox: initialize lowp vec4 color\n    #pragma mapbox: initialize lowp float opacity\n\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\n#pragma mapbox: define lowp vec4 color\r\n#pragma mapbox: define lowp float opacity\r\n\r\nvoid main() {\r\n    #pragma mapbox: initialize lowp vec4 color\r\n    #pragma mapbox: initialize lowp float opacity\r\n\r\n    gl_FragColor = color * opacity;\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nattribute vec2 a_pos;\r\n\r\nuniform mat4 u_matrix;\r\n\r\n#pragma mapbox: define lowp vec4 color\r\n#pragma mapbox: define lowp float opacity\r\n\r\nvoid main() {\r\n    #pragma mapbox: initialize lowp vec4 color\r\n    #pragma mapbox: initialize lowp float opacity\r\n\r\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\r\n}\r\n"
   },
   circle: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\n#pragma mapbox: define lowp vec4 color\n#pragma mapbox: define lowp float blur\n#pragma mapbox: define lowp float opacity\n\nvarying vec2 v_extrude;\nvarying lowp float v_antialiasblur;\n\nvoid main() {\n    #pragma mapbox: initialize lowp vec4 color\n    #pragma mapbox: initialize lowp float blur\n    #pragma mapbox: initialize lowp float opacity\n\n    float t = smoothstep(1.0 - max(blur, v_antialiasblur), 1.0, length(v_extrude));\n    gl_FragColor = color * (1.0 - t) * opacity;\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform mat4 u_matrix;\nuniform bool u_scale_with_map;\nuniform vec2 u_extrude_scale;\nuniform float u_devicepixelratio;\n\nattribute vec2 a_pos;\n\n#pragma mapbox: define lowp vec4 color\n#pragma mapbox: define mediump float radius\n#pragma mapbox: define lowp float blur\n#pragma mapbox: define lowp float opacity\n\nvarying vec2 v_extrude;\nvarying lowp float v_antialiasblur;\n\nvoid main(void) {\n    #pragma mapbox: initialize lowp vec4 color\n    #pragma mapbox: initialize mediump float radius\n    #pragma mapbox: initialize lowp float blur\n    #pragma mapbox: initialize lowp float opacity\n\n    // unencode the extrusion vector that we snuck into the a_pos vector\n    v_extrude = vec2(mod(a_pos, 2.0) * 2.0 - 1.0);\n\n    vec2 extrude = v_extrude * radius * u_extrude_scale;\n    // multiply a_pos by 0.5, since we had it * 2 in order to sneak\n    // in extrusion data\n    gl_Position = u_matrix * vec4(floor(a_pos * 0.5), 0, 1);\n\n    if (u_scale_with_map) {\n        gl_Position.xy += extrude;\n    } else {\n        gl_Position.xy += extrude * gl_Position.w;\n    }\n\n    // This is a minimum blur distance that serves as a faux-antialiasing for\n    // the circle. since blur is a ratio of the circle's size and the intent is\n    // to keep the blur at roughly 1px, the two are inversely related.\n    v_antialiasblur = 1.0 / u_devicepixelratio / radius;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\n#pragma mapbox: define lowp vec4 color\r\n#pragma mapbox: define lowp float blur\r\n#pragma mapbox: define lowp float opacity\r\n\r\nvarying vec2 v_extrude;\r\nvarying lowp float v_antialiasblur;\r\n\r\nvoid main() {\r\n    #pragma mapbox: initialize lowp vec4 color\r\n    #pragma mapbox: initialize lowp float blur\r\n    #pragma mapbox: initialize lowp float opacity\r\n\r\n    float t = smoothstep(1.0 - max(blur, v_antialiasblur), 1.0, length(v_extrude));\r\n    gl_FragColor = color * (1.0 - t) * opacity;\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform mat4 u_matrix;\r\nuniform bool u_scale_with_map;\r\nuniform vec2 u_extrude_scale;\r\nuniform float u_devicepixelratio;\r\n\r\nattribute vec2 a_pos;\r\n\r\n#pragma mapbox: define lowp vec4 color\r\n#pragma mapbox: define mediump float radius\r\n#pragma mapbox: define lowp float blur\r\n#pragma mapbox: define lowp float opacity\r\n\r\nvarying vec2 v_extrude;\r\nvarying lowp float v_antialiasblur;\r\n\r\nvoid main(void) {\r\n    #pragma mapbox: initialize lowp vec4 color\r\n    #pragma mapbox: initialize mediump float radius\r\n    #pragma mapbox: initialize lowp float blur\r\n    #pragma mapbox: initialize lowp float opacity\r\n\r\n    // unencode the extrusion vector that we snuck into the a_pos vector\r\n    v_extrude = vec2(mod(a_pos, 2.0) * 2.0 - 1.0);\r\n\r\n    vec2 extrude = v_extrude * radius * u_extrude_scale;\r\n    // multiply a_pos by 0.5, since we had it * 2 in order to sneak\r\n    // in extrusion data\r\n    gl_Position = u_matrix * vec4(floor(a_pos * 0.5), 0, 1);\r\n\r\n    if (u_scale_with_map) {\r\n        gl_Position.xy += extrude;\r\n    } else {\r\n        gl_Position.xy += extrude * gl_Position.w;\r\n    }\r\n\r\n    // This is a minimum blur distance that serves as a faux-antialiasing for\r\n    // the circle. since blur is a ratio of the circle's size and the intent is\r\n    // to keep the blur at roughly 1px, the two are inversely related.\r\n    v_antialiasblur = 1.0 / u_devicepixelratio / radius;\r\n}\r\n"
   },
   line: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform lowp vec4 u_color;\nuniform lowp float u_opacity;\nuniform float u_blur;\n\nvarying vec2 v_linewidth;\nvarying vec2 v_normal;\nvarying float v_gamma_scale;\n\nvoid main() {\n    // Calculate the distance of the pixel from the line in pixels.\n    float dist = length(v_normal) * v_linewidth.s;\n\n    // Calculate the antialiasing fade factor. This is either when fading in\n    // the line in case of an offset line (v_linewidth.t) or when fading out\n    // (v_linewidth.s)\n    float blur = u_blur * v_gamma_scale;\n    float alpha = clamp(min(dist - (v_linewidth.t - blur), v_linewidth.s - dist) / blur, 0.0, 1.0);\n\n    gl_FragColor = u_color * (alpha * u_opacity);\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\n// floor(127 / 2) == 63.0\n// the maximum allowed miter limit is 2.0 at the moment. the extrude normal is\n// stored in a byte (-128..127). we scale regular normals up to length 63, but\n// there are also \"special\" normals that have a bigger length (of up to 126 in\n// this case).\n// #define scale 63.0\n#define scale 0.015873016\n\nattribute vec2 a_pos;\nattribute vec4 a_data;\n\nuniform mat4 u_matrix;\nuniform mediump float u_ratio;\nuniform mediump float u_linewidth;\nuniform mediump float u_gapwidth;\nuniform mediump float u_antialiasing;\nuniform mediump float u_extra;\nuniform mat2 u_antialiasingmatrix;\nuniform mediump float u_offset;\nuniform mediump float u_blur;\n\nvarying vec2 v_normal;\nvarying vec2 v_linewidth;\nvarying float v_gamma_scale;\n\nvoid main() {\n    vec2 a_extrude = a_data.xy - 128.0;\n    float a_direction = mod(a_data.z, 4.0) - 1.0;\n\n    // We store the texture normals in the most insignificant bit\n    // transform y so that 0 => -1 and 1 => 1\n    // In the texture normal, x is 0 if the normal points straight up/down and 1 if it's a round cap\n    // y is 1 if the normal points up, and -1 if it points down\n    mediump vec2 normal = mod(a_pos, 2.0);\n    normal.y = sign(normal.y - 0.5);\n    v_normal = normal;\n\n    float inset = u_gapwidth + (u_gapwidth > 0.0 ? u_antialiasing : 0.0);\n    float outset = u_gapwidth + u_linewidth * (u_gapwidth > 0.0 ? 2.0 : 1.0) + u_antialiasing;\n\n    // Scale the extrusion vector down to a normal and then up by the line width\n    // of this vertex.\n    mediump vec2 dist = outset * a_extrude * scale;\n\n    // Calculate the offset when drawing a line that is to the side of the actual line.\n    // We do this by creating a vector that points towards the extrude, but rotate\n    // it when we're drawing round end points (a_direction = -1 or 1) since their\n    // extrude vector points in another direction.\n    mediump float u = 0.5 * a_direction;\n    mediump float t = 1.0 - abs(u);\n    mediump vec2 offset = u_offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);\n\n    // Remove the texture normal bit of the position before scaling it with the\n    // model/view matrix.\n    gl_Position = u_matrix * vec4(floor(a_pos * 0.5) + (offset + dist) / u_ratio, 0.0, 1.0);\n\n    // position of y on the screen\n    float y = gl_Position.y / gl_Position.w;\n\n    // how much features are squished in the y direction by the tilt\n    float squish_scale = length(a_extrude) / length(u_antialiasingmatrix * a_extrude);\n\n    // how much features are squished in all directions by the perspectiveness\n    float perspective_scale = 1.0 / (1.0 - min(y * u_extra, 0.9));\n\n    v_linewidth = vec2(outset, inset);\n    v_gamma_scale = perspective_scale * squish_scale;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform lowp vec4 u_color;\r\nuniform lowp float u_opacity;\r\nuniform float u_blur;\r\n\r\nvarying vec2 v_linewidth;\r\nvarying vec2 v_normal;\r\nvarying float v_gamma_scale;\r\n\r\nvoid main() {\r\n    // Calculate the distance of the pixel from the line in pixels.\r\n    float dist = length(v_normal) * v_linewidth.s;\r\n\r\n    // Calculate the antialiasing fade factor. This is either when fading in\r\n    // the line in case of an offset line (v_linewidth.t) or when fading out\r\n    // (v_linewidth.s)\r\n    float blur = u_blur * v_gamma_scale;\r\n    float alpha = clamp(min(dist - (v_linewidth.t - blur), v_linewidth.s - dist) / blur, 0.0, 1.0);\r\n\r\n    gl_FragColor = u_color * (alpha * u_opacity);\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\n// floor(127 / 2) == 63.0\r\n// the maximum allowed miter limit is 2.0 at the moment. the extrude normal is\r\n// stored in a byte (-128..127). we scale regular normals up to length 63, but\r\n// there are also \"special\" normals that have a bigger length (of up to 126 in\r\n// this case).\r\n// #define scale 63.0\r\n#define scale 0.015873016\r\n\r\nattribute vec2 a_pos;\r\nattribute vec4 a_data;\r\n\r\nuniform mat4 u_matrix;\r\nuniform mediump float u_ratio;\r\nuniform mediump float u_linewidth;\r\nuniform mediump float u_gapwidth;\r\nuniform mediump float u_antialiasing;\r\nuniform mediump float u_extra;\r\nuniform mat2 u_antialiasingmatrix;\r\nuniform mediump float u_offset;\r\nuniform mediump float u_blur;\r\n\r\nvarying vec2 v_normal;\r\nvarying vec2 v_linewidth;\r\nvarying float v_gamma_scale;\r\n\r\nvoid main() {\r\n    vec2 a_extrude = a_data.xy - 128.0;\r\n    float a_direction = mod(a_data.z, 4.0) - 1.0;\r\n\r\n    // We store the texture normals in the most insignificant bit\r\n    // transform y so that 0 => -1 and 1 => 1\r\n    // In the texture normal, x is 0 if the normal points straight up/down and 1 if it's a round cap\r\n    // y is 1 if the normal points up, and -1 if it points down\r\n    mediump vec2 normal = mod(a_pos, 2.0);\r\n    normal.y = sign(normal.y - 0.5);\r\n    v_normal = normal;\r\n\r\n    float inset = u_gapwidth + (u_gapwidth > 0.0 ? u_antialiasing : 0.0);\r\n    float outset = u_gapwidth + u_linewidth * (u_gapwidth > 0.0 ? 2.0 : 1.0) + u_antialiasing;\r\n\r\n    // Scale the extrusion vector down to a normal and then up by the line width\r\n    // of this vertex.\r\n    mediump vec2 dist = outset * a_extrude * scale;\r\n\r\n    // Calculate the offset when drawing a line that is to the side of the actual line.\r\n    // We do this by creating a vector that points towards the extrude, but rotate\r\n    // it when we're drawing round end points (a_direction = -1 or 1) since their\r\n    // extrude vector points in another direction.\r\n    mediump float u = 0.5 * a_direction;\r\n    mediump float t = 1.0 - abs(u);\r\n    mediump vec2 offset = u_offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);\r\n\r\n    // Remove the texture normal bit of the position before scaling it with the\r\n    // model/view matrix.\r\n    gl_Position = u_matrix * vec4(floor(a_pos * 0.5) + (offset + dist) / u_ratio, 0.0, 1.0);\r\n\r\n    // position of y on the screen\r\n    float y = gl_Position.y / gl_Position.w;\r\n\r\n    // how much features are squished in the y direction by the tilt\r\n    float squish_scale = length(a_extrude) / length(u_antialiasingmatrix * a_extrude);\r\n\r\n    // how much features are squished in all directions by the perspectiveness\r\n    float perspective_scale = 1.0 / (1.0 - min(y * u_extra, 0.9));\r\n\r\n    v_linewidth = vec2(outset, inset);\r\n    v_gamma_scale = perspective_scale * squish_scale;\r\n}\r\n"
   },
   linepattern: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform float u_blur;\n\nuniform vec2 u_pattern_size_a;\nuniform vec2 u_pattern_size_b;\nuniform vec2 u_pattern_tl_a;\nuniform vec2 u_pattern_br_a;\nuniform vec2 u_pattern_tl_b;\nuniform vec2 u_pattern_br_b;\nuniform float u_fade;\nuniform float u_opacity;\n\nuniform sampler2D u_image;\n\nvarying vec2 v_normal;\nvarying vec2 v_linewidth;\nvarying float v_linesofar;\nvarying float v_gamma_scale;\n\nvoid main() {\n    // Calculate the distance of the pixel from the line in pixels.\n    float dist = length(v_normal) * v_linewidth.s;\n\n    // Calculate the antialiasing fade factor. This is either when fading in\n    // the line in case of an offset line (v_linewidth.t) or when fading out\n    // (v_linewidth.s)\n    float blur = u_blur * v_gamma_scale;\n    float alpha = clamp(min(dist - (v_linewidth.t - blur), v_linewidth.s - dist) / blur, 0.0, 1.0);\n\n    float x_a = mod(v_linesofar / u_pattern_size_a.x, 1.0);\n    float x_b = mod(v_linesofar / u_pattern_size_b.x, 1.0);\n    float y_a = 0.5 + (v_normal.y * v_linewidth.s / u_pattern_size_a.y);\n    float y_b = 0.5 + (v_normal.y * v_linewidth.s / u_pattern_size_b.y);\n    vec2 pos_a = mix(u_pattern_tl_a, u_pattern_br_a, vec2(x_a, y_a));\n    vec2 pos_b = mix(u_pattern_tl_b, u_pattern_br_b, vec2(x_b, y_b));\n\n    vec4 color = mix(texture2D(u_image, pos_a), texture2D(u_image, pos_b), u_fade);\n\n    alpha *= u_opacity;\n\n    gl_FragColor = color * alpha;\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\n// floor(127 / 2) == 63.0\n// the maximum allowed miter limit is 2.0 at the moment. the extrude normal is\n// stored in a byte (-128..127). we scale regular normals up to length 63, but\n// there are also \"special\" normals that have a bigger length (of up to 126 in\n// this case).\n// #define scale 63.0\n#define scale 0.015873016\n\n// We scale the distance before adding it to the buffers so that we can store\n// long distances for long segments. Use this value to unscale the distance.\n#define LINE_DISTANCE_SCALE 2.0\n\nattribute vec2 a_pos;\nattribute vec4 a_data;\n\nuniform mat4 u_matrix;\nuniform mediump float u_ratio;\nuniform mediump float u_linewidth;\nuniform mediump float u_gapwidth;\nuniform mediump float u_antialiasing;\nuniform mediump float u_extra;\nuniform mat2 u_antialiasingmatrix;\nuniform mediump float u_offset;\n\nvarying vec2 v_normal;\nvarying vec2 v_linewidth;\nvarying float v_linesofar;\nvarying float v_gamma_scale;\n\nvoid main() {\n    vec2 a_extrude = a_data.xy - 128.0;\n    float a_direction = mod(a_data.z, 4.0) - 1.0;\n    float a_linesofar = (floor(a_data.z / 4.0) + a_data.w * 64.0) * LINE_DISTANCE_SCALE;\n\n    // We store the texture normals in the most insignificant bit\n    // transform y so that 0 => -1 and 1 => 1\n    // In the texture normal, x is 0 if the normal points straight up/down and 1 if it's a round cap\n    // y is 1 if the normal points up, and -1 if it points down\n    mediump vec2 normal = mod(a_pos, 2.0);\n    normal.y = sign(normal.y - 0.5);\n    v_normal = normal;\n\n    float inset = u_gapwidth + (u_gapwidth > 0.0 ? u_antialiasing : 0.0);\n    float outset = u_gapwidth + u_linewidth * (u_gapwidth > 0.0 ? 2.0 : 1.0) + u_antialiasing;\n\n    // Scale the extrusion vector down to a normal and then up by the line width\n    // of this vertex.\n    mediump vec2 dist = outset * a_extrude * scale;\n\n    // Calculate the offset when drawing a line that is to the side of the actual line.\n    // We do this by creating a vector that points towards the extrude, but rotate\n    // it when we're drawing round end points (a_direction = -1 or 1) since their\n    // extrude vector points in another direction.\n    mediump float u = 0.5 * a_direction;\n    mediump float t = 1.0 - abs(u);\n    mediump vec2 offset = u_offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);\n\n    // Remove the texture normal bit of the position before scaling it with the\n    // model/view matrix.\n    gl_Position = u_matrix * vec4(floor(a_pos * 0.5) + (offset + dist) / u_ratio, 0.0, 1.0);\n    v_linesofar = a_linesofar;\n\n    // position of y on the screen\n    float y = gl_Position.y / gl_Position.w;\n\n    // how much features are squished in the y direction by the tilt\n    float squish_scale = length(a_extrude) / length(u_antialiasingmatrix * a_extrude);\n\n    // how much features are squished in all directions by the perspectiveness\n    float perspective_scale = 1.0 / (1.0 - min(y * u_extra, 0.9));\n\n    v_linewidth = vec2(outset, inset);\n    v_gamma_scale = perspective_scale * squish_scale;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform float u_blur;\r\n\r\nuniform vec2 u_pattern_size_a;\r\nuniform vec2 u_pattern_size_b;\r\nuniform vec2 u_pattern_tl_a;\r\nuniform vec2 u_pattern_br_a;\r\nuniform vec2 u_pattern_tl_b;\r\nuniform vec2 u_pattern_br_b;\r\nuniform float u_fade;\r\nuniform float u_opacity;\r\n\r\nuniform sampler2D u_image;\r\n\r\nvarying vec2 v_normal;\r\nvarying vec2 v_linewidth;\r\nvarying float v_linesofar;\r\nvarying float v_gamma_scale;\r\n\r\nvoid main() {\r\n    // Calculate the distance of the pixel from the line in pixels.\r\n    float dist = length(v_normal) * v_linewidth.s;\r\n\r\n    // Calculate the antialiasing fade factor. This is either when fading in\r\n    // the line in case of an offset line (v_linewidth.t) or when fading out\r\n    // (v_linewidth.s)\r\n    float blur = u_blur * v_gamma_scale;\r\n    float alpha = clamp(min(dist - (v_linewidth.t - blur), v_linewidth.s - dist) / blur, 0.0, 1.0);\r\n\r\n    float x_a = mod(v_linesofar / u_pattern_size_a.x, 1.0);\r\n    float x_b = mod(v_linesofar / u_pattern_size_b.x, 1.0);\r\n    float y_a = 0.5 + (v_normal.y * v_linewidth.s / u_pattern_size_a.y);\r\n    float y_b = 0.5 + (v_normal.y * v_linewidth.s / u_pattern_size_b.y);\r\n    vec2 pos_a = mix(u_pattern_tl_a, u_pattern_br_a, vec2(x_a, y_a));\r\n    vec2 pos_b = mix(u_pattern_tl_b, u_pattern_br_b, vec2(x_b, y_b));\r\n\r\n    vec4 color = mix(texture2D(u_image, pos_a), texture2D(u_image, pos_b), u_fade);\r\n\r\n    alpha *= u_opacity;\r\n\r\n    gl_FragColor = color * alpha;\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\n// floor(127 / 2) == 63.0\r\n// the maximum allowed miter limit is 2.0 at the moment. the extrude normal is\r\n// stored in a byte (-128..127). we scale regular normals up to length 63, but\r\n// there are also \"special\" normals that have a bigger length (of up to 126 in\r\n// this case).\r\n// #define scale 63.0\r\n#define scale 0.015873016\r\n\r\n// We scale the distance before adding it to the buffers so that we can store\r\n// long distances for long segments. Use this value to unscale the distance.\r\n#define LINE_DISTANCE_SCALE 2.0\r\n\r\nattribute vec2 a_pos;\r\nattribute vec4 a_data;\r\n\r\nuniform mat4 u_matrix;\r\nuniform mediump float u_ratio;\r\nuniform mediump float u_linewidth;\r\nuniform mediump float u_gapwidth;\r\nuniform mediump float u_antialiasing;\r\nuniform mediump float u_extra;\r\nuniform mat2 u_antialiasingmatrix;\r\nuniform mediump float u_offset;\r\n\r\nvarying vec2 v_normal;\r\nvarying vec2 v_linewidth;\r\nvarying float v_linesofar;\r\nvarying float v_gamma_scale;\r\n\r\nvoid main() {\r\n    vec2 a_extrude = a_data.xy - 128.0;\r\n    float a_direction = mod(a_data.z, 4.0) - 1.0;\r\n    float a_linesofar = (floor(a_data.z / 4.0) + a_data.w * 64.0) * LINE_DISTANCE_SCALE;\r\n\r\n    // We store the texture normals in the most insignificant bit\r\n    // transform y so that 0 => -1 and 1 => 1\r\n    // In the texture normal, x is 0 if the normal points straight up/down and 1 if it's a round cap\r\n    // y is 1 if the normal points up, and -1 if it points down\r\n    mediump vec2 normal = mod(a_pos, 2.0);\r\n    normal.y = sign(normal.y - 0.5);\r\n    v_normal = normal;\r\n\r\n    float inset = u_gapwidth + (u_gapwidth > 0.0 ? u_antialiasing : 0.0);\r\n    float outset = u_gapwidth + u_linewidth * (u_gapwidth > 0.0 ? 2.0 : 1.0) + u_antialiasing;\r\n\r\n    // Scale the extrusion vector down to a normal and then up by the line width\r\n    // of this vertex.\r\n    mediump vec2 dist = outset * a_extrude * scale;\r\n\r\n    // Calculate the offset when drawing a line that is to the side of the actual line.\r\n    // We do this by creating a vector that points towards the extrude, but rotate\r\n    // it when we're drawing round end points (a_direction = -1 or 1) since their\r\n    // extrude vector points in another direction.\r\n    mediump float u = 0.5 * a_direction;\r\n    mediump float t = 1.0 - abs(u);\r\n    mediump vec2 offset = u_offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);\r\n\r\n    // Remove the texture normal bit of the position before scaling it with the\r\n    // model/view matrix.\r\n    gl_Position = u_matrix * vec4(floor(a_pos * 0.5) + (offset + dist) / u_ratio, 0.0, 1.0);\r\n    v_linesofar = a_linesofar;\r\n\r\n    // position of y on the screen\r\n    float y = gl_Position.y / gl_Position.w;\r\n\r\n    // how much features are squished in the y direction by the tilt\r\n    float squish_scale = length(a_extrude) / length(u_antialiasingmatrix * a_extrude);\r\n\r\n    // how much features are squished in all directions by the perspectiveness\r\n    float perspective_scale = 1.0 / (1.0 - min(y * u_extra, 0.9));\r\n\r\n    v_linewidth = vec2(outset, inset);\r\n    v_gamma_scale = perspective_scale * squish_scale;\r\n}\r\n"
   },
   linesdfpattern: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform lowp vec4 u_color;\nuniform lowp float u_opacity;\n\nuniform float u_blur;\nuniform sampler2D u_image;\nuniform float u_sdfgamma;\nuniform float u_mix;\n\nvarying vec2 v_normal;\nvarying vec2 v_linewidth;\nvarying vec2 v_tex_a;\nvarying vec2 v_tex_b;\nvarying float v_gamma_scale;\n\nvoid main() {\n    // Calculate the distance of the pixel from the line in pixels.\n    float dist = length(v_normal) * v_linewidth.s;\n\n    // Calculate the antialiasing fade factor. This is either when fading in\n    // the line in case of an offset line (v_linewidth.t) or when fading out\n    // (v_linewidth.s)\n    float blur = u_blur * v_gamma_scale;\n    float alpha = clamp(min(dist - (v_linewidth.t - blur), v_linewidth.s - dist) / blur, 0.0, 1.0);\n\n    float sdfdist_a = texture2D(u_image, v_tex_a).a;\n    float sdfdist_b = texture2D(u_image, v_tex_b).a;\n    float sdfdist = mix(sdfdist_a, sdfdist_b, u_mix);\n    alpha *= smoothstep(0.5 - u_sdfgamma, 0.5 + u_sdfgamma, sdfdist);\n\n    gl_FragColor = u_color * (alpha * u_opacity);\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\n// floor(127 / 2) == 63.0\n// the maximum allowed miter limit is 2.0 at the moment. the extrude normal is\n// stored in a byte (-128..127). we scale regular normals up to length 63, but\n// there are also \"special\" normals that have a bigger length (of up to 126 in\n// this case).\n// #define scale 63.0\n#define scale 0.015873016\n\n// We scale the distance before adding it to the buffers so that we can store\n// long distances for long segments. Use this value to unscale the distance.\n#define LINE_DISTANCE_SCALE 2.0\n\nattribute vec2 a_pos;\nattribute vec4 a_data;\n\nuniform mat4 u_matrix;\nuniform mediump float u_ratio;\nuniform mediump float u_linewidth;\nuniform mediump float u_gapwidth;\nuniform mediump float u_antialiasing;\nuniform vec2 u_patternscale_a;\nuniform float u_tex_y_a;\nuniform vec2 u_patternscale_b;\nuniform float u_tex_y_b;\nuniform float u_extra;\nuniform mat2 u_antialiasingmatrix;\nuniform mediump float u_offset;\n\nvarying vec2 v_normal;\nvarying vec2 v_linewidth;\nvarying vec2 v_tex_a;\nvarying vec2 v_tex_b;\nvarying float v_gamma_scale;\n\nvoid main() {\n    vec2 a_extrude = a_data.xy - 128.0;\n    float a_direction = mod(a_data.z, 4.0) - 1.0;\n    float a_linesofar = (floor(a_data.z / 4.0) + a_data.w * 64.0) * LINE_DISTANCE_SCALE;\n\n    // We store the texture normals in the most insignificant bit\n    // transform y so that 0 => -1 and 1 => 1\n    // In the texture normal, x is 0 if the normal points straight up/down and 1 if it's a round cap\n    // y is 1 if the normal points up, and -1 if it points down\n    mediump vec2 normal = mod(a_pos, 2.0);\n    normal.y = sign(normal.y - 0.5);\n    v_normal = normal;\n\n    float inset = u_gapwidth + (u_gapwidth > 0.0 ? u_antialiasing : 0.0);\n    float outset = u_gapwidth + u_linewidth * (u_gapwidth > 0.0 ? 2.0 : 1.0) + u_antialiasing;\n\n    // Scale the extrusion vector down to a normal and then up by the line width\n    // of this vertex.\n    mediump vec2 dist = outset * a_extrude * scale;\n\n    // Calculate the offset when drawing a line that is to the side of the actual line.\n    // We do this by creating a vector that points towards the extrude, but rotate\n    // it when we're drawing round end points (a_direction = -1 or 1) since their\n    // extrude vector points in another direction.\n    mediump float u = 0.5 * a_direction;\n    mediump float t = 1.0 - abs(u);\n    mediump vec2 offset = u_offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);\n\n    // Remove the texture normal bit of the position before scaling it with the\n    // model/view matrix.\n    gl_Position = u_matrix * vec4(floor(a_pos * 0.5) + (offset + dist) / u_ratio, 0.0, 1.0);\n\n    v_tex_a = vec2(a_linesofar * u_patternscale_a.x, normal.y * u_patternscale_a.y + u_tex_y_a);\n    v_tex_b = vec2(a_linesofar * u_patternscale_b.x, normal.y * u_patternscale_b.y + u_tex_y_b);\n\n    // position of y on the screen\n    float y = gl_Position.y / gl_Position.w;\n\n    // how much features are squished in the y direction by the tilt\n    float squish_scale = length(a_extrude) / length(u_antialiasingmatrix * a_extrude);\n\n    // how much features are squished in all directions by the perspectiveness\n    float perspective_scale = 1.0 / (1.0 - min(y * u_extra, 0.9));\n\n    v_linewidth = vec2(outset, inset);\n    v_gamma_scale = perspective_scale * squish_scale;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform lowp vec4 u_color;\r\nuniform lowp float u_opacity;\r\n\r\nuniform float u_blur;\r\nuniform sampler2D u_image;\r\nuniform float u_sdfgamma;\r\nuniform float u_mix;\r\n\r\nvarying vec2 v_normal;\r\nvarying vec2 v_linewidth;\r\nvarying vec2 v_tex_a;\r\nvarying vec2 v_tex_b;\r\nvarying float v_gamma_scale;\r\n\r\nvoid main() {\r\n    // Calculate the distance of the pixel from the line in pixels.\r\n    float dist = length(v_normal) * v_linewidth.s;\r\n\r\n    // Calculate the antialiasing fade factor. This is either when fading in\r\n    // the line in case of an offset line (v_linewidth.t) or when fading out\r\n    // (v_linewidth.s)\r\n    float blur = u_blur * v_gamma_scale;\r\n    float alpha = clamp(min(dist - (v_linewidth.t - blur), v_linewidth.s - dist) / blur, 0.0, 1.0);\r\n\r\n    float sdfdist_a = texture2D(u_image, v_tex_a).a;\r\n    float sdfdist_b = texture2D(u_image, v_tex_b).a;\r\n    float sdfdist = mix(sdfdist_a, sdfdist_b, u_mix);\r\n    alpha *= smoothstep(0.5 - u_sdfgamma, 0.5 + u_sdfgamma, sdfdist);\r\n\r\n    gl_FragColor = u_color * (alpha * u_opacity);\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\n// floor(127 / 2) == 63.0\r\n// the maximum allowed miter limit is 2.0 at the moment. the extrude normal is\r\n// stored in a byte (-128..127). we scale regular normals up to length 63, but\r\n// there are also \"special\" normals that have a bigger length (of up to 126 in\r\n// this case).\r\n// #define scale 63.0\r\n#define scale 0.015873016\r\n\r\n// We scale the distance before adding it to the buffers so that we can store\r\n// long distances for long segments. Use this value to unscale the distance.\r\n#define LINE_DISTANCE_SCALE 2.0\r\n\r\nattribute vec2 a_pos;\r\nattribute vec4 a_data;\r\n\r\nuniform mat4 u_matrix;\r\nuniform mediump float u_ratio;\r\nuniform mediump float u_linewidth;\r\nuniform mediump float u_gapwidth;\r\nuniform mediump float u_antialiasing;\r\nuniform vec2 u_patternscale_a;\r\nuniform float u_tex_y_a;\r\nuniform vec2 u_patternscale_b;\r\nuniform float u_tex_y_b;\r\nuniform float u_extra;\r\nuniform mat2 u_antialiasingmatrix;\r\nuniform mediump float u_offset;\r\n\r\nvarying vec2 v_normal;\r\nvarying vec2 v_linewidth;\r\nvarying vec2 v_tex_a;\r\nvarying vec2 v_tex_b;\r\nvarying float v_gamma_scale;\r\n\r\nvoid main() {\r\n    vec2 a_extrude = a_data.xy - 128.0;\r\n    float a_direction = mod(a_data.z, 4.0) - 1.0;\r\n    float a_linesofar = (floor(a_data.z / 4.0) + a_data.w * 64.0) * LINE_DISTANCE_SCALE;\r\n\r\n    // We store the texture normals in the most insignificant bit\r\n    // transform y so that 0 => -1 and 1 => 1\r\n    // In the texture normal, x is 0 if the normal points straight up/down and 1 if it's a round cap\r\n    // y is 1 if the normal points up, and -1 if it points down\r\n    mediump vec2 normal = mod(a_pos, 2.0);\r\n    normal.y = sign(normal.y - 0.5);\r\n    v_normal = normal;\r\n\r\n    float inset = u_gapwidth + (u_gapwidth > 0.0 ? u_antialiasing : 0.0);\r\n    float outset = u_gapwidth + u_linewidth * (u_gapwidth > 0.0 ? 2.0 : 1.0) + u_antialiasing;\r\n\r\n    // Scale the extrusion vector down to a normal and then up by the line width\r\n    // of this vertex.\r\n    mediump vec2 dist = outset * a_extrude * scale;\r\n\r\n    // Calculate the offset when drawing a line that is to the side of the actual line.\r\n    // We do this by creating a vector that points towards the extrude, but rotate\r\n    // it when we're drawing round end points (a_direction = -1 or 1) since their\r\n    // extrude vector points in another direction.\r\n    mediump float u = 0.5 * a_direction;\r\n    mediump float t = 1.0 - abs(u);\r\n    mediump vec2 offset = u_offset * a_extrude * scale * normal.y * mat2(t, -u, u, t);\r\n\r\n    // Remove the texture normal bit of the position before scaling it with the\r\n    // model/view matrix.\r\n    gl_Position = u_matrix * vec4(floor(a_pos * 0.5) + (offset + dist) / u_ratio, 0.0, 1.0);\r\n\r\n    v_tex_a = vec2(a_linesofar * u_patternscale_a.x, normal.y * u_patternscale_a.y + u_tex_y_a);\r\n    v_tex_b = vec2(a_linesofar * u_patternscale_b.x, normal.y * u_patternscale_b.y + u_tex_y_b);\r\n\r\n    // position of y on the screen\r\n    float y = gl_Position.y / gl_Position.w;\r\n\r\n    // how much features are squished in the y direction by the tilt\r\n    float squish_scale = length(a_extrude) / length(u_antialiasingmatrix * a_extrude);\r\n\r\n    // how much features are squished in all directions by the perspectiveness\r\n    float perspective_scale = 1.0 / (1.0 - min(y * u_extra, 0.9));\r\n\r\n    v_linewidth = vec2(outset, inset);\r\n    v_gamma_scale = perspective_scale * squish_scale;\r\n}\r\n"
   },
   outline: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\n#pragma mapbox: define lowp vec4 outline_color\n#pragma mapbox: define lowp float opacity\n\nvarying vec2 v_pos;\n\nvoid main() {\n    #pragma mapbox: initialize lowp vec4 outline_color\n    #pragma mapbox: initialize lowp float opacity\n\n    float dist = length(v_pos - gl_FragCoord.xy);\n    float alpha = smoothstep(1.0, 0.0, dist);\n    gl_FragColor = outline_color * (alpha * opacity);\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nattribute vec2 a_pos;\n\nuniform mat4 u_matrix;\nuniform vec2 u_world;\n\nvarying vec2 v_pos;\n\n#pragma mapbox: define lowp vec4 outline_color\n#pragma mapbox: define lowp float opacity\n\nvoid main() {\n    #pragma mapbox: initialize lowp vec4 outline_color\n    #pragma mapbox: initialize lowp float opacity\n\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\n    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\n#pragma mapbox: define lowp vec4 outline_color\r\n#pragma mapbox: define lowp float opacity\r\n\r\nvarying vec2 v_pos;\r\n\r\nvoid main() {\r\n    #pragma mapbox: initialize lowp vec4 outline_color\r\n    #pragma mapbox: initialize lowp float opacity\r\n\r\n    float dist = length(v_pos - gl_FragCoord.xy);\r\n    float alpha = smoothstep(1.0, 0.0, dist);\r\n    gl_FragColor = outline_color * (alpha * opacity);\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nattribute vec2 a_pos;\r\n\r\nuniform mat4 u_matrix;\r\nuniform vec2 u_world;\r\n\r\nvarying vec2 v_pos;\r\n\r\n#pragma mapbox: define lowp vec4 outline_color\r\n#pragma mapbox: define lowp float opacity\r\n\r\nvoid main() {\r\n    #pragma mapbox: initialize lowp vec4 outline_color\r\n    #pragma mapbox: initialize lowp float opacity\r\n\r\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\r\n    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;\r\n}\r\n"
   },
   outlinepattern: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform float u_opacity;\nuniform vec2 u_pattern_tl_a;\nuniform vec2 u_pattern_br_a;\nuniform vec2 u_pattern_tl_b;\nuniform vec2 u_pattern_br_b;\nuniform float u_mix;\n\nuniform sampler2D u_image;\n\nvarying vec2 v_pos_a;\nvarying vec2 v_pos_b;\nvarying vec2 v_pos;\n\nvoid main() {\n    vec2 imagecoord = mod(v_pos_a, 1.0);\n    vec2 pos = mix(u_pattern_tl_a, u_pattern_br_a, imagecoord);\n    vec4 color1 = texture2D(u_image, pos);\n\n    vec2 imagecoord_b = mod(v_pos_b, 1.0);\n    vec2 pos2 = mix(u_pattern_tl_b, u_pattern_br_b, imagecoord_b);\n    vec4 color2 = texture2D(u_image, pos2);\n\n    // find distance to outline for alpha interpolation\n\n    float dist = length(v_pos - gl_FragCoord.xy);\n    float alpha = smoothstep(1.0, 0.0, dist);\n    \n\n    gl_FragColor = mix(color1, color2, u_mix) * alpha * u_opacity;\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform vec2 u_pattern_size_a;\nuniform vec2 u_pattern_size_b;\nuniform vec2 u_pixel_coord_upper;\nuniform vec2 u_pixel_coord_lower;\nuniform float u_scale_a;\nuniform float u_scale_b;\nuniform float u_tile_units_to_pixels;\n\nattribute vec2 a_pos;\n\nuniform mat4 u_matrix;\nuniform vec2 u_world;\n\nvarying vec2 v_pos_a;\nvarying vec2 v_pos_b;\nvarying vec2 v_pos;\n\nvoid main() {\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\n    vec2 scaled_size_a = u_scale_a * u_pattern_size_a;\n    vec2 scaled_size_b = u_scale_b * u_pattern_size_b;\n\n    // the correct offset needs to be calculated.\n    //\n    // The offset depends on how many pixels are between the world origin and\n    // the edge of the tile:\n    // vec2 offset = mod(pixel_coord, size)\n    //\n    // At high zoom levels there are a ton of pixels between the world origin\n    // and the edge of the tile. The glsl spec only guarantees 16 bits of\n    // precision for highp floats. We need more than that.\n    //\n    // The pixel_coord is passed in as two 16 bit values:\n    // pixel_coord_upper = floor(pixel_coord / 2^16)\n    // pixel_coord_lower = mod(pixel_coord, 2^16)\n    //\n    // The offset is calculated in a series of steps that should preserve this precision:\n    vec2 offset_a = mod(mod(mod(u_pixel_coord_upper, scaled_size_a) * 256.0, scaled_size_a) * 256.0 + u_pixel_coord_lower, scaled_size_a);\n    vec2 offset_b = mod(mod(mod(u_pixel_coord_upper, scaled_size_b) * 256.0, scaled_size_b) * 256.0 + u_pixel_coord_lower, scaled_size_b);\n\n    v_pos_a = (u_tile_units_to_pixels * a_pos + offset_a) / scaled_size_a;\n    v_pos_b = (u_tile_units_to_pixels * a_pos + offset_b) / scaled_size_b;\n\n    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform float u_opacity;\r\nuniform vec2 u_pattern_tl_a;\r\nuniform vec2 u_pattern_br_a;\r\nuniform vec2 u_pattern_tl_b;\r\nuniform vec2 u_pattern_br_b;\r\nuniform float u_mix;\r\n\r\nuniform sampler2D u_image;\r\n\r\nvarying vec2 v_pos_a;\r\nvarying vec2 v_pos_b;\r\nvarying vec2 v_pos;\r\n\r\nvoid main() {\r\n    vec2 imagecoord = mod(v_pos_a, 1.0);\r\n    vec2 pos = mix(u_pattern_tl_a, u_pattern_br_a, imagecoord);\r\n    vec4 color1 = texture2D(u_image, pos);\r\n\r\n    vec2 imagecoord_b = mod(v_pos_b, 1.0);\r\n    vec2 pos2 = mix(u_pattern_tl_b, u_pattern_br_b, imagecoord_b);\r\n    vec4 color2 = texture2D(u_image, pos2);\r\n\r\n    // find distance to outline for alpha interpolation\r\n\r\n    float dist = length(v_pos - gl_FragCoord.xy);\r\n    float alpha = smoothstep(1.0, 0.0, dist);\r\n    \r\n\r\n    gl_FragColor = mix(color1, color2, u_mix) * alpha * u_opacity;\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform vec2 u_pattern_size_a;\r\nuniform vec2 u_pattern_size_b;\r\nuniform vec2 u_pixel_coord_upper;\r\nuniform vec2 u_pixel_coord_lower;\r\nuniform float u_scale_a;\r\nuniform float u_scale_b;\r\nuniform float u_tile_units_to_pixels;\r\n\r\nattribute vec2 a_pos;\r\n\r\nuniform mat4 u_matrix;\r\nuniform vec2 u_world;\r\n\r\nvarying vec2 v_pos_a;\r\nvarying vec2 v_pos_b;\r\nvarying vec2 v_pos;\r\n\r\nvoid main() {\r\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\r\n    vec2 scaled_size_a = u_scale_a * u_pattern_size_a;\r\n    vec2 scaled_size_b = u_scale_b * u_pattern_size_b;\r\n\r\n    // the correct offset needs to be calculated.\r\n    //\r\n    // The offset depends on how many pixels are between the world origin and\r\n    // the edge of the tile:\r\n    // vec2 offset = mod(pixel_coord, size)\r\n    //\r\n    // At high zoom levels there are a ton of pixels between the world origin\r\n    // and the edge of the tile. The glsl spec only guarantees 16 bits of\r\n    // precision for highp floats. We need more than that.\r\n    //\r\n    // The pixel_coord is passed in as two 16 bit values:\r\n    // pixel_coord_upper = floor(pixel_coord / 2^16)\r\n    // pixel_coord_lower = mod(pixel_coord, 2^16)\r\n    //\r\n    // The offset is calculated in a series of steps that should preserve this precision:\r\n    vec2 offset_a = mod(mod(mod(u_pixel_coord_upper, scaled_size_a) * 256.0, scaled_size_a) * 256.0 + u_pixel_coord_lower, scaled_size_a);\r\n    vec2 offset_b = mod(mod(mod(u_pixel_coord_upper, scaled_size_b) * 256.0, scaled_size_b) * 256.0 + u_pixel_coord_lower, scaled_size_b);\r\n\r\n    v_pos_a = (u_tile_units_to_pixels * a_pos + offset_a) / scaled_size_a;\r\n    v_pos_b = (u_tile_units_to_pixels * a_pos + offset_b) / scaled_size_b;\r\n\r\n    v_pos = (gl_Position.xy / gl_Position.w + 1.0) / 2.0 * u_world;\r\n}\r\n"
   },
   pattern: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform float u_opacity;\nuniform vec2 u_pattern_tl_a;\nuniform vec2 u_pattern_br_a;\nuniform vec2 u_pattern_tl_b;\nuniform vec2 u_pattern_br_b;\nuniform float u_mix;\n\nuniform sampler2D u_image;\n\nvarying vec2 v_pos_a;\nvarying vec2 v_pos_b;\n\nvoid main() {\n\n    vec2 imagecoord = mod(v_pos_a, 1.0);\n    vec2 pos = mix(u_pattern_tl_a, u_pattern_br_a, imagecoord);\n    vec4 color1 = texture2D(u_image, pos);\n\n    vec2 imagecoord_b = mod(v_pos_b, 1.0);\n    vec2 pos2 = mix(u_pattern_tl_b, u_pattern_br_b, imagecoord_b);\n    vec4 color2 = texture2D(u_image, pos2);\n\n    gl_FragColor = mix(color1, color2, u_mix) * u_opacity;\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform mat4 u_matrix;\nuniform vec2 u_pattern_size_a;\nuniform vec2 u_pattern_size_b;\nuniform vec2 u_pixel_coord_upper;\nuniform vec2 u_pixel_coord_lower;\nuniform float u_scale_a;\nuniform float u_scale_b;\nuniform float u_tile_units_to_pixels;\n\nattribute vec2 a_pos;\n\nvarying vec2 v_pos_a;\nvarying vec2 v_pos_b;\n\nvoid main() {\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\n    vec2 scaled_size_a = u_scale_a * u_pattern_size_a;\n    vec2 scaled_size_b = u_scale_b * u_pattern_size_b;\n\n    // the correct offset needs to be calculated.\n    //\n    // The offset depends on how many pixels are between the world origin and\n    // the edge of the tile:\n    // vec2 offset = mod(pixel_coord, size)\n    //\n    // At high zoom levels there are a ton of pixels between the world origin\n    // and the edge of the tile. The glsl spec only guarantees 16 bits of\n    // precision for highp floats. We need more than that.\n    //\n    // The pixel_coord is passed in as two 16 bit values:\n    // pixel_coord_upper = floor(pixel_coord / 2^16)\n    // pixel_coord_lower = mod(pixel_coord, 2^16)\n    //\n    // The offset is calculated in a series of steps that should preserve this precision:\n    vec2 offset_a = mod(mod(mod(u_pixel_coord_upper, scaled_size_a) * 256.0, scaled_size_a) * 256.0 + u_pixel_coord_lower, scaled_size_a);\n    vec2 offset_b = mod(mod(mod(u_pixel_coord_upper, scaled_size_b) * 256.0, scaled_size_b) * 256.0 + u_pixel_coord_lower, scaled_size_b);\n\n    v_pos_a = (u_tile_units_to_pixels * a_pos + offset_a) / scaled_size_a;\n    v_pos_b = (u_tile_units_to_pixels * a_pos + offset_b) / scaled_size_b;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform float u_opacity;\r\nuniform vec2 u_pattern_tl_a;\r\nuniform vec2 u_pattern_br_a;\r\nuniform vec2 u_pattern_tl_b;\r\nuniform vec2 u_pattern_br_b;\r\nuniform float u_mix;\r\n\r\nuniform sampler2D u_image;\r\n\r\nvarying vec2 v_pos_a;\r\nvarying vec2 v_pos_b;\r\n\r\nvoid main() {\r\n\r\n    vec2 imagecoord = mod(v_pos_a, 1.0);\r\n    vec2 pos = mix(u_pattern_tl_a, u_pattern_br_a, imagecoord);\r\n    vec4 color1 = texture2D(u_image, pos);\r\n\r\n    vec2 imagecoord_b = mod(v_pos_b, 1.0);\r\n    vec2 pos2 = mix(u_pattern_tl_b, u_pattern_br_b, imagecoord_b);\r\n    vec4 color2 = texture2D(u_image, pos2);\r\n\r\n    gl_FragColor = mix(color1, color2, u_mix) * u_opacity;\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform mat4 u_matrix;\r\nuniform vec2 u_pattern_size_a;\r\nuniform vec2 u_pattern_size_b;\r\nuniform vec2 u_pixel_coord_upper;\r\nuniform vec2 u_pixel_coord_lower;\r\nuniform float u_scale_a;\r\nuniform float u_scale_b;\r\nuniform float u_tile_units_to_pixels;\r\n\r\nattribute vec2 a_pos;\r\n\r\nvarying vec2 v_pos_a;\r\nvarying vec2 v_pos_b;\r\n\r\nvoid main() {\r\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\r\n    vec2 scaled_size_a = u_scale_a * u_pattern_size_a;\r\n    vec2 scaled_size_b = u_scale_b * u_pattern_size_b;\r\n\r\n    // the correct offset needs to be calculated.\r\n    //\r\n    // The offset depends on how many pixels are between the world origin and\r\n    // the edge of the tile:\r\n    // vec2 offset = mod(pixel_coord, size)\r\n    //\r\n    // At high zoom levels there are a ton of pixels between the world origin\r\n    // and the edge of the tile. The glsl spec only guarantees 16 bits of\r\n    // precision for highp floats. We need more than that.\r\n    //\r\n    // The pixel_coord is passed in as two 16 bit values:\r\n    // pixel_coord_upper = floor(pixel_coord / 2^16)\r\n    // pixel_coord_lower = mod(pixel_coord, 2^16)\r\n    //\r\n    // The offset is calculated in a series of steps that should preserve this precision:\r\n    vec2 offset_a = mod(mod(mod(u_pixel_coord_upper, scaled_size_a) * 256.0, scaled_size_a) * 256.0 + u_pixel_coord_lower, scaled_size_a);\r\n    vec2 offset_b = mod(mod(mod(u_pixel_coord_upper, scaled_size_b) * 256.0, scaled_size_b) * 256.0 + u_pixel_coord_lower, scaled_size_b);\r\n\r\n    v_pos_a = (u_tile_units_to_pixels * a_pos + offset_a) / scaled_size_a;\r\n    v_pos_b = (u_tile_units_to_pixels * a_pos + offset_b) / scaled_size_b;\r\n}\r\n"
   },
   raster: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform float u_opacity0;\nuniform float u_opacity1;\nuniform sampler2D u_image0;\nuniform sampler2D u_image1;\nvarying vec2 v_pos0;\nvarying vec2 v_pos1;\n\nuniform float u_brightness_low;\nuniform float u_brightness_high;\n\nuniform float u_saturation_factor;\nuniform float u_contrast_factor;\nuniform vec3 u_spin_weights;\n\nvoid main() {\n\n    // read and cross-fade colors from the main and parent tiles\n    vec4 color0 = texture2D(u_image0, v_pos0);\n    vec4 color1 = texture2D(u_image1, v_pos1);\n    vec4 color = color0 * u_opacity0 + color1 * u_opacity1;\n    vec3 rgb = color.rgb;\n\n    // spin\n    rgb = vec3(\n        dot(rgb, u_spin_weights.xyz),\n        dot(rgb, u_spin_weights.zxy),\n        dot(rgb, u_spin_weights.yzx));\n\n    // saturation\n    float average = (color.r + color.g + color.b) / 3.0;\n    rgb += (average - rgb) * u_saturation_factor;\n\n    // contrast\n    rgb = (rgb - 0.5) * u_contrast_factor + 0.5;\n\n    // brightness\n    vec3 u_high_vec = vec3(u_brightness_low, u_brightness_low, u_brightness_low);\n    vec3 u_low_vec = vec3(u_brightness_high, u_brightness_high, u_brightness_high);\n\n    gl_FragColor = vec4(mix(u_high_vec, u_low_vec, rgb), color.a);\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform mat4 u_matrix;\nuniform vec2 u_tl_parent;\nuniform float u_scale_parent;\nuniform float u_buffer_scale;\n\nattribute vec2 a_pos;\nattribute vec2 a_texture_pos;\n\nvarying vec2 v_pos0;\nvarying vec2 v_pos1;\n\nvoid main() {\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\n    v_pos0 = (((a_texture_pos / 32767.0) - 0.5) / u_buffer_scale ) + 0.5;\n    v_pos1 = (v_pos0 * u_scale_parent) + u_tl_parent;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform float u_opacity0;\r\nuniform float u_opacity1;\r\nuniform sampler2D u_image0;\r\nuniform sampler2D u_image1;\r\nvarying vec2 v_pos0;\r\nvarying vec2 v_pos1;\r\n\r\nuniform float u_brightness_low;\r\nuniform float u_brightness_high;\r\n\r\nuniform float u_saturation_factor;\r\nuniform float u_contrast_factor;\r\nuniform vec3 u_spin_weights;\r\n\r\nvoid main() {\r\n\r\n    // read and cross-fade colors from the main and parent tiles\r\n    vec4 color0 = texture2D(u_image0, v_pos0);\r\n    vec4 color1 = texture2D(u_image1, v_pos1);\r\n    vec4 color = color0 * u_opacity0 + color1 * u_opacity1;\r\n    vec3 rgb = color.rgb;\r\n\r\n    // spin\r\n    rgb = vec3(\r\n        dot(rgb, u_spin_weights.xyz),\r\n        dot(rgb, u_spin_weights.zxy),\r\n        dot(rgb, u_spin_weights.yzx));\r\n\r\n    // saturation\r\n    float average = (color.r + color.g + color.b) / 3.0;\r\n    rgb += (average - rgb) * u_saturation_factor;\r\n\r\n    // contrast\r\n    rgb = (rgb - 0.5) * u_contrast_factor + 0.5;\r\n\r\n    // brightness\r\n    vec3 u_high_vec = vec3(u_brightness_low, u_brightness_low, u_brightness_low);\r\n    vec3 u_low_vec = vec3(u_brightness_high, u_brightness_high, u_brightness_high);\r\n\r\n    gl_FragColor = vec4(mix(u_high_vec, u_low_vec, rgb), color.a);\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform mat4 u_matrix;\r\nuniform vec2 u_tl_parent;\r\nuniform float u_scale_parent;\r\nuniform float u_buffer_scale;\r\n\r\nattribute vec2 a_pos;\r\nattribute vec2 a_texture_pos;\r\n\r\nvarying vec2 v_pos0;\r\nvarying vec2 v_pos1;\r\n\r\nvoid main() {\r\n    gl_Position = u_matrix * vec4(a_pos, 0, 1);\r\n    v_pos0 = (((a_texture_pos / 32767.0) - 0.5) / u_buffer_scale ) + 0.5;\r\n    v_pos1 = (v_pos0 * u_scale_parent) + u_tl_parent;\r\n}\r\n"
   },
   icon: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform sampler2D u_texture;\nuniform sampler2D u_fadetexture;\nuniform lowp float u_opacity;\n\nvarying vec2 v_tex;\nvarying vec2 v_fade_tex;\n\nvoid main() {\n    lowp float alpha = texture2D(u_fadetexture, v_fade_tex).a * u_opacity;\n    gl_FragColor = texture2D(u_texture, v_tex) * alpha;\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nattribute vec2 a_pos;\nattribute vec2 a_offset;\nattribute vec2 a_texture_pos;\nattribute vec4 a_data;\n\n\n// matrix is for the vertex position.\nuniform mat4 u_matrix;\n\nuniform mediump float u_zoom;\nuniform bool u_rotate_with_map;\nuniform vec2 u_extrude_scale;\n\nuniform vec2 u_texsize;\n\nvarying vec2 v_tex;\nvarying vec2 v_fade_tex;\n\nvoid main() {\n    vec2 a_tex = a_texture_pos.xy;\n    mediump float a_labelminzoom = a_data[0];\n    mediump vec2 a_zoom = a_data.pq;\n    mediump float a_minzoom = a_zoom[0];\n    mediump float a_maxzoom = a_zoom[1];\n\n    // u_zoom is the current zoom level adjusted for the change in font size\n    mediump float z = 2.0 - step(a_minzoom, u_zoom) - (1.0 - step(a_maxzoom, u_zoom));\n\n    vec2 extrude = u_extrude_scale * (a_offset / 64.0);\n    if (u_rotate_with_map) {\n        gl_Position = u_matrix * vec4(a_pos + extrude, 0, 1);\n        gl_Position.z += z * gl_Position.w;\n    } else {\n        gl_Position = u_matrix * vec4(a_pos, 0, 1) + vec4(extrude, 0, 0);\n    }\n\n    v_tex = a_tex / u_texsize;\n    v_fade_tex = vec2(a_labelminzoom / 255.0, 0.0);\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform sampler2D u_texture;\r\nuniform sampler2D u_fadetexture;\r\nuniform lowp float u_opacity;\r\n\r\nvarying vec2 v_tex;\r\nvarying vec2 v_fade_tex;\r\n\r\nvoid main() {\r\n    lowp float alpha = texture2D(u_fadetexture, v_fade_tex).a * u_opacity;\r\n    gl_FragColor = texture2D(u_texture, v_tex) * alpha;\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nattribute vec2 a_pos;\r\nattribute vec2 a_offset;\r\nattribute vec2 a_texture_pos;\r\nattribute vec4 a_data;\r\n\r\n\r\n// matrix is for the vertex position.\r\nuniform mat4 u_matrix;\r\n\r\nuniform mediump float u_zoom;\r\nuniform bool u_rotate_with_map;\r\nuniform vec2 u_extrude_scale;\r\n\r\nuniform vec2 u_texsize;\r\n\r\nvarying vec2 v_tex;\r\nvarying vec2 v_fade_tex;\r\n\r\nvoid main() {\r\n    vec2 a_tex = a_texture_pos.xy;\r\n    mediump float a_labelminzoom = a_data[0];\r\n    mediump vec2 a_zoom = a_data.pq;\r\n    mediump float a_minzoom = a_zoom[0];\r\n    mediump float a_maxzoom = a_zoom[1];\r\n\r\n    // u_zoom is the current zoom level adjusted for the change in font size\r\n    mediump float z = 2.0 - step(a_minzoom, u_zoom) - (1.0 - step(a_maxzoom, u_zoom));\r\n\r\n    vec2 extrude = u_extrude_scale * (a_offset / 64.0);\r\n    if (u_rotate_with_map) {\r\n        gl_Position = u_matrix * vec4(a_pos + extrude, 0, 1);\r\n        gl_Position.z += z * gl_Position.w;\r\n    } else {\r\n        gl_Position = u_matrix * vec4(a_pos, 0, 1) + vec4(extrude, 0, 0);\r\n    }\r\n\r\n    v_tex = a_tex / u_texsize;\r\n    v_fade_tex = vec2(a_labelminzoom / 255.0, 0.0);\r\n}\r\n"
   },
   sdf: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform sampler2D u_texture;\nuniform sampler2D u_fadetexture;\nuniform lowp vec4 u_color;\nuniform lowp float u_opacity;\nuniform lowp float u_buffer;\nuniform lowp float u_gamma;\n\nvarying vec2 v_tex;\nvarying vec2 v_fade_tex;\nvarying float v_gamma_scale;\n\nvoid main() {\n    lowp float dist = texture2D(u_texture, v_tex).a;\n    lowp float fade_alpha = texture2D(u_fadetexture, v_fade_tex).a;\n    lowp float gamma = u_gamma * v_gamma_scale;\n    lowp float alpha = smoothstep(u_buffer - gamma, u_buffer + gamma, dist) * fade_alpha;\n\n    gl_FragColor = u_color * (alpha * u_opacity);\n\n#ifdef OVERDRAW_INSPECTOR\n    gl_FragColor = vec4(1.0);\n#endif\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nconst float PI = 3.141592653589793;\n\nattribute vec2 a_pos;\nattribute vec2 a_offset;\nattribute vec2 a_texture_pos;\nattribute vec4 a_data;\n\n\n// matrix is for the vertex position.\nuniform mat4 u_matrix;\n\nuniform mediump float u_zoom;\nuniform bool u_rotate_with_map;\nuniform bool u_pitch_with_map;\nuniform mediump float u_pitch;\nuniform mediump float u_bearing;\nuniform mediump float u_aspect_ratio;\nuniform vec2 u_extrude_scale;\n\nuniform vec2 u_texsize;\n\nvarying vec2 v_tex;\nvarying vec2 v_fade_tex;\nvarying float v_gamma_scale;\n\nvoid main() {\n    vec2 a_tex = a_texture_pos.xy;\n    mediump float a_labelminzoom = a_data[0];\n    mediump vec2 a_zoom = a_data.pq;\n    mediump float a_minzoom = a_zoom[0];\n    mediump float a_maxzoom = a_zoom[1];\n\n    // u_zoom is the current zoom level adjusted for the change in font size\n    mediump float z = 2.0 - step(a_minzoom, u_zoom) - (1.0 - step(a_maxzoom, u_zoom));\n\n    // pitch-alignment: map\n    // rotation-alignment: map | viewport\n    if (u_pitch_with_map) {\n        lowp float angle = u_rotate_with_map ? (a_data[1] / 256.0 * 2.0 * PI) : u_bearing;\n        lowp float asin = sin(angle);\n        lowp float acos = cos(angle);\n        mat2 RotationMatrix = mat2(acos, asin, -1.0 * asin, acos);\n        vec2 offset = RotationMatrix * a_offset;\n        vec2 extrude = u_extrude_scale * (offset / 64.0);\n        gl_Position = u_matrix * vec4(a_pos + extrude, 0, 1);\n        gl_Position.z += z * gl_Position.w;\n    // pitch-alignment: viewport\n    // rotation-alignment: map\n    } else if (u_rotate_with_map) {\n        // foreshortening factor to apply on pitched maps\n        // as a label goes from horizontal <=> vertical in angle\n        // it goes from 0% foreshortening to up to around 70% foreshortening\n        lowp float pitchfactor = 1.0 - cos(u_pitch * sin(u_pitch * 0.75));\n\n        lowp float lineangle = a_data[1] / 256.0 * 2.0 * PI;\n\n        // use the lineangle to position points a,b along the line\n        // project the points and calculate the label angle in projected space\n        // this calculation allows labels to be rendered unskewed on pitched maps\n        vec4 a = u_matrix * vec4(a_pos, 0, 1);\n        vec4 b = u_matrix * vec4(a_pos + vec2(cos(lineangle),sin(lineangle)), 0, 1);\n        lowp float angle = atan((b[1]/b[3] - a[1]/a[3])/u_aspect_ratio, b[0]/b[3] - a[0]/a[3]);\n        lowp float asin = sin(angle);\n        lowp float acos = cos(angle);\n        mat2 RotationMatrix = mat2(acos, -1.0 * asin, asin, acos);\n\n        vec2 offset = RotationMatrix * (vec2((1.0-pitchfactor)+(pitchfactor*cos(angle*2.0)), 1.0) * a_offset);\n        vec2 extrude = u_extrude_scale * (offset / 64.0);\n        gl_Position = u_matrix * vec4(a_pos, 0, 1) + vec4(extrude, 0, 0);\n        gl_Position.z += z * gl_Position.w;\n    // pitch-alignment: viewport\n    // rotation-alignment: viewport\n    } else {\n        vec2 extrude = u_extrude_scale * (a_offset / 64.0);\n        gl_Position = u_matrix * vec4(a_pos, 0, 1) + vec4(extrude, 0, 0);\n    }\n\n    v_gamma_scale = (gl_Position.w - 0.5);\n\n    v_tex = a_tex / u_texsize;\n    v_fade_tex = vec2(a_labelminzoom / 255.0, 0.0);\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform sampler2D u_texture;\r\nuniform sampler2D u_fadetexture;\r\nuniform lowp vec4 u_color;\r\nuniform lowp float u_opacity;\r\nuniform lowp float u_buffer;\r\nuniform lowp float u_gamma;\r\n\r\nvarying vec2 v_tex;\r\nvarying vec2 v_fade_tex;\r\nvarying float v_gamma_scale;\r\n\r\nvoid main() {\r\n    lowp float dist = texture2D(u_texture, v_tex).a;\r\n    lowp float fade_alpha = texture2D(u_fadetexture, v_fade_tex).a;\r\n    lowp float gamma = u_gamma * v_gamma_scale;\r\n    lowp float alpha = smoothstep(u_buffer - gamma, u_buffer + gamma, dist) * fade_alpha;\r\n\r\n    gl_FragColor = u_color * (alpha * u_opacity);\r\n\r\n#ifdef OVERDRAW_INSPECTOR\r\n    gl_FragColor = vec4(1.0);\r\n#endif\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nconst float PI = 3.141592653589793;\r\n\r\nattribute vec2 a_pos;\r\nattribute vec2 a_offset;\r\nattribute vec2 a_texture_pos;\r\nattribute vec4 a_data;\r\n\r\n\r\n// matrix is for the vertex position.\r\nuniform mat4 u_matrix;\r\n\r\nuniform mediump float u_zoom;\r\nuniform bool u_rotate_with_map;\r\nuniform bool u_pitch_with_map;\r\nuniform mediump float u_pitch;\r\nuniform mediump float u_bearing;\r\nuniform mediump float u_aspect_ratio;\r\nuniform vec2 u_extrude_scale;\r\n\r\nuniform vec2 u_texsize;\r\n\r\nvarying vec2 v_tex;\r\nvarying vec2 v_fade_tex;\r\nvarying float v_gamma_scale;\r\n\r\nvoid main() {\r\n    vec2 a_tex = a_texture_pos.xy;\r\n    mediump float a_labelminzoom = a_data[0];\r\n    mediump vec2 a_zoom = a_data.pq;\r\n    mediump float a_minzoom = a_zoom[0];\r\n    mediump float a_maxzoom = a_zoom[1];\r\n\r\n    // u_zoom is the current zoom level adjusted for the change in font size\r\n    mediump float z = 2.0 - step(a_minzoom, u_zoom) - (1.0 - step(a_maxzoom, u_zoom));\r\n\r\n    // pitch-alignment: map\r\n    // rotation-alignment: map | viewport\r\n    if (u_pitch_with_map) {\r\n        lowp float angle = u_rotate_with_map ? (a_data[1] / 256.0 * 2.0 * PI) : u_bearing;\r\n        lowp float asin = sin(angle);\r\n        lowp float acos = cos(angle);\r\n        mat2 RotationMatrix = mat2(acos, asin, -1.0 * asin, acos);\r\n        vec2 offset = RotationMatrix * a_offset;\r\n        vec2 extrude = u_extrude_scale * (offset / 64.0);\r\n        gl_Position = u_matrix * vec4(a_pos + extrude, 0, 1);\r\n        gl_Position.z += z * gl_Position.w;\r\n    // pitch-alignment: viewport\r\n    // rotation-alignment: map\r\n    } else if (u_rotate_with_map) {\r\n        // foreshortening factor to apply on pitched maps\r\n        // as a label goes from horizontal <=> vertical in angle\r\n        // it goes from 0% foreshortening to up to around 70% foreshortening\r\n        lowp float pitchfactor = 1.0 - cos(u_pitch * sin(u_pitch * 0.75));\r\n\r\n        lowp float lineangle = a_data[1] / 256.0 * 2.0 * PI;\r\n\r\n        // use the lineangle to position points a,b along the line\r\n        // project the points and calculate the label angle in projected space\r\n        // this calculation allows labels to be rendered unskewed on pitched maps\r\n        vec4 a = u_matrix * vec4(a_pos, 0, 1);\r\n        vec4 b = u_matrix * vec4(a_pos + vec2(cos(lineangle),sin(lineangle)), 0, 1);\r\n        lowp float angle = atan((b[1]/b[3] - a[1]/a[3])/u_aspect_ratio, b[0]/b[3] - a[0]/a[3]);\r\n        lowp float asin = sin(angle);\r\n        lowp float acos = cos(angle);\r\n        mat2 RotationMatrix = mat2(acos, -1.0 * asin, asin, acos);\r\n\r\n        vec2 offset = RotationMatrix * (vec2((1.0-pitchfactor)+(pitchfactor*cos(angle*2.0)), 1.0) * a_offset);\r\n        vec2 extrude = u_extrude_scale * (offset / 64.0);\r\n        gl_Position = u_matrix * vec4(a_pos, 0, 1) + vec4(extrude, 0, 0);\r\n        gl_Position.z += z * gl_Position.w;\r\n    // pitch-alignment: viewport\r\n    // rotation-alignment: viewport\r\n    } else {\r\n        vec2 extrude = u_extrude_scale * (a_offset / 64.0);\r\n        gl_Position = u_matrix * vec4(a_pos, 0, 1) + vec4(extrude, 0, 0);\r\n    }\r\n\r\n    v_gamma_scale = (gl_Position.w - 0.5);\r\n\r\n    v_tex = a_tex / u_texsize;\r\n    v_fade_tex = vec2(a_labelminzoom / 255.0, 0.0);\r\n}\r\n"
   },
   collisionbox: {
-    fragmentSource: "#ifdef GL_ES\nprecision mediump float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nuniform float u_zoom;\nuniform float u_maxzoom;\n\nvarying float v_max_zoom;\nvarying float v_placement_zoom;\n\nvoid main() {\n\n    float alpha = 0.5;\n\n    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0) * alpha;\n\n    if (v_placement_zoom > u_zoom) {\n        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0) * alpha;\n    }\n\n    if (u_zoom >= v_max_zoom) {\n        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0) * alpha * 0.25;\n    }\n\n    if (v_placement_zoom >= u_maxzoom) {\n        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0) * alpha * 0.2;\n    }\n}\n",
-    vertexSource: "#ifdef GL_ES\nprecision highp float;\n#else\n#define lowp\n#define mediump\n#define highp\n#endif\n\nattribute vec2 a_pos;\nattribute vec2 a_extrude;\nattribute vec2 a_data;\n\nuniform mat4 u_matrix;\nuniform float u_scale;\n\nvarying float v_max_zoom;\nvarying float v_placement_zoom;\n\nvoid main() {\n    gl_Position = u_matrix * vec4(a_pos + a_extrude / u_scale, 0.0, 1.0);\n\n    v_max_zoom = a_data.x;\n    v_placement_zoom = a_data.y;\n}\n"
+    fragmentSource: "#ifdef GL_ES\r\nprecision mediump float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nuniform float u_zoom;\r\nuniform float u_maxzoom;\r\n\r\nvarying float v_max_zoom;\r\nvarying float v_placement_zoom;\r\n\r\nvoid main() {\r\n\r\n    float alpha = 0.5;\r\n\r\n    gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0) * alpha;\r\n\r\n    if (v_placement_zoom > u_zoom) {\r\n        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0) * alpha;\r\n    }\r\n\r\n    if (u_zoom >= v_max_zoom) {\r\n        gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0) * alpha * 0.25;\r\n    }\r\n\r\n    if (v_placement_zoom >= u_maxzoom) {\r\n        gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0) * alpha * 0.2;\r\n    }\r\n}\r\n",
+    vertexSource: "#ifdef GL_ES\r\nprecision highp float;\r\n#else\r\n#define lowp\r\n#define mediump\r\n#define highp\r\n#endif\r\n\r\nattribute vec2 a_pos;\r\nattribute vec2 a_extrude;\r\nattribute vec2 a_data;\r\n\r\nuniform mat4 u_matrix;\r\nuniform float u_scale;\r\n\r\nvarying float v_max_zoom;\r\nvarying float v_placement_zoom;\r\n\r\nvoid main() {\r\n    gl_Position = u_matrix * vec4(a_pos + a_extrude / u_scale, 0.0, 1.0);\r\n\r\n    v_max_zoom = a_data.x;\r\n    v_placement_zoom = a_data.y;\r\n}\r\n"
   }
 };
 
-module.exports.util = "float evaluate_zoom_function_1(const vec4 values, const float t) {\n    if (t < 1.0) {\n        return mix(values[0], values[1], t);\n    } else if (t < 2.0) {\n        return mix(values[1], values[2], t - 1.0);\n    } else {\n        return mix(values[2], values[3], t - 2.0);\n    }\n}\nvec4 evaluate_zoom_function_4(const vec4 value0, const vec4 value1, const vec4 value2, const vec4 value3, const float t) {\n    if (t < 1.0) {\n        return mix(value0, value1, t);\n    } else if (t < 2.0) {\n        return mix(value1, value2, t - 1.0);\n    } else {\n        return mix(value2, value3, t - 2.0);\n    }\n}\n";
+module.exports.util = "float evaluate_zoom_function_1(const vec4 values, const float t) {\r\n    if (t < 1.0) {\r\n        return mix(values[0], values[1], t);\r\n    } else if (t < 2.0) {\r\n        return mix(values[1], values[2], t - 1.0);\r\n    } else {\r\n        return mix(values[2], values[3], t - 2.0);\r\n    }\r\n}\r\nvec4 evaluate_zoom_function_4(const vec4 value0, const vec4 value1, const vec4 value2, const vec4 value3, const float t) {\r\n    if (t < 1.0) {\r\n        return mix(value0, value1, t);\r\n    } else if (t < 2.0) {\r\n        return mix(value1, value2, t - 1.0);\r\n    } else {\r\n        return mix(value2, value3, t - 2.0);\r\n    }\r\n}\r\n";
 
 },{"path":184}],43:[function(require,module,exports){
 'use strict';
@@ -40360,7 +40354,7 @@ module.exports={
         "spec": ">=0.22.0 <0.23.0",
         "type": "range"
       },
-      "/home/etienne/Documents/plotly/plotly.js"
+      "c:\\Dev\\Cptplotly"
     ]
   ],
   "_from": "mapbox-gl@>=0.22.0 <0.23.0",
@@ -40394,7 +40388,7 @@ module.exports={
   "_shasum": "92a965547d4c2f24c22cbc487eeda48694cb627a",
   "_shrinkwrap": null,
   "_spec": "mapbox-gl@^0.22.0",
-  "_where": "/home/etienne/Documents/plotly/plotly.js",
+  "_where": "c:\\Dev\\Cptplotly",
   "browser": {
     "./js/util/ajax.js": "./js/util/browser/ajax.js",
     "./js/util/browser.js": "./js/util/browser/browser.js",
@@ -41806,6 +41800,10 @@ process.off = noop;
 process.removeListener = noop;
 process.removeAllListeners = noop;
 process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
@@ -46774,7 +46772,6 @@ module.exports = function handleAnnotationDefaults(annIn, annOut, fullLayout, op
     if(!(visible || clickToShow)) return annOut;
 
     coerce('opacity');
-    coerce('align');
     coerce('bgcolor');
 
     var borderColor = coerce('bordercolor'),
@@ -46788,6 +46785,12 @@ module.exports = function handleAnnotationDefaults(annIn, annOut, fullLayout, op
     coerce('text', showArrow ? ' ' : 'new text');
     coerce('textangle');
     Lib.coerceFont(coerce, 'font', fullLayout.font);
+
+    coerce('width');
+    coerce('align');
+
+    var h = coerce('height');
+    if(h) coerce('valign');
 
     // positioning
     var axLetters = ['x', 'y'],
@@ -46956,6 +46959,20 @@ module.exports = {
     font: extendFlat({}, fontAttrs, {
         
     }),
+    width: {
+        valType: 'number',
+        min: 1,
+        dflt: null,
+        
+        
+    },
+    height: {
+        valType: 'number',
+        min: 1,
+        dflt: null,
+        
+        
+    },
     opacity: {
         valType: 'number',
         min: 0,
@@ -46968,6 +46985,13 @@ module.exports = {
         valType: 'enumerated',
         values: ['left', 'center', 'right'],
         dflt: 'center',
+        
+        
+    },
+    valign: {
+        valType: 'enumerated',
+        values: ['top', 'middle', 'bottom'],
+        dflt: 'middle',
         
         
     },
@@ -47137,7 +47161,7 @@ module.exports = {
     }
 };
 
-},{"../../lib/extend":318,"../../plots/cartesian/constants":363,"../../plots/font_attributes":378,"./arrow_paths":215}],217:[function(require,module,exports){
+},{"../../lib/extend":318,"../../plots/cartesian/constants":363,"../../plots/font_attributes":382,"./arrow_paths":215}],217:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -47520,9 +47544,14 @@ function drawOne(gd, index) {
     var optionsIn = (layout.annotations || [])[index],
         options = fullLayout.annotations[index];
 
+    var annClipID = 'clip' + fullLayout._uid + '_ann' + index;
+
     // this annotation is gone - quit now after deleting it
     // TODO: use d3 idioms instead of deleting and redrawing every time
-    if(!optionsIn || options.visible === false) return;
+    if(!optionsIn || options.visible === false) {
+        d3.selectAll('#' + annClipID).remove();
+        return;
+    }
 
     var xa = Axes.getFromId(gd, options.xref),
         ya = Axes.getFromId(gd, options.yref),
@@ -47566,6 +47595,18 @@ function drawOne(gd, index) {
         .call(Color.stroke, options.bordercolor)
         .call(Color.fill, options.bgcolor);
 
+    var isSizeConstrained = options.width || options.height;
+
+    var annTextClip = fullLayout._defs.select('.clips')
+        .selectAll('#' + annClipID)
+        .data(isSizeConstrained ? [0] : []);
+
+    annTextClip.enter().append('clipPath')
+        .classed('annclip', true)
+        .attr('id', annClipID)
+      .append('rect');
+    annTextClip.exit().remove();
+
     var font = options.font;
 
     var annText = annTextGroupInner.append('text')
@@ -47592,19 +47633,21 @@ function drawOne(gd, index) {
         // at the end, even if their position changes
         annText.selectAll('tspan.line').attr({y: 0, x: 0});
 
-        var mathjaxGroup = annTextGroupInner.select('.annotation-math-group'),
-            hasMathjax = !mathjaxGroup.empty(),
-            anntextBB = Drawing.bBox(
-                (hasMathjax ? mathjaxGroup : annText).node()),
-            annwidth = anntextBB.width,
-            annheight = anntextBB.height,
-            outerwidth = Math.round(annwidth + 2 * borderfull),
-            outerheight = Math.round(annheight + 2 * borderfull);
+        var mathjaxGroup = annTextGroupInner.select('.annotation-math-group');
+        var hasMathjax = !mathjaxGroup.empty();
+        var anntextBB = Drawing.bBox(
+                (hasMathjax ? mathjaxGroup : annText).node());
+        var textWidth = anntextBB.width;
+        var textHeight = anntextBB.height;
+        var annWidth = options.width || textWidth;
+        var annHeight = options.height || textHeight;
+        var outerWidth = Math.round(annWidth + 2 * borderfull);
+        var outerHeight = Math.round(annHeight + 2 * borderfull);
 
 
         // save size in the annotation object for use by autoscale
-        options._w = annwidth;
-        options._h = annheight;
+        options._w = annWidth;
+        options._h = annHeight;
 
         function shiftFraction(v, anchor) {
             if(anchor === 'auto') {
@@ -47629,8 +47672,8 @@ function drawOne(gd, index) {
                 ax = Axes.getFromId(gd, axRef),
                 dimAngle = (textangle + (axLetter === 'x' ? 0 : -90)) * Math.PI / 180,
                 // note that these two can be either positive or negative
-                annSizeFromWidth = outerwidth * Math.cos(dimAngle),
-                annSizeFromHeight = outerheight * Math.sin(dimAngle),
+                annSizeFromWidth = outerWidth * Math.cos(dimAngle),
+                annSizeFromHeight = outerHeight * Math.sin(dimAngle),
                 // but this one is the positive total size
                 annSize = Math.abs(annSizeFromWidth) + Math.abs(annSizeFromHeight),
                 anchor = options[axLetter + 'anchor'],
@@ -47747,22 +47790,43 @@ function drawOne(gd, index) {
             return;
         }
 
+        var xShift = 0;
+        var yShift = 0;
+
+        if(options.align !== 'left') {
+            xShift = (annWidth - textWidth) * (options.align === 'center' ? 0.5 : 1);
+        }
+        if(options.valign !== 'top') {
+            yShift = (annHeight - textHeight) * (options.valign === 'middle' ? 0.5 : 1);
+        }
+
         if(hasMathjax) {
-            mathjaxGroup.select('svg').attr({x: borderfull - 1, y: borderfull});
+            mathjaxGroup.select('svg').attr({
+                x: borderfull + xShift - 1,
+                y: borderfull + yShift
+            })
+            .call(Drawing.setClipUrl, isSizeConstrained ? annClipID : null);
         }
         else {
-            var texty = borderfull - anntextBB.top,
-                textx = borderfull - anntextBB.left;
-            annText.attr({x: textx, y: texty});
+            var texty = borderfull + yShift - anntextBB.top,
+                textx = borderfull + xShift - anntextBB.left;
+            annText.attr({
+                x: textx,
+                y: texty
+            })
+            .call(Drawing.setClipUrl, isSizeConstrained ? annClipID : null);
             annText.selectAll('tspan.line').attr({y: texty, x: textx});
         }
 
+        annTextClip.select('rect').call(Drawing.setRect, borderfull, borderfull,
+            annWidth, annHeight);
+
         annTextBG.call(Drawing.setRect, borderwidth / 2, borderwidth / 2,
-            outerwidth - borderwidth, outerheight - borderwidth);
+            outerWidth - borderwidth, outerHeight - borderwidth);
 
         annTextGroupInner.call(Drawing.setTranslate,
-            Math.round(annPosPx.x.text - outerwidth / 2),
-            Math.round(annPosPx.y.text - outerheight / 2));
+            Math.round(annPosPx.x.text - outerWidth / 2),
+            Math.round(annPosPx.y.text - outerHeight / 2));
 
         /*
          * rotate text and background
@@ -48054,7 +48118,7 @@ function lineIntersect(x1, y1, x2, y2, x3, y3, x4, y4) {
     return {x: x1 + a * t, y: y1 + d * t};
 }
 
-},{"../../lib":323,"../../lib/setcursor":338,"../../lib/svg_text_utils":340,"../../plotly":353,"../../plots/cartesian/axes":358,"../../plots/plots":389,"../color":225,"../dragelement":246,"../drawing":248,"./draw_arrow_head":222,"d3":8}],222:[function(require,module,exports){
+},{"../../lib":323,"../../lib/setcursor":338,"../../lib/svg_text_utils":340,"../../plotly":353,"../../plots/cartesian/axes":358,"../../plots/plots":393,"../color":225,"../dragelement":246,"../drawing":248,"./draw_arrow_head":222,"d3":8}],222:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -48573,7 +48637,7 @@ module.exports = {
     }
 };
 
-},{"../../lib/extend":318,"../../plots/cartesian/layout_attributes":367,"../../plots/font_attributes":378}],227:[function(require,module,exports){
+},{"../../lib/extend":318,"../../plots/cartesian/layout_attributes":369,"../../plots/font_attributes":382}],227:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -48640,7 +48704,7 @@ module.exports = function colorbarDefaults(containerIn, containerOut, layout) {
     coerce('titleside');
 };
 
-},{"../../lib":323,"../../plots/cartesian/tick_label_defaults":373,"../../plots/cartesian/tick_mark_defaults":374,"../../plots/cartesian/tick_value_defaults":375,"./attributes":226}],228:[function(require,module,exports){
+},{"../../lib":323,"../../plots/cartesian/tick_label_defaults":376,"../../plots/cartesian/tick_mark_defaults":377,"../../plots/cartesian/tick_value_defaults":378,"./attributes":226}],228:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -48813,7 +48877,10 @@ module.exports = function draw(gd, id) {
                 anchor: 'free',
                 position: 1
             },
-            cbAxisOut = {},
+            cbAxisOut = {
+                type: 'linear',
+                _id: 'y' + id
+            },
             axisOptions = {
                 letter: 'y',
                 font: fullLayout.font,
@@ -48830,8 +48897,6 @@ module.exports = function draw(gd, id) {
         // Prepare the Plotly axis object
         handleAxisDefaults(cbAxisIn, cbAxisOut, coerce, axisOptions, fullLayout);
         handleAxisPositionDefaults(cbAxisIn, cbAxisOut, coerce, axisOptions);
-
-        cbAxisOut._id = 'y' + id;
 
         // position can't go in through supplyDefaults
         // because that restricts it to [0,1]
@@ -49272,7 +49337,7 @@ module.exports = function draw(gd, id) {
     return component;
 };
 
-},{"../../lib":323,"../../lib/extend":318,"../../lib/setcursor":338,"../../plotly":353,"../../plots/cartesian/axes":358,"../../plots/cartesian/axis_defaults":360,"../../plots/cartesian/layout_attributes":367,"../../plots/cartesian/position_defaults":370,"../../plots/plots":389,"../../registry":397,"../color":225,"../dragelement":246,"../drawing":248,"../titles":301,"./attributes":226,"d3":8,"tinycolor2":197}],229:[function(require,module,exports){
+},{"../../lib":323,"../../lib/extend":318,"../../lib/setcursor":338,"../../plotly":353,"../../plots/cartesian/axes":358,"../../plots/cartesian/axis_defaults":360,"../../plots/cartesian/layout_attributes":369,"../../plots/cartesian/position_defaults":372,"../../plots/plots":393,"../../registry":401,"../color":225,"../dragelement":246,"../drawing":248,"../titles":301,"./attributes":226,"d3":8,"tinycolor2":197}],229:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -50106,6 +50171,12 @@ var constants = require('../../plots/cartesian/constants');
 var interactConstants = require('../../constants/interactions');
 
 var dragElement = module.exports = {};
+var mousePos1;
+var mousePos2;
+var doubleTouch;
+var doubleMove;
+var clickTimer = null;
+
 
 dragElement.align = require('./align');
 dragElement.getCursor = require('./cursor');
@@ -50151,6 +50222,96 @@ dragElement.init = function init(options) {
         initialOnMouseMove;
 
     if(!gd._mouseDownTime) gd._mouseDownTime = 0;
+    var result = document.getElementsByClassName("nsewdrag");
+    for(var i = 0;i< result.length;i++){
+      if(!result[i].ontouchstart){
+        console.log('add');
+        options.element.addEventListener('touchstart', touchstart);
+        options.element.addEventListener('touchmove', touchmove);
+        options.element.addEventListener('touchend', touchend);
+        options.element.ontouchstart = touchstart;
+      }
+    }
+
+    function touchstart(e) {
+      if(!mousePos1){
+        if (clickTimer == null) {
+          clickTimer = setTimeout(function () {
+              clickTimer = null;
+
+          }, 200)
+        } else {
+          clearTimeout(clickTimer);
+          clickTimer = null;
+          doubleTouch = true;
+        }
+         mousePos1 = [
+                           e.changedTouches[0].pageX,
+                           e.changedTouches[0].pageY
+                         ];
+       gd._dragged = false;
+       gd._dragging = true;
+       startX = mousePos1[0];
+       startY = mousePos1[1];
+       initialTarget = e.target;
+       dragCover = coverSlip();
+
+       dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
+      //  if(e.touches.length <= 1){
+      //    gd._fullLayout.dragmode = 'pan';
+      //  }else if(e.touches.length == 2){
+      //    gd._fullLayout.dragmode = 'zoom';
+      //  }
+       if(options.prepFn) options.prepFn(e, startX, startY);
+       console.log('start');
+       return Lib.pauseEvent(e);
+      }
+    }
+
+    function touchmove(e) {
+      if(e.touches.length <= 1){
+        //gd._fullLayout.dragmode = 'pan';
+        if(mousePos1){
+           mousePos2 = [
+                             e.changedTouches[0].pageX,
+                             e.changedTouches[0].pageY
+                           ];
+        }
+        var dx, dy
+        dx = mousePos2[0] - mousePos1[0],
+        dy = mousePos2[1] - mousePos1[1]
+        if(dx || dy) {
+            gd._dragged = true;
+            dragElement.unhover(gd);
+        }
+        if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
+      }
+    }
+
+    function touchend(e) {
+      if(mousePos1 || mousePos2) {
+
+        if(doubleTouch){
+          numClicks = 2;
+          gd._dragged = false;
+        }else{
+          numClicks = 1;
+          gd._dragged = true;
+        }
+        doubleTouch = false;
+        if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
+        mousePos1 = null;
+        mousePos2 = null;
+        Lib.removeElement(dragCover);
+        finishDrag(gd);
+        options.element.removeEventListener('touchstart', touchstart);
+        options.element.removeEventListener('touchmove', touchmove);
+        options.element.removeEventListener('touchend', touchend);
+        gd._dragged = false;
+        gd._dragging = false;
+        console.log('end')
+      }
+    }
 
     function onStart(e) {
         // disable call to options.setCursor(evt)
@@ -50230,8 +50391,22 @@ dragElement.init = function init(options) {
         if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
 
         if(!gd._dragged) {
-            var e2 = document.createEvent('MouseEvents');
-            e2.initEvent('click', true, true);
+            var e2;
+
+            try {
+                e2 = new MouseEvent('click', e);
+            }
+            catch(err) {
+                e2 = document.createEvent('MouseEvents');
+                e2.initMouseEvent('click',
+                    e.bubbles, e.cancelable,
+                    e.view, e.detail,
+                    e.screenX, e.screenY,
+                    e.clientX, e.clientY,
+                    e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
+                    e.button, e.relatedTarget);
+            }
+
             initialTarget.dispatchEvent(e2);
         }
 
@@ -50322,7 +50497,10 @@ unhover.raw = function unhoverRaw(gd, evt) {
     gd._hoverdata = undefined;
 
     if(evt.target && oldhoverdata) {
-        gd.emit('plotly_unhover', {points: oldhoverdata});
+        gd.emit('plotly_unhover', {
+            event: evt,
+            points: oldhoverdata
+        });
     }
 };
 
@@ -51008,7 +51186,7 @@ drawing.setPointGroupScale = function(selection, x, y) {
     return scale;
 };
 
-},{"../../constants/xmlns_namespaces":311,"../../lib":323,"../../lib/svg_text_utils":340,"../../registry":397,"../../traces/scatter/make_bubble_size_func":423,"../../traces/scatter/subtypes":428,"../color":225,"../colorscale":239,"./symbol_defs":249,"d3":8,"fast-isnumeric":12}],249:[function(require,module,exports){
+},{"../../constants/xmlns_namespaces":311,"../../lib":323,"../../lib/svg_text_utils":340,"../../registry":401,"../../traces/scatter/make_bubble_size_func":427,"../../traces/scatter/subtypes":432,"../color":225,"../colorscale":239,"./symbol_defs":249,"d3":8,"fast-isnumeric":12}],249:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -51646,7 +51824,7 @@ function calcOneAxis(calcTrace, trace, axis, coord) {
     Axes.expand(axis, vals, {padded: true});
 }
 
-},{"../../plots/cartesian/axes":358,"../../registry":397,"./compute_error":252,"fast-isnumeric":12}],252:[function(require,module,exports){
+},{"../../plots/cartesian/axes":358,"../../registry":401,"./compute_error":252,"fast-isnumeric":12}],252:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -51819,7 +51997,7 @@ module.exports = function(traceIn, traceOut, defaultColor, opts) {
     }
 };
 
-},{"../../lib":323,"../../registry":397,"./attributes":250,"fast-isnumeric":12}],254:[function(require,module,exports){
+},{"../../lib":323,"../../registry":401,"./attributes":250,"fast-isnumeric":12}],254:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -51841,7 +52019,7 @@ errorBars.calc = require('./calc');
 
 errorBars.calcFromTrace = function(trace, layout) {
     var x = trace.x || [],
-        y = trace.y,
+        y = trace.y || [],
         len = x.length || y.length;
 
     var calcdataMock = new Array(len);
@@ -52042,7 +52220,7 @@ function errorCoords(d, xa, ya) {
     return out;
 }
 
-},{"../../traces/scatter/subtypes":428,"d3":8,"fast-isnumeric":12}],256:[function(require,module,exports){
+},{"../../traces/scatter/subtypes":432,"d3":8,"fast-isnumeric":12}],256:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -52725,7 +52903,7 @@ module.exports = {
     }
 };
 
-},{"../../lib/extend":318,"../../plots/font_attributes":378,"../color/attributes":224}],264:[function(require,module,exports){
+},{"../../lib/extend":318,"../../plots/font_attributes":382,"../color/attributes":224}],264:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -52836,7 +53014,7 @@ module.exports = function legendDefaults(layoutIn, layoutOut, fullData) {
     Lib.noneOrAll(containerIn, containerOut, ['x', 'y']);
 };
 
-},{"../../lib":323,"../../plots/layout_attributes":380,"../../registry":397,"./attributes":263,"./helpers":268}],266:[function(require,module,exports){
+},{"../../lib":323,"../../plots/layout_attributes":384,"../../registry":401,"./attributes":263,"./helpers":268}],266:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -53652,7 +53830,7 @@ function expandHorizontalMargin(gd) {
     });
 }
 
-},{"../../constants/interactions":308,"../../lib":323,"../../lib/svg_text_utils":340,"../../plotly":353,"../../plots/plots":389,"../../registry":397,"../color":225,"../dragelement":246,"../drawing":248,"./anchor_utils":262,"./constants":264,"./get_legend_data":267,"./helpers":268,"./style":270,"d3":8}],267:[function(require,module,exports){
+},{"../../constants/interactions":308,"../../lib":323,"../../lib/svg_text_utils":340,"../../plotly":353,"../../plots/plots":393,"../../registry":401,"../color":225,"../dragelement":246,"../drawing":248,"./anchor_utils":262,"./constants":264,"./get_legend_data":267,"./helpers":268,"./style":270,"d3":8}],267:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -53757,7 +53935,7 @@ module.exports = function getLegendData(calcdata, opts) {
     return legendData;
 };
 
-},{"../../registry":397,"./helpers":268}],268:[function(require,module,exports){
+},{"../../registry":401,"./helpers":268}],268:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -53788,7 +53966,7 @@ exports.isReversed = function isReversed(legendLayout) {
     return (legendLayout.traceorder || '').indexOf('reversed') !== -1;
 };
 
-},{"../../registry":397}],269:[function(require,module,exports){
+},{"../../registry":401}],269:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -54040,7 +54218,7 @@ function stylePies(d) {
     if(pts.size()) pts.call(stylePie, d[0], trace);
 }
 
-},{"../../lib":323,"../../registry":397,"../../traces/pie/style_one":406,"../../traces/scatter/subtypes":428,"../color":225,"../drawing":248,"d3":8}],271:[function(require,module,exports){
+},{"../../lib":323,"../../registry":401,"../../traces/pie/style_one":410,"../../traces/scatter/subtypes":432,"../color":225,"../drawing":248,"d3":8}],271:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -54562,7 +54740,7 @@ modeBarButtons.resetViews = {
     }
 };
 
-},{"../../../build/ploticon":2,"../../lib":323,"../../plotly":353,"../../plots/cartesian/axes":358,"../../plots/plots":389,"../../snapshot/download":399}],272:[function(require,module,exports){
+},{"../../../build/ploticon":2,"../../lib":323,"../../plotly":353,"../../plots/cartesian/axes":358,"../../plots/plots":393,"../../snapshot/download":403}],272:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -54804,7 +54982,7 @@ function fillCustomButton(customButtons) {
     return customButtons;
 }
 
-},{"../../plots/cartesian/axes":358,"../../traces/scatter/subtypes":428,"./buttons":271,"./modebar":274}],274:[function(require,module,exports){
+},{"../../plots/cartesian/axes":358,"../../traces/scatter/subtypes":432,"./buttons":271,"./modebar":274}],274:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -55184,7 +55362,7 @@ module.exports = {
     }
 };
 
-},{"../../lib/extend":318,"../../plots/font_attributes":378,"../color/attributes":224,"./button_attributes":276}],276:[function(require,module,exports){
+},{"../../lib/extend":318,"../../plots/font_attributes":382,"../color/attributes":224,"./button_attributes":276}],276:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -55628,7 +55806,7 @@ function reposition(gd, buttons, opts, axName) {
     });
 }
 
-},{"../../lib/svg_text_utils":340,"../../plotly":353,"../../plots/cartesian/axis_ids":361,"../../plots/plots":389,"../color":225,"../drawing":248,"../legend/anchor_utils":262,"./constants":277,"./get_update_object":280,"d3":8}],280:[function(require,module,exports){
+},{"../../lib/svg_text_utils":340,"../../plotly":353,"../../plots/cartesian/axis_ids":361,"../../plots/plots":393,"../color":225,"../drawing":248,"../legend/anchor_utils":262,"./constants":277,"./get_update_object":280,"d3":8}],280:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -56472,7 +56650,7 @@ function clearPushMargins(gd) {
     }
 }
 
-},{"../../lib":323,"../../lib/setcursor":338,"../../plotly":353,"../../plots/cartesian":366,"../../plots/cartesian/axes":358,"../../plots/plots":389,"../color":225,"../dragelement":246,"../drawing":248,"./constants":284,"d3":8}],287:[function(require,module,exports){
+},{"../../lib":323,"../../lib/setcursor":338,"../../plotly":353,"../../plots/cartesian":368,"../../plots/cartesian/axes":358,"../../plots/plots":393,"../color":225,"../dragelement":246,"../drawing":248,"./constants":284,"d3":8}],287:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -56597,7 +56775,7 @@ module.exports = {
     }
 };
 
-},{"../../lib/extend":318,"../../traces/scatter/attributes":408,"../annotations/attributes":216}],289:[function(require,module,exports){
+},{"../../lib/extend":318,"../../traces/scatter/attributes":412,"../annotations/attributes":216}],289:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -57578,7 +57756,7 @@ module.exports = {
     },
 };
 
-},{"../../lib/extend":318,"../../plots/animation_attributes":354,"../../plots/font_attributes":378,"../../plots/pad_attributes":388,"./constants":297}],297:[function(require,module,exports){
+},{"../../lib/extend":318,"../../plots/animation_attributes":354,"../../plots/font_attributes":382,"../../plots/pad_attributes":392,"./constants":297}],297:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -58390,7 +58568,7 @@ function clearPushMargins(gd) {
     }
 }
 
-},{"../../lib/svg_text_utils":340,"../../plots/plots":389,"../color":225,"../drawing":248,"../legend/anchor_utils":262,"./constants":297,"d3":8}],300:[function(require,module,exports){
+},{"../../lib/svg_text_utils":340,"../../plots/plots":393,"../color":225,"../drawing":248,"../legend/anchor_utils":262,"./constants":297,"d3":8}],300:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -58646,7 +58824,7 @@ Titles.draw = function(gd, titleClass, options) {
     el.classed('js-placeholder', isplaceholder);
 };
 
-},{"../../constants/interactions":308,"../../lib":323,"../../lib/svg_text_utils":340,"../../plotly":353,"../../plots/plots":389,"../color":225,"../drawing":248,"d3":8,"fast-isnumeric":12}],302:[function(require,module,exports){
+},{"../../constants/interactions":308,"../../lib":323,"../../lib/svg_text_utils":340,"../../plotly":353,"../../plots/plots":393,"../color":225,"../drawing":248,"d3":8,"fast-isnumeric":12}],302:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -58793,7 +58971,7 @@ module.exports = {
     }
 };
 
-},{"../../lib/extend":318,"../../plots/font_attributes":378,"../../plots/pad_attributes":388,"../color/attributes":224}],303:[function(require,module,exports){
+},{"../../lib/extend":318,"../../plots/font_attributes":382,"../../plots/pad_attributes":392,"../color/attributes":224}],303:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -59643,7 +59821,7 @@ function clearPushMargins(gd) {
     }
 }
 
-},{"../../lib/svg_text_utils":340,"../../plots/plots":389,"../color":225,"../drawing":248,"../legend/anchor_utils":262,"./constants":303,"./scrollbox":307,"d3":8}],306:[function(require,module,exports){
+},{"../../lib/svg_text_utils":340,"../../plots/plots":393,"../color":225,"../drawing":248,"../legend/anchor_utils":262,"./constants":303,"./scrollbox":307,"d3":8}],306:[function(require,module,exports){
 arguments[4][300][0].apply(exports,arguments)
 },{"./attributes":302,"./constants":303,"./defaults":304,"./draw":305,"dup":300}],307:[function(require,module,exports){
 /**
@@ -60185,7 +60363,12 @@ module.exports = {
      * For fast conversion btwn world calendars and epoch ms, the Julian Day Number
      * of the unix epoch. From calendars.instance().newDate(1970, 1, 1).toJD()
      */
-    EPOCHJD: 2440587.5
+    EPOCHJD: 2440587.5,
+
+    /*
+     * Are two values nearly equal? Compare to 1PPM
+     */
+    ALMOST_EQUAL: 1 - 1e-6
 };
 
 },{}],310:[function(require,module,exports){
@@ -60329,7 +60512,7 @@ exports.Queue = require('./lib/queue');
 // export d3 used in the bundle
 exports.d3 = require('d3');
 
-},{"../build/plotcss":1,"../build/ploticon":2,"./components/annotations":223,"./components/images":261,"./components/legend":269,"./components/rangeselector":281,"./components/rangeslider":287,"./components/shapes":294,"./components/sliders":300,"./components/updatemenus":306,"./fonts/mathjax_config":313,"./lib/queue":335,"./plot_api/plot_schema":347,"./plot_api/register":348,"./plot_api/set_plot_config":349,"./plot_api/to_image":351,"./plot_api/validate":352,"./plotly":353,"./snapshot":402,"./snapshot/download":399,"./traces/scatter":418,"d3":8,"es6-promise":10}],313:[function(require,module,exports){
+},{"../build/plotcss":1,"../build/ploticon":2,"./components/annotations":223,"./components/images":261,"./components/legend":269,"./components/rangeselector":281,"./components/rangeslider":287,"./components/shapes":294,"./components/sliders":300,"./components/updatemenus":306,"./fonts/mathjax_config":313,"./lib/queue":335,"./plot_api/plot_schema":347,"./plot_api/register":348,"./plot_api/set_plot_config":349,"./plot_api/to_image":351,"./plot_api/validate":352,"./plotly":353,"./snapshot":406,"./snapshot/download":403,"./traces/scatter":422,"d3":8,"es6-promise":10}],313:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -61334,7 +61517,7 @@ exports.findExactDates = function(data, calendar) {
     };
 };
 
-},{"../constants/numerical":309,"../registry":397,"./loggers":326,"./mod":328,"d3":8,"fast-isnumeric":12}],317:[function(require,module,exports){
+},{"../constants/numerical":309,"../registry":401,"./loggers":326,"./mod":328,"d3":8,"fast-isnumeric":12}],317:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -61708,6 +61891,8 @@ module.exports = function filterVisible(container) {
 
 'use strict';
 
+var BADNUM = require('../constants/numerical').BADNUM;
+
 /**
  * Convert calcTrace to GeoJSON 'MultiLineString' coordinate arrays
  *
@@ -61720,18 +61905,19 @@ module.exports = function filterVisible(container) {
  *
  */
 exports.calcTraceToLineCoords = function(calcTrace) {
-    var trace = calcTrace[0].trace,
-        connectgaps = trace.connectgaps;
+    var trace = calcTrace[0].trace;
+    var connectgaps = trace.connectgaps;
 
-    var coords = [],
-        lineString = [];
+    var coords = [];
+    var lineString = [];
 
     for(var i = 0; i < calcTrace.length; i++) {
         var calcPt = calcTrace[i];
+        var lonlat = calcPt.lonlat;
 
-        lineString.push(calcPt.lonlat);
-
-        if(!connectgaps && calcPt.gapAfter && lineString.length > 0) {
+        if(lonlat[0] !== BADNUM) {
+            lineString.push(lonlat);
+        } else if(!connectgaps && lineString.length > 0) {
             coords.push(lineString);
             lineString = [];
         }
@@ -61830,7 +62016,7 @@ exports.makeBlank = function() {
     };
 };
 
-},{}],322:[function(require,module,exports){
+},{"../constants/numerical":309}],322:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -64597,7 +64783,7 @@ module.exports = function containerArrayMatch(astr) {
     return {array: arrayStr, index: Number(match[1]), property: match[3] || ''};
 };
 
-},{"../registry":397}],343:[function(require,module,exports){
+},{"../registry":401}],343:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -65118,7 +65304,7 @@ exports.hasParent = function(aobj, attr) {
     return false;
 };
 
-},{"../components/color":225,"../lib":323,"../plots/cartesian/axes":358,"../plots/plots":389,"../registry":397,"fast-isnumeric":12,"gl-mat4/fromQuat":24}],344:[function(require,module,exports){
+},{"../components/color":225,"../lib":323,"../plots/cartesian/axes":358,"../plots/plots":393,"../registry":401,"fast-isnumeric":12,"gl-mat4/fromQuat":24}],344:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -65331,7 +65517,7 @@ exports.applyContainerArrayChanges = function applyContainerArrayChanges(gd, np,
     return true;
 };
 
-},{"../lib/is_plain_object":325,"../lib/loggers":326,"../lib/nested_property":329,"../lib/noop":330,"../registry":397,"./container_array_match":342}],345:[function(require,module,exports){
+},{"../lib/is_plain_object":325,"../lib/loggers":326,"../lib/nested_property":329,"../lib/noop":330,"../registry":401,"./container_array_match":342}],345:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -65366,6 +65552,8 @@ var manageArrays = require('./manage_arrays');
 var helpers = require('./helpers');
 var subroutines = require('./subroutines');
 var cartesianConstants = require('../plots/cartesian/constants');
+var enforceAxisConstraints = require('../plots/cartesian/constraints');
+var axisIds = require('../plots/cartesian/axis_ids');
 
 
 /**
@@ -65485,10 +65673,6 @@ Plotly.plot = function(gd, data, layout, config) {
         makePlotFramework(gd);
     }
 
-    // save initial axis range once per graph
-    if(graphWasEmpty) Plotly.Axes.saveRangeInitial(gd);
-
-
     // prepare the data and find the autorange
 
     // generate calcdata, if we need to
@@ -65590,18 +65774,24 @@ Plotly.plot = function(gd, data, layout, config) {
         return Lib.syncOrAsync([
             Registry.getComponentMethod('shapes', 'calcAutorange'),
             Registry.getComponentMethod('annotations', 'calcAutorange'),
-            doAutoRange,
+            doAutoRangeAndConstraints,
             Registry.getComponentMethod('rangeslider', 'calcAutorange')
         ], gd);
     }
 
-    function doAutoRange() {
+    function doAutoRangeAndConstraints() {
         if(gd._transitioning) return;
 
         var axList = Plotly.Axes.list(gd, '', true);
         for(var i = 0; i < axList.length; i++) {
             Plotly.Axes.doAutoRange(axList[i]);
         }
+
+        enforceAxisConstraints(gd);
+
+        // store initial ranges *after* enforcing constraints, otherwise
+        // we will never look like we're at the initial ranges
+        if(graphWasEmpty) Plotly.Axes.saveRangeInitial(gd);
     }
 
     // draw ticks, titles, and calculate axis scaling (._b, ._m)
@@ -66914,6 +67104,12 @@ function _restyle(gd, aobj, _traces) {
                 var moduleAttrs = (contFull._module || {}).attributes || {};
                 var valObject = Lib.nestedProperty(moduleAttrs, ai).get() || {};
 
+                // if restyling entire attribute container, assume worse case
+                if(!valObject.valType) {
+                    flags.docalc = true;
+                }
+
+                // must redo calcdata when restyling array values of arrayOk attributes
                 if(valObject.arrayOk && (Array.isArray(newVal) || Array.isArray(oldVal))) {
                     flags.docalc = true;
                 }
@@ -67191,6 +67387,16 @@ function _relayout(gd, aobj) {
         return (ax || {}).autorange;
     }
 
+    // for constraint enforcement: keep track of all axes (as {id: name})
+    // we're editing the (auto)range of, so we can tell the others constrained
+    // to scale with them that it's OK for them to shrink
+    var rangesAltered = {};
+
+    function recordAlteredAxis(pleafPlus) {
+        var axId = axisIds.name2id(pleafPlus.split('.')[0]);
+        rangesAltered[axId] = 1;
+    }
+
     // alter gd.layout
     for(var ai in aobj) {
         if(helpers.hasParent(aobj, ai)) {
@@ -67225,15 +67431,17 @@ function _relayout(gd, aobj) {
         //
         // To do so, we must manually set them back here using the _initialAutoSize cache.
         if(['width', 'height'].indexOf(ai) !== -1 && vi === null) {
-            gd._fullLayout[ai] = gd._initialAutoSize[ai];
+            fullLayout[ai] = gd._initialAutoSize[ai];
         }
         // check autorange vs range
         else if(pleafPlus.match(/^[xyz]axis[0-9]*\.range(\[[0|1]\])?$/)) {
             doextra(ptrunk + '.autorange', false);
+            recordAlteredAxis(pleafPlus);
         }
         else if(pleafPlus.match(/^[xyz]axis[0-9]*\.autorange$/)) {
             doextra([ptrunk + '.range[0]', ptrunk + '.range[1]'],
                 undefined);
+            recordAlteredAxis(pleafPlus);
         }
         else if(pleafPlus.match(/^aspectratio\.[xyz]$/)) {
             doextra(proot + '.aspectmode', 'manual');
@@ -67397,6 +67605,18 @@ function _relayout(gd, aobj) {
             else if(proot.indexOf('geo') === 0) flags.doplot = true;
             else if(proot.indexOf('ternary') === 0) flags.doplot = true;
             else if(ai === 'paper_bgcolor') flags.doplot = true;
+            else if(proot === 'margin' ||
+                    pp1 === 'autorange' ||
+                    pp1 === 'rangemode' ||
+                    pp1 === 'type' ||
+                    pp1 === 'domain' ||
+                    pp1 === 'fixedrange' ||
+                    pp1 === 'scaleanchor' ||
+                    pp1 === 'scaleratio' ||
+                    ai.indexOf('calendar') !== -1 ||
+                    ai.match(/^(bar|box|font)/)) {
+                flags.docalc = true;
+            }
             else if(fullLayout._has('gl2d') &&
                 (ai.indexOf('axis') !== -1 || ai === 'plot_bgcolor')
             ) flags.doplot = true;
@@ -67419,15 +67639,6 @@ function _relayout(gd, aobj) {
             }
             else if(ai === 'margin.pad') {
                 flags.doticks = flags.dolayoutstyle = true;
-            }
-            else if(proot === 'margin' ||
-                    pp1 === 'autorange' ||
-                    pp1 === 'rangemode' ||
-                    pp1 === 'type' ||
-                    pp1 === 'domain' ||
-                    ai.indexOf('calendar') !== -1 ||
-                    ai.match(/^(bar|box|font)/)) {
-                flags.docalc = true;
             }
             /*
              * hovermode and dragmode don't need any redrawing, since they just
@@ -67452,16 +67663,37 @@ function _relayout(gd, aobj) {
         if(!finished) flags.doplot = true;
     }
 
-    var oldWidth = gd._fullLayout.width,
-        oldHeight = gd._fullLayout.height;
+    // figure out if we need to recalculate axis constraints
+    var constraints = fullLayout._axisConstraintGroups;
+    for(var axId in rangesAltered) {
+        for(i = 0; i < constraints.length; i++) {
+            var group = constraints[i];
+            if(group[axId]) {
+                // Always recalc if we're changing constrained ranges.
+                // Otherwise it's possible to violate the constraints by
+                // specifying arbitrary ranges for all axes in the group.
+                // this way some ranges may expand beyond what's specified,
+                // as they do at first draw, to satisfy the constraints.
+                flags.docalc = true;
+                for(var groupAxId in group) {
+                    if(!rangesAltered[groupAxId]) {
+                        axisIds.getFromId(gd, groupAxId)._constraintShrinkable = true;
+                    }
+                }
+            }
+        }
+    }
+
+    var oldWidth = fullLayout.width,
+        oldHeight = fullLayout.height;
 
     // calculate autosizing
-    if(gd.layout.autosize) Plots.plotAutoSize(gd, gd.layout, gd._fullLayout);
+    if(gd.layout.autosize) Plots.plotAutoSize(gd, gd.layout, fullLayout);
 
     // avoid unnecessary redraws
     var hasSizechanged = aobj.height || aobj.width ||
-        (gd._fullLayout.width !== oldWidth) ||
-        (gd._fullLayout.height !== oldHeight);
+        (fullLayout.width !== oldWidth) ||
+        (fullLayout.height !== oldHeight);
 
     if(hasSizechanged) flags.docalc = true;
 
@@ -68098,6 +68330,13 @@ Plotly.deleteFrames = function(gd, frameList) {
     var ops = [];
     var revops = [];
 
+    if(!frameList) {
+        frameList = [];
+        for(i = 0; i < _frames.length; i++) {
+            frameList.push(i);
+        }
+    }
+
     frameList = frameList.slice(0);
     frameList.sort();
 
@@ -68260,7 +68499,7 @@ function makePlotFramework(gd) {
     gd.emit('plotly_framework');
 }
 
-},{"../components/drawing":248,"../components/errorbars":254,"../constants/xmlns_namespaces":311,"../lib":323,"../lib/events":317,"../lib/queue":335,"../lib/svg_text_utils":340,"../plotly":353,"../plots/cartesian/constants":363,"../plots/cartesian/graph_interact":365,"../plots/plots":389,"../plots/polar":392,"../registry":397,"./helpers":343,"./manage_arrays":344,"./subroutines":350,"d3":8,"fast-isnumeric":12}],346:[function(require,module,exports){
+},{"../components/drawing":248,"../components/errorbars":254,"../constants/xmlns_namespaces":311,"../lib":323,"../lib/events":317,"../lib/queue":335,"../lib/svg_text_utils":340,"../plotly":353,"../plots/cartesian/axis_ids":361,"../plots/cartesian/constants":363,"../plots/cartesian/constraints":365,"../plots/cartesian/graph_interact":367,"../plots/plots":393,"../plots/polar":396,"../registry":401,"./helpers":343,"./manage_arrays":344,"./subroutines":350,"d3":8,"fast-isnumeric":12}],346:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -68792,7 +69031,7 @@ function insertAttrs(baseAttrs, newAttrs, astr) {
     np.set(extendDeep(np.get() || {}, newAttrs));
 }
 
-},{"../lib":323,"../plots/animation_attributes":354,"../plots/attributes":356,"../plots/frame_attributes":379,"../plots/layout_attributes":380,"../plots/polar/area_attributes":390,"../plots/polar/axis_attributes":391,"../registry":397}],348:[function(require,module,exports){
+},{"../lib":323,"../plots/animation_attributes":354,"../plots/attributes":356,"../plots/frame_attributes":383,"../plots/layout_attributes":384,"../plots/polar/area_attributes":394,"../plots/polar/axis_attributes":395,"../registry":401}],348:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -68891,7 +69130,7 @@ function registerComponentModule(newModule) {
     Registry.registerComponent(newModule);
 }
 
-},{"../lib":323,"../registry":397}],349:[function(require,module,exports){
+},{"../lib":323,"../registry":401}],349:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -69324,7 +69563,7 @@ exports.doCamera = function(gd) {
     }
 };
 
-},{"../components/color":225,"../components/drawing":248,"../components/modebar":272,"../components/titles":301,"../lib":323,"../plotly":353,"../plots/plots":389,"../registry":397,"d3":8}],351:[function(require,module,exports){
+},{"../components/color":225,"../components/drawing":248,"../components/modebar":272,"../components/titles":301,"../lib":323,"../plotly":353,"../plots/plots":393,"../registry":401,"d3":8}],351:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -69434,7 +69673,7 @@ function toImage(gd, opts) {
 
 module.exports = toImage;
 
-},{"../lib":323,"../plotly":353,"../snapshot/cloneplot":398,"../snapshot/helpers":401,"../snapshot/svgtoimg":403,"../snapshot/tosvg":405,"fast-isnumeric":12}],352:[function(require,module,exports){
+},{"../lib":323,"../plotly":353,"../snapshot/cloneplot":402,"../snapshot/helpers":405,"../snapshot/svgtoimg":407,"../snapshot/tosvg":409,"fast-isnumeric":12}],352:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -69805,7 +70044,7 @@ function convertPathToAttributeString(path) {
     return astr;
 }
 
-},{"../lib":323,"../plots/plots":389,"./plot_schema":347}],353:[function(require,module,exports){
+},{"../lib":323,"../plots/plots":393,"./plot_schema":347}],353:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -69838,7 +70077,7 @@ exports.ModeBar = require('./components/modebar');
 // plot api
 require('./plot_api/plot_api');
 
-},{"./components/modebar":272,"./plot_api/plot_api":345,"./plot_api/plot_config":346,"./plots/cartesian/axes":358,"./plots/cartesian/graph_interact":365,"./plots/plots":389}],354:[function(require,module,exports){
+},{"./components/modebar":272,"./plot_api/plot_api":345,"./plot_api/plot_config":346,"./plots/cartesian/axes":358,"./plots/cartesian/graph_interact":367,"./plots/plots":393}],354:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -71872,12 +72111,19 @@ axes.doTicks = function(gd, axid, skipTitle) {
                 // alter later
                 .attr('text-anchor', 'middle')
                 .each(function(d) {
+                    var labelText = d.text;
+					if (ax._shortLabel) {
+						if (labelText.length > 9) {
+							labelText = labelText.substring(0, 6);
+							labelText += '...';
+						}
+					}
                     var thisLabel = d3.select(this),
                         newPromise = gd._promises.length;
                     thisLabel
                         .call(Drawing.setPosition, labelx(d), labely(d))
                         .call(Drawing.font, d.font, d.fontSize, d.fontColor)
-                        .text(d.text)
+                        .text(labelText)
                         .call(svgTextUtils.convertToTspans);
                     newPromise = gd._promises[newPromise];
                     if(newPromise) {
@@ -71950,8 +72196,8 @@ axes.doTicks = function(gd, axid, skipTitle) {
             // check for auto-angling if x labels overlap
             // don't auto-angle at all for log axes with
             // base and digit format
-            if(axletter === 'x' && !isNumeric(ax.tickangle) &&
-                    (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
+            if(!isNumeric(ax.tickangle) && axletter === 'x'
+                && (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
                 var lbbArray = [];
                 tickLabels.each(function(d) {
                     var s = d3.select(this),
@@ -71972,23 +72218,23 @@ axes.doTicks = function(gd, axid, skipTitle) {
                         width: bb.width + 2
                     });
                 });
-                for(i = 0; i < lbbArray.length - 1; i++) {
-                    if(Lib.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
-                        // any overlap at all - set 30 degrees
-                        autoangle = 30;
-                        break;
-                    }
-                }
-                if(autoangle) {
-                    var tickspacing = Math.abs(
-                            (vals[vals.length - 1].x - vals[0].x) * ax._m
-                        ) / (vals.length - 1);
-                    if(tickspacing < maxFontSize * 2.5) {
-                        autoangle = 90;
-                    }
-                    positionLabels(tickLabels, autoangle);
-                }
-                ax._lastangle = autoangle;
+				for (i = 0; i < lbbArray.length - 1; i++) {
+					if (Lib.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
+						// any overlap at all - set 30 degrees
+						autoangle = 30;
+						break;
+					}
+				}
+				if (autoangle) {
+					var tickspacing = Math.abs(
+							(vals[vals.length - 1].x - vals[0].x) * ax._m
+						) / (vals.length - 1);
+					if (tickspacing < maxFontSize * 2.5) {
+						autoangle = 90;
+					}
+					positionLabels(tickLabels, autoangle);
+				}
+				ax._lastangle = autoangle;
             }
 
             // update the axis title
@@ -72339,7 +72585,7 @@ function swapAxisAttrs(layout, key, xFullAxes, yFullAxes) {
     }
 }
 
-},{"../../components/color":225,"../../components/drawing":248,"../../components/titles":301,"../../constants/numerical":309,"../../lib":323,"../../lib/svg_text_utils":340,"../../registry":397,"./axis_ids":361,"./layout_attributes":367,"./layout_defaults":368,"./set_convert":372,"d3":8,"fast-isnumeric":12}],359:[function(require,module,exports){
+},{"../../components/color":225,"../../components/drawing":248,"../../components/titles":301,"../../constants/numerical":309,"../../lib":323,"../../lib/svg_text_utils":340,"../../registry":401,"./axis_ids":361,"./layout_attributes":369,"./layout_defaults":370,"./set_convert":375,"d3":8,"fast-isnumeric":12}],359:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -72439,8 +72685,6 @@ var handleTickLabelDefaults = require('./tick_label_defaults');
 var handleCategoryOrderDefaults = require('./category_order_defaults');
 var setConvert = require('./set_convert');
 var orderedCategories = require('./ordered_categories');
-var axisIds = require('./axis_ids');
-var autoType = require('./axis_autotype');
 
 
 /**
@@ -72448,12 +72692,11 @@ var autoType = require('./axis_autotype');
  *
  *  letter: 'x' or 'y'
  *  title: name of the axis (ie 'Colorbar') to go in default title
- *  name: axis object name (ie 'xaxis') if one should be stored
  *  font: the default font to inherit
  *  outerTicks: boolean, should ticks default to outside?
  *  showGrid: boolean, should gridlines be shown by default?
  *  noHover: boolean, this axis doesn't support hover effects?
- *  data: the plot data to use in choosing auto type
+ *  data: the plot data, used to manage categories
  *  bgColor: the plot background color, to calculate default gridline colors
  */
 module.exports = function handleAxisDefaults(containerIn, containerOut, coerce, options, layoutOut) {
@@ -72467,28 +72710,7 @@ module.exports = function handleAxisDefaults(containerIn, containerOut, coerce, 
         return Lib.coerce2(containerIn, containerOut, layoutAttributes, attr, dflt);
     }
 
-    // set up some private properties
-    if(options.name) {
-        containerOut._name = options.name;
-        containerOut._id = axisIds.name2id(options.name);
-    }
-
-    // now figure out type and do some more initialization
-    var axType = coerce('type');
-    if(axType === '-') {
-        setAutoType(containerOut, options.data);
-
-        if(containerOut.type === '-') {
-            containerOut.type = 'linear';
-        }
-        else {
-            // copy autoType back to input axis
-            // note that if this object didn't exist
-            // in the input layout, we have to put it in
-            // this happens in the main supplyDefaults function
-            axType = containerIn.type = containerOut.type;
-        }
-    }
+    var axType = containerOut.type;
 
     if(axType === 'date') {
         var handleCalendarDefaults = Registry.getComponentMethod('calendars', 'handleDefaults');
@@ -72558,91 +72780,7 @@ module.exports = function handleAxisDefaults(containerIn, containerOut, coerce, 
     return containerOut;
 };
 
-function setAutoType(ax, data) {
-    // new logic: let people specify any type they want,
-    // only autotype if type is '-'
-    if(ax.type !== '-') return;
-
-    var id = ax._id,
-        axLetter = id.charAt(0);
-
-    // support 3d
-    if(id.indexOf('scene') !== -1) id = axLetter;
-
-    var d0 = getFirstNonEmptyTrace(data, id, axLetter);
-    if(!d0) return;
-
-    // first check for histograms, as the count direction
-    // should always default to a linear axis
-    if(d0.type === 'histogram' &&
-            axLetter === {v: 'y', h: 'x'}[d0.orientation || 'v']) {
-        ax.type = 'linear';
-        return;
-    }
-
-    var calAttr = axLetter + 'calendar',
-        calendar = d0[calAttr];
-
-    // check all boxes on this x axis to see
-    // if they're dates, numbers, or categories
-    if(isBoxWithoutPositionCoords(d0, axLetter)) {
-        var posLetter = getBoxPosLetter(d0),
-            boxPositions = [],
-            trace;
-
-        for(var i = 0; i < data.length; i++) {
-            trace = data[i];
-            if(!Registry.traceIs(trace, 'box') ||
-               (trace[axLetter + 'axis'] || axLetter) !== id) continue;
-
-            if(trace[posLetter] !== undefined) boxPositions.push(trace[posLetter][0]);
-            else if(trace.name !== undefined) boxPositions.push(trace.name);
-            else boxPositions.push('text');
-
-            if(trace[calAttr] !== calendar) calendar = undefined;
-        }
-
-        ax.type = autoType(boxPositions, calendar);
-    }
-    else {
-        ax.type = autoType(d0[axLetter] || [d0[axLetter + '0']], calendar);
-    }
-}
-
-function getBoxPosLetter(trace) {
-    return {v: 'x', h: 'y'}[trace.orientation || 'v'];
-}
-
-function isBoxWithoutPositionCoords(trace, axLetter) {
-    var posLetter = getBoxPosLetter(trace),
-        isBox = Registry.traceIs(trace, 'box'),
-        isCandlestick = Registry.traceIs(trace._fullInput || {}, 'candlestick');
-
-    return (
-        isBox &&
-        !isCandlestick &&
-        axLetter === posLetter &&
-        trace[posLetter] === undefined &&
-        trace[posLetter + '0'] === undefined
-    );
-}
-
-function getFirstNonEmptyTrace(data, id, axLetter) {
-    for(var i = 0; i < data.length; i++) {
-        var trace = data[i];
-
-        if((trace[axLetter + 'axis'] || axLetter) === id) {
-            if(isBoxWithoutPositionCoords(trace, axLetter)) {
-                return trace;
-            }
-            else if((trace[axLetter] || []).length || trace[axLetter + '0']) {
-                return trace;
-            }
-        }
-    }
-}
-
-},{"../../components/color/attributes":224,"../../lib":323,"../../registry":397,"./axis_autotype":359,"./axis_ids":361,"./category_order_defaults":362,"./layout_attributes":367,"./ordered_categories":369,"./set_convert":372,"./tick_label_defaults":373,"./tick_mark_defaults":374,"./tick_value_defaults":375,"tinycolor2":197}],361:[function(require,module,exports){
+},{"../../components/color/attributes":224,"../../lib":323,"../../registry":401,"./category_order_defaults":362,"./layout_attributes":369,"./ordered_categories":371,"./set_convert":375,"./tick_label_defaults":376,"./tick_mark_defaults":377,"./tick_value_defaults":378,"tinycolor2":197}],361:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -72764,7 +72902,7 @@ exports.getFromTrace = function(gd, fullTrace, type) {
     return ax;
 };
 
-},{"../../lib":323,"../../registry":397,"../plots":389,"./constants":363}],362:[function(require,module,exports){
+},{"../../lib":323,"../../registry":401,"../plots":393,"./constants":363}],362:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -72880,6 +73018,221 @@ module.exports = {
 
 'use strict';
 
+var Lib = require('../../lib');
+var id2name = require('./axis_ids').id2name;
+
+
+module.exports = function handleConstraintDefaults(containerIn, containerOut, coerce, allAxisIds, layoutOut) {
+    var constraintGroups = layoutOut._axisConstraintGroups;
+
+    if(containerOut.fixedrange || !containerIn.scaleanchor) return;
+
+    var constraintOpts = getConstraintOpts(constraintGroups, containerOut._id, allAxisIds, layoutOut);
+
+    var scaleanchor = Lib.coerce(containerIn, containerOut, {
+        scaleanchor: {
+            valType: 'enumerated',
+            values: constraintOpts.linkableAxes
+        }
+    }, 'scaleanchor');
+
+    if(scaleanchor) {
+        var scaleratio = coerce('scaleratio');
+        // TODO: I suppose I could do attribute.min: Number.MIN_VALUE to avoid zero,
+        // but that seems hacky. Better way to say "must be a positive number"?
+        // Of course if you use several super-tiny values you could eventually
+        // force a product of these to zero and all hell would break loose...
+        // Likewise with super-huge values.
+        if(!scaleratio) scaleratio = containerOut.scaleratio = 1;
+
+        updateConstraintGroups(constraintGroups, constraintOpts.thisGroup,
+            containerOut._id, scaleanchor, scaleratio);
+    }
+    else if(allAxisIds.indexOf(containerIn.scaleanchor) !== -1) {
+        Lib.warn('ignored ' + containerOut._name + '.scaleanchor: "' +
+            containerIn.scaleanchor + '" to avoid either an infinite loop ' +
+            'and possibly inconsistent scaleratios, or because the target' +
+            'axis has fixed range.');
+    }
+};
+
+function getConstraintOpts(constraintGroups, thisID, allAxisIds, layoutOut) {
+    // If this axis is already part of a constraint group, we can't
+    // scaleanchor any other axis in that group, or we'd make a loop.
+    // Filter allAxisIds to enforce this, also matching axis types.
+
+    var thisType = layoutOut[id2name(thisID)].type;
+
+    var i, j, idj, axj;
+
+    var linkableAxes = [];
+    for(j = 0; j < allAxisIds.length; j++) {
+        idj = allAxisIds[j];
+        if(idj === thisID) continue;
+
+        axj = layoutOut[id2name(idj)];
+        if(axj.type === thisType && !axj.fixedrange) linkableAxes.push(idj);
+    }
+
+    for(i = 0; i < constraintGroups.length; i++) {
+        if(constraintGroups[i][thisID]) {
+            var thisGroup = constraintGroups[i];
+
+            var linkableAxesNoLoops = [];
+            for(j = 0; j < linkableAxes.length; j++) {
+                idj = linkableAxes[j];
+                if(!thisGroup[idj]) linkableAxesNoLoops.push(idj);
+            }
+            return {linkableAxes: linkableAxesNoLoops, thisGroup: thisGroup};
+        }
+    }
+
+    return {linkableAxes: linkableAxes, thisGroup: null};
+}
+
+
+/*
+ * Add this axis to the axis constraint groups, which is the collection
+ * of axes that are all constrained together on scale.
+ *
+ * constraintGroups: a list of objects. each object is
+ * {axis_id: scale_within_group}, where scale_within_group is
+ * only important relative to the rest of the group, and defines
+ * the relative scales between all axes in the group
+ *
+ * thisGroup: the group the current axis is already in
+ * thisID: the id if the current axis
+ * scaleanchor: the id of the axis to scale it with
+ * scaleratio: the ratio of this axis to the scaleanchor axis
+ */
+function updateConstraintGroups(constraintGroups, thisGroup, thisID, scaleanchor, scaleratio) {
+    var i, j, groupi, keyj, thisGroupIndex;
+
+    if(thisGroup === null) {
+        thisGroup = {};
+        thisGroup[thisID] = 1;
+        thisGroupIndex = constraintGroups.length;
+        constraintGroups.push(thisGroup);
+    }
+    else {
+        thisGroupIndex = constraintGroups.indexOf(thisGroup);
+    }
+
+    var thisGroupKeys = Object.keys(thisGroup);
+
+    // we know that this axis isn't in any other groups, but we don't know
+    // about the scaleanchor axis. If it is, we need to merge the groups.
+    for(i = 0; i < constraintGroups.length; i++) {
+        groupi = constraintGroups[i];
+        if(i !== thisGroupIndex && groupi[scaleanchor]) {
+            var baseScale = groupi[scaleanchor];
+            for(j = 0; j < thisGroupKeys.length; j++) {
+                keyj = thisGroupKeys[j];
+                groupi[keyj] = baseScale * scaleratio * thisGroup[keyj];
+            }
+            constraintGroups.splice(thisGroupIndex, 1);
+            return;
+        }
+    }
+
+    // otherwise, we insert the new scaleanchor axis as the base scale (1)
+    // in its group, and scale the rest of the group to it
+    if(scaleratio !== 1) {
+        for(j = 0; j < thisGroupKeys.length; j++) {
+            thisGroup[thisGroupKeys[j]] *= scaleratio;
+        }
+    }
+    thisGroup[scaleanchor] = 1;
+}
+
+},{"../../lib":323,"./axis_ids":361}],365:[function(require,module,exports){
+/**
+* Copyright 2012-2017, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+var id2name = require('./axis_ids').id2name;
+var scaleZoom = require('./scale_zoom');
+
+var ALMOST_EQUAL = require('../../constants/numerical').ALMOST_EQUAL;
+
+
+module.exports = function enforceAxisConstraints(gd) {
+    var fullLayout = gd._fullLayout;
+    var constraintGroups = fullLayout._axisConstraintGroups;
+
+    var i, j, axisID, ax, normScale;
+
+    for(i = 0; i < constraintGroups.length; i++) {
+        var group = constraintGroups[i];
+        var axisIDs = Object.keys(group);
+
+        var minScale = Infinity;
+        var maxScale = 0;
+        // mostly matchScale will be the same as minScale
+        // ie we expand axis ranges to encompass *everything*
+        // that's currently in any of their ranges, but during
+        // autorange of a subset of axes we will ignore other
+        // axes for this purpose.
+        var matchScale = Infinity;
+        var normScales = {};
+        var axes = {};
+
+        // find the (normalized) scale of each axis in the group
+        for(j = 0; j < axisIDs.length; j++) {
+            axisID = axisIDs[j];
+            axes[axisID] = ax = fullLayout[id2name(axisID)];
+
+            // set axis scale here so we can use _m rather than
+            // having to calculate it from length and range
+            ax.setScale();
+
+            // abs: inverted scales still satisfy the constraint
+            normScales[axisID] = normScale = Math.abs(ax._m) / group[axisID];
+            minScale = Math.min(minScale, normScale);
+            if(ax._constraintShrinkable) {
+                // this has served its purpose, so remove it
+                delete ax._constraintShrinkable;
+            }
+            else {
+                matchScale = Math.min(matchScale, normScale);
+            }
+            maxScale = Math.max(maxScale, normScale);
+        }
+
+        // Do we have a constraint mismatch? Give a small buffer for rounding errors
+        if(minScale > ALMOST_EQUAL * maxScale) continue;
+
+        // now increase any ranges we need to until all normalized scales are equal
+        for(j = 0; j < axisIDs.length; j++) {
+            axisID = axisIDs[j];
+            normScale = normScales[axisID];
+
+            if(normScale !== matchScale) {
+                scaleZoom(axes[axisID], normScale / matchScale);
+            }
+        }
+    }
+};
+
+},{"../../constants/numerical":309,"./axis_ids":361,"./scale_zoom":373}],366:[function(require,module,exports){
+/**
+* Copyright 2012-2017, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
 var d3 = require('d3');
 var tinycolor = require('tinycolor2');
 
@@ -72892,10 +73245,20 @@ var Drawing = require('../../components/drawing');
 var setCursor = require('../../lib/setcursor');
 var dragElement = require('../../components/dragelement');
 
-var Axes = require('./axes');
+var doTicks = require('./axes').doTicks;
+var getFromId = require('./axis_ids').getFromId;
 var prepSelect = require('./select');
-var constants = require('./constants');
+var scaleZoom = require('./scale_zoom');
 
+var constants = require('./constants');
+var MINDRAG = constants.MINDRAG;
+var MINZOOM = constants.MINZOOM;
+var mousePos1;
+var mousePos2;
+var result;
+var scaling;
+var oldresult = 0;
+var redraw = true;
 
 // flag for showing "doubleclick to zoom out" only at the beginning
 var SHOWZOOMOUTTIP = true;
@@ -72917,48 +73280,71 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
     // dragged stores whether a drag has occurred, so we don't have to
     // redraw unnecessarily, ie if no move bigger than MINDRAG or MINZOOM px
     var fullLayout = gd._fullLayout,
+        zoomlayer = gd._fullLayout._zoomlayer,
+        isMainDrag = (ns + ew === 'nsew'),
+        subplots,
+        xa,
+        ya,
+        xs,
+        ys,
+        pw,
+        ph,
+        xActive,
+        yActive,
+        cursor,
+        isSubplotConstrained,
+        xaLinked,
+        yaLinked;
+
+    function recomputeAxisLists() {
+        xa = [plotinfo.xaxis];
+        ya = [plotinfo.yaxis];
+        var xa0 = xa[0];
+        var ya0 = ya[0];
+        pw = xa0._length;
+        ph = ya0._length;
+
+        var constraintGroups = fullLayout._axisConstraintGroups;
+        var xIDs = [xa0._id];
+        var yIDs = [ya0._id];
+
         // if we're dragging two axes at once, also drag overlays
-        subplots = [plotinfo].concat((ns && ew) ? plotinfo.overlays : []),
-        xa = [plotinfo.xaxis],
-        ya = [plotinfo.yaxis],
-        pw = xa[0]._length,
-        ph = ya[0]._length,
-        MINDRAG = constants.MINDRAG,
-        MINZOOM = constants.MINZOOM,
-        isMainDrag = (ns + ew === 'nsew');
+        subplots = [plotinfo].concat((ns && ew) ? plotinfo.overlays : []);
 
-    for(var i = 1; i < subplots.length; i++) {
-        var subplotXa = subplots[i].xaxis,
-            subplotYa = subplots[i].yaxis;
-        if(xa.indexOf(subplotXa) === -1) xa.push(subplotXa);
-        if(ya.indexOf(subplotYa) === -1) ya.push(subplotYa);
-    }
+        for(var i = 1; i < subplots.length; i++) {
+            var subplotXa = subplots[i].xaxis,
+                subplotYa = subplots[i].yaxis;
 
-    function isDirectionActive(axList, activeVal) {
-        for(var i = 0; i < axList.length; i++) {
-            if(!axList[i].fixedrange) return activeVal;
+            if(xa.indexOf(subplotXa) === -1) {
+                xa.push(subplotXa);
+                xIDs.push(subplotXa._id);
+            }
+
+            if(ya.indexOf(subplotYa) === -1) {
+                ya.push(subplotYa);
+                yIDs.push(subplotYa._id);
+            }
         }
-        return '';
+
+        xActive = isDirectionActive(xa, ew);
+        yActive = isDirectionActive(ya, ns);
+        cursor = getDragCursor(yActive + xActive, fullLayout.dragmode);
+        xs = xa0._offset;
+        ys = ya0._offset;
+
+        var links = calcLinks(constraintGroups, xIDs, yIDs);
+        isSubplotConstrained = links.xy;
+
+        // finally make the list of axis objects to link
+        xaLinked = [];
+        for(var xLinkID in links.x) { xaLinked.push(getFromId(gd, xLinkID)); }
+        yaLinked = [];
+        for(var yLinkID in links.y) { yaLinked.push(getFromId(gd, yLinkID)); }
     }
 
-    var allaxes = xa.concat(ya),
-        xActive = isDirectionActive(xa, ew),
-        yActive = isDirectionActive(ya, ns),
-        cursor = getDragCursor(yActive + xActive, fullLayout.dragmode),
-        dragClass = ns + ew + 'drag';
+    recomputeAxisLists();
 
-    var dragger3 = plotinfo.draglayer.selectAll('.' + dragClass).data([0]);
-
-    dragger3.enter().append('rect')
-        .classed('drag', true)
-        .classed(dragClass, true)
-        .style({fill: 'transparent', 'stroke-width': 0})
-        .attr('data-subplot', plotinfo.id);
-
-    dragger3.call(Drawing.setRect, x, y, w, h)
-        .call(setCursor, cursor);
-
-    var dragger = dragger3.node();
+    var dragger = makeDragger(plotinfo, ns + ew + 'drag', cursor, x, y, w, h);
 
     // still need to make the element if the axes are disabled
     // but nuke its events (except for maindrag which needs them for hover)
@@ -72973,8 +73359,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         element: dragger,
         gd: gd,
         plotinfo: plotinfo,
-        xaxes: xa,
-        yaxes: ya,
         doubleclick: doubleClick,
         prepFn: function(e, startX, startY) {
             var dragModeNow = gd._fullLayout.dragmode;
@@ -72996,14 +73380,22 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             if(dragModeNow === 'zoom') {
                 dragOptions.moveFn = zoomMove;
                 dragOptions.doneFn = zoomDone;
+
+                // zoomMove takes care of the threshold, but we need to
+                // minimize this so that constrained zoom boxes will flip
+                // orientation at the right place
+                dragOptions.minDrag = 1;
+
                 zoomPrep(e, startX, startY);
             }
             else if(dragModeNow === 'pan') {
                 dragOptions.moveFn = plotDrag;
                 dragOptions.doneFn = dragDone;
-                clearSelect();
+                clearSelect(zoomlayer);
             }
             else if(isSelectOrLasso(dragModeNow)) {
+                dragOptions.xaxes = xa;
+                dragOptions.yaxes = ya;
                 prepSelect(e, startX, startY, dragOptions, dragModeNow);
             }
         }
@@ -73011,10 +73403,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
 
     dragElement.init(dragOptions);
 
-    var zoomlayer = gd._fullLayout._zoomlayer,
-        xs = plotinfo.xaxis._offset,
-        ys = plotinfo.yaxis._offset,
-        x0,
+    var x0,
         y0,
         box,
         lum,
@@ -73023,28 +73412,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         zoomMode,
         zb,
         corners;
-
-    function recomputeAxisLists() {
-        xa = [plotinfo.xaxis];
-        ya = [plotinfo.yaxis];
-        pw = xa[0]._length;
-        ph = ya[0]._length;
-
-        for(var i = 1; i < subplots.length; i++) {
-            var subplotXa = subplots[i].xaxis,
-                subplotYa = subplots[i].yaxis;
-            if(xa.indexOf(subplotXa) === -1) xa.push(subplotXa);
-            if(ya.indexOf(subplotYa) === -1) ya.push(subplotYa);
-        }
-        allaxes = xa.concat(ya);
-        xActive = isDirectionActive(xa, ew);
-        yActive = isDirectionActive(ya, ns);
-        cursor = getDragCursor(yActive + xActive, fullLayout.dragmode);
-        xs = plotinfo.xaxis._offset;
-        ys = plotinfo.yaxis._offset;
-        dragOptions.xa = xa;
-        dragOptions.ya = ya;
-    }
 
     function zoomPrep(e, startX, startY) {
         var dragBBox = dragger.getBoundingClientRect();
@@ -73058,34 +73425,11 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         dimmed = false;
         zoomMode = 'xy';
 
-        zb = zoomlayer.append('path')
-            .attr('class', 'zoombox')
-            .style({
-                'fill': lum > 0.2 ? 'rgba(0,0,0,0)' : 'rgba(255,255,255,0)',
-                'stroke-width': 0
-            })
-            .attr('transform', 'translate(' + xs + ', ' + ys + ')')
-            .attr('d', path0 + 'Z');
+        zb = makeZoombox(zoomlayer, lum, xs, ys, path0);
 
-        corners = zoomlayer.append('path')
-            .attr('class', 'zoombox-corners')
-            .style({
-                fill: Color.background,
-                stroke: Color.defaultLine,
-                'stroke-width': 1,
-                opacity: 0
-            })
-            .attr('transform', 'translate(' + xs + ', ' + ys + ')')
-            .attr('d', 'M0,0Z');
+        corners = makeCorners(zoomlayer, xs, ys);
 
-        clearSelect();
-    }
-
-    function clearSelect() {
-        // until we get around to persistent selections, remove the outline
-        // here. The selection itself will be removed when the plot redraws
-        // at the end.
-        zoomlayer.selectAll('.select-outline').remove();
+        clearSelect(zoomlayer);
     }
 
     function zoomMove(dx0, dy0) {
@@ -73096,93 +73440,67 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         var x1 = Math.max(0, Math.min(pw, dx0 + x0)),
             y1 = Math.max(0, Math.min(ph, dy0 + y0)),
             dx = Math.abs(x1 - x0),
-            dy = Math.abs(y1 - y0),
-            clen = Math.floor(Math.min(dy, dx, MINZOOM) / 2);
+            dy = Math.abs(y1 - y0);
 
         box.l = Math.min(x0, x1);
         box.r = Math.max(x0, x1);
         box.t = Math.min(y0, y1);
         box.b = Math.max(y0, y1);
 
+        function noZoom() {
+            zoomMode = '';
+            box.r = box.l;
+            box.t = box.b;
+            corners.attr('d', 'M0,0Z');
+        }
+
+        if(isSubplotConstrained) {
+            if(dx > MINZOOM || dy > MINZOOM) {
+                zoomMode = 'xy';
+                if(dx / pw > dy / ph) {
+                    dy = dx * ph / pw;
+                    if(y0 > y1) box.t = y0 - dy;
+                    else box.b = y0 + dy;
+                }
+                else {
+                    dx = dy * pw / ph;
+                    if(x0 > x1) box.l = x0 - dx;
+                    else box.r = x0 + dx;
+                }
+                corners.attr('d', xyCorners(box));
+            }
+            else {
+                noZoom();
+            }
+        }
         // look for small drags in one direction or the other,
         // and only drag the other axis
-        if(!yActive || dy < Math.min(Math.max(dx * 0.6, MINDRAG), MINZOOM)) {
+        else if(!yActive || dy < Math.min(Math.max(dx * 0.6, MINDRAG), MINZOOM)) {
             if(dx < MINDRAG) {
-                zoomMode = '';
-                box.r = box.l;
-                box.t = box.b;
-                corners.attr('d', 'M0,0Z');
+                noZoom();
             }
             else {
                 box.t = 0;
                 box.b = ph;
                 zoomMode = 'x';
-                corners.attr('d',
-                    'M' + (box.l - 0.5) + ',' + (y0 - MINZOOM - 0.5) +
-                    'h-3v' + (2 * MINZOOM + 1) + 'h3ZM' +
-                    (box.r + 0.5) + ',' + (y0 - MINZOOM - 0.5) +
-                    'h3v' + (2 * MINZOOM + 1) + 'h-3Z');
+                corners.attr('d', xCorners(box, y0));
             }
         }
         else if(!xActive || dx < Math.min(dy * 0.6, MINZOOM)) {
             box.l = 0;
             box.r = pw;
             zoomMode = 'y';
-            corners.attr('d',
-                'M' + (x0 - MINZOOM - 0.5) + ',' + (box.t - 0.5) +
-                'v-3h' + (2 * MINZOOM + 1) + 'v3ZM' +
-                (x0 - MINZOOM - 0.5) + ',' + (box.b + 0.5) +
-                'v3h' + (2 * MINZOOM + 1) + 'v-3Z');
+            corners.attr('d', yCorners(box, x0));
         }
         else {
             zoomMode = 'xy';
-            corners.attr('d',
-                'M' + (box.l - 3.5) + ',' + (box.t - 0.5 + clen) + 'h3v' + (-clen) +
-                        'h' + clen + 'v-3h-' + (clen + 3) + 'ZM' +
-                    (box.r + 3.5) + ',' + (box.t - 0.5 + clen) + 'h-3v' + (-clen) +
-                        'h' + (-clen) + 'v-3h' + (clen + 3) + 'ZM' +
-                    (box.r + 3.5) + ',' + (box.b + 0.5 - clen) + 'h-3v' + clen +
-                        'h' + (-clen) + 'v3h' + (clen + 3) + 'ZM' +
-                    (box.l - 3.5) + ',' + (box.b + 0.5 - clen) + 'h3v' + clen +
-                        'h' + clen + 'v3h-' + (clen + 3) + 'Z');
+            corners.attr('d', xyCorners(box));
         }
         box.w = box.r - box.l;
         box.h = box.b - box.t;
 
-        // Not sure about the addition of window.scrollX/Y...
-        // seems to work but doesn't seem robust.
-        zb.attr('d',
-            path0 + 'M' + (box.l) + ',' + (box.t) + 'v' + (box.h) +
-            'h' + (box.w) + 'v-' + (box.h) + 'h-' + (box.w) + 'Z');
-        if(!dimmed) {
-            zb.transition()
-                .style('fill', lum > 0.2 ? 'rgba(0,0,0,0.4)' :
-                    'rgba(255,255,255,0.3)')
-                .duration(200);
-            corners.transition()
-                .style('opacity', 1)
-                .duration(200);
-            dimmed = true;
-        }
-    }
-
-    function zoomAxRanges(axList, r0Fraction, r1Fraction) {
-        var i,
-            axi,
-            axRangeLinear0,
-            axRangeLinearSpan;
-
-        for(i = 0; i < axList.length; i++) {
-            axi = axList[i];
-            if(axi.fixedrange) continue;
-
-            axRangeLinear0 = axi._rl[0];
-            axRangeLinearSpan = axi._rl[1] - axRangeLinear0;
-            axi.range = [
-                axi.l2r(axRangeLinear0 + axRangeLinearSpan * r0Fraction),
-                axi.l2r(axRangeLinear0 + axRangeLinearSpan * r1Fraction)
-            ];
-        }
+        updateZoombox(zb, corners, box, path0, dimmed, lum);
+        dimmed = true;
     }
 
     function zoomDone(dragged, numClicks) {
@@ -73192,8 +73510,9 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             return removeZoombox(gd);
         }
 
-        if(zoomMode === 'xy' || zoomMode === 'x') zoomAxRanges(xa, box.l / pw, box.r / pw);
-        if(zoomMode === 'xy' || zoomMode === 'y') zoomAxRanges(ya, (ph - box.b) / ph, (ph - box.t) / ph);
+        // TODO: edit linked axes in zoomAxRanges and in dragTail
+        if(zoomMode === 'xy' || zoomMode === 'x') zoomAxRanges(xa, box.l / pw, box.r / pw, xaLinked);
+        if(zoomMode === 'xy' || zoomMode === 'y') zoomAxRanges(ya, (ph - box.b) / ph, (ph - box.t) / ph, yaLinked);
 
         removeZoombox(gd);
         dragTail(zoomMode);
@@ -73225,7 +73544,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             else if(ew === 'e') hAlign = 'right';
 
             if(gd._context.showAxisRangeEntryBoxes) {
-                dragger3
+                d3.select(dragger)
                     .call(svgTextUtils.makeEditable, null, {
                         immediate: true,
                         background: fullLayout.paper_bgcolor,
@@ -73250,82 +73569,178 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         redrawTimer = null,
         REDRAWDELAY = constants.REDRAWDELAY,
         mainplot = plotinfo.mainplot ?
-            fullLayout._plots[plotinfo.mainplot] : plotinfo;
+        fullLayout._plots[plotinfo.mainplot] : plotinfo;
 
-    function zoomWheel(e) {
-        // deactivate mousewheel scrolling on embedded graphs
-        // devs can override this with layout._enablescrollzoom,
-        // but _ ensures this setting won't leave their page
-        if(!gd._context.scrollZoom && !fullLayout._enablescrollzoom) {
-            return;
+        function zoomWheel(e) {
+            if(e == 'touch'){
+              if(redraw){
+                redrawTimer = setTimeout(function() {
+                    scrollViewBox = [0, 0, pw, ph];
+                    var zoomMode;
+                    if(isSubplotConstrained) zoomMode = 'xy';
+                    else zoomMode = (ew ? 'x' : '') + (ns ? 'y' : '');
+                    dragTail(zoomMode);
+                }, REDRAWDELAY);
+              }
+            }else{
+                  // deactivate mousewheel scrolling on embedded graphs
+                  // devs can override this with layout._enablescrollzoom,
+                  // but _ ensures this setting won't leave their page
+                  if(!gd._context.scrollZoom && !fullLayout._enablescrollzoom) {
+                      return;
+                  }
+
+                  // If a transition is in progress, then disable any behavior:
+                  if(gd._transitioningWithDuration) {
+                      return Lib.pauseEvent(e);
+                  }
+
+                  var pc = gd.querySelector('.plotly');
+
+                  recomputeAxisLists();
+
+                  // if the plot has scrollbars (more than a tiny excess)
+                  // disable scrollzoom too.
+                  if(pc.scrollHeight - pc.clientHeight > 10 ||
+                          pc.scrollWidth - pc.clientWidth > 10) {
+                      return;
+                  }
+
+                  clearTimeout(redrawTimer);
+                  var wheelDelta = -e.deltaY;
+                  if(!isFinite(wheelDelta)) wheelDelta = e.wheelDelta / 10;
+                  if(!isFinite(wheelDelta)) {
+                      Lib.log('Did not find wheel motion attributes: ', e);
+                      return;
+                  }
+                  if(e.touches){
+                    var zoom = Math.exp(-Math.min(Math.max(wheelDelta, -20), 20) / 100),
+                        gbb = mainplot.draglayer.select('.nsewdrag').node().getBoundingClientRect(),
+                        xfrac = (((mousePos2[0] + mousePos1[0]) / 2) - gbb.left) / gbb.width,
+                        yfrac = (gbb.bottom - ((mousePos2[1] + mousePos1[1]) / 2)) / gbb.height,
+                        i;
+                  }else{
+                    console.log('mouse')
+                    var zoom = Math.exp(-Math.min(Math.max(wheelDelta, -20), 20) / 100),
+                        gbb = mainplot.draglayer.select('.nsewdrag').node().getBoundingClientRect(),
+                        xfrac = (e.clientX - gbb.left) / gbb.width,
+                        yfrac = (gbb.bottom - e.clientY) / gbb.height,
+                        i;
+                  }
+
+                  function zoomWheelOneAxis(ax, centerFraction, zoom) {
+                      if(ax.fixedrange) return;
+
+                      var axRange = Lib.simpleMap(ax.range, ax.r2l),
+                          v0 = axRange[0] + (axRange[1] - axRange[0]) * centerFraction;
+                      function doZoom(v) { return ax.l2r(v0 + (v - v0) * zoom); }
+                      ax.range = axRange.map(doZoom);
+                  }
+
+                  if(ew || isSubplotConstrained) {
+                      // if we're only zooming this axis because of constraints,
+                      // zoom it about the center
+                      if(!ew) xfrac = 0.5;
+
+                      for(i = 0; i < xa.length; i++) zoomWheelOneAxis(xa[i], xfrac, zoom);
+
+                      scrollViewBox[2] *= zoom;
+                      scrollViewBox[0] += scrollViewBox[2] * xfrac * (1 / zoom - 1);
+                  }
+                  if(ns || isSubplotConstrained) {
+                      if(!ns) yfrac = 0.5;
+
+                      for(i = 0; i < ya.length; i++) zoomWheelOneAxis(ya[i], yfrac, zoom);
+
+                      scrollViewBox[3] *= zoom;
+                      scrollViewBox[1] += scrollViewBox[3] * (1 - yfrac) * (1 / zoom - 1);
+                  }
+
+                  console.log(scrollViewBox);
+                  // viewbox redraw at first
+                  updateSubplots(scrollViewBox);
+                  ticksAndAnnotations(ns, ew);
+
+                  // then replot after a delay to make sure
+                  // no more scrolling is coming
+
+                  if(redraw){
+                    redrawTimer = setTimeout(function() {
+                        scrollViewBox = [0, 0, pw, ph];
+                        var zoomMode;
+                        if(isSubplotConstrained) zoomMode = 'xy';
+                        else zoomMode = (ew ? 'x' : '') + (ns ? 'y' : '');
+                        dragTail(zoomMode);
+                    }, REDRAWDELAY);
+                  }
+                  return Lib.pauseEvent(e);
+                }
+            }
+    var result = document.getElementsByClassName("nsewdrag");
+    for(var i = 0;i< result.length;i++){
+      if(!result[i].onpinchstart){
+        dragger.addEventListener('touchstart', zoomPinchStart);
+        dragger.addEventListener('touchmove', zoomPinchMove);
+        dragger.addEventListener('touchend', zoomPinchEnd);
+        dragger.onpinchstart = zoomPinchStart;
+      }
+    }
+
+    function zoomPinchStart(e) {
+      redraw = false;
+    }
+
+    function zoompinchMove(e) {
+      if(e.touches.length == 2){
+        if(!scaling){
+          //redraw = false;
+          scaling = true;
+          mousePos1 = [
+                          e.touches[0].clientX,
+                          e.touches[0].clientY
+                      ];
+          mousePos2 = [
+                          e.touches[1].clientX,
+                          e.touches[1].clientY
+                      ];
+        var pow1 = Math.pow(mousePos1[0] - mousePos2[0], 2);
+        var pow2 = Math.pow(mousePos2[1] - mousePos1[1], 2);
+        oldresult = Math.sqrt(pow1 + pow2);
         }
-
-        // If a transition is in progress, then disable any behavior:
-        if(gd._transitioningWithDuration) {
-            return Lib.pauseEvent(e);
+    }
+    if(e.touches.length == 2) {
+      mousePos2 = [
+                      e.touches[1].clientX,
+                      e.touches[1].clientY
+                  ];
+      var pow1 = Math.pow(mousePos1[0] - mousePos2[0], 2);
+      var pow2 = Math.pow(mousePos2[1] - mousePos1[1], 2);
+      var result = Math.sqrt(pow1 + pow2);
+      //console.log('oldresult: ' + oldresult);
+      //console.log(result);
+      if((result - oldresult) >= 30){
+        oldresult = result;
+        e.deltaY = -100;
+        e.wheelDelta = 12;
+        //zoomTouch(e);
+        zoomWheel(e);
+      }else if((result - oldresult) <= -30){
+        oldresult = result;
+        e.deltaY = 100;
+        e.wheelDelta = -12;
+        //zoomTouch(e);
+        zoomWheel(e);
         }
+      }
+    }
 
-        var pc = gd.querySelector('.plotly');
-
-        recomputeAxisLists();
-
-        // if the plot has scrollbars (more than a tiny excess)
-        // disable scrollzoom too.
-        if(pc.scrollHeight - pc.clientHeight > 10 ||
-                pc.scrollWidth - pc.clientWidth > 10) {
-            return;
-        }
-
-        clearTimeout(redrawTimer);
-
-        var wheelDelta = -e.deltaY;
-        if(!isFinite(wheelDelta)) wheelDelta = e.wheelDelta / 10;
-        if(!isFinite(wheelDelta)) {
-            Lib.log('Did not find wheel motion attributes: ', e);
-            return;
-        }
-
-        var zoom = Math.exp(-Math.min(Math.max(wheelDelta, -20), 20) / 100),
-            gbb = mainplot.draglayer.select('.nsewdrag')
-                .node().getBoundingClientRect(),
-            xfrac = (e.clientX - gbb.left) / gbb.width,
-            vbx0 = scrollViewBox[0] + scrollViewBox[2] * xfrac,
-            yfrac = (gbb.bottom - e.clientY) / gbb.height,
-            vby0 = scrollViewBox[1] + scrollViewBox[3] * (1 - yfrac),
-            i;
-
-        function zoomWheelOneAxis(ax, centerFraction, zoom) {
-            if(ax.fixedrange) return;
-
-            var axRange = Lib.simpleMap(ax.range, ax.r2l),
-                v0 = axRange[0] + (axRange[1] - axRange[0]) * centerFraction;
-            function doZoom(v) { return ax.l2r(v0 + (v - v0) * zoom); }
-            ax.range = axRange.map(doZoom);
-        }
-
-        if(ew) {
-            for(i = 0; i < xa.length; i++) zoomWheelOneAxis(xa[i], xfrac, zoom);
-            scrollViewBox[2] *= zoom;
-            scrollViewBox[0] = vbx0 - scrollViewBox[2] * xfrac;
-        }
-        if(ns) {
-            for(i = 0; i < ya.length; i++) zoomWheelOneAxis(ya[i], yfrac, zoom);
-            scrollViewBox[3] *= zoom;
-            scrollViewBox[1] = vby0 - scrollViewBox[3] * (1 - yfrac);
-        }
-
-        // viewbox redraw at first
-        updateSubplots(scrollViewBox);
-        ticksAndAnnotations(ns, ew);
-
-        // then replot after a delay to make sure
-        // no more scrolling is coming
-        redrawTimer = setTimeout(function() {
-            scrollViewBox = [0, 0, pw, ph];
-            dragTail();
-        }, REDRAWDELAY);
-
-        return Lib.pauseEvent(e);
+    function zoomPinchEnd(e) {
+      if(scaling){
+        scaling = false
+        redraw = true;
+        e = 'touch';
+        zoomWheel(e)
+      }
     }
 
     // everything but the corners gets wheel zoom
@@ -73344,34 +73759,12 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
 
         recomputeAxisLists();
 
-        function dragAxList(axList, pix) {
-            for(var i = 0; i < axList.length; i++) {
-                var axi = axList[i];
-                if(!axi.fixedrange) {
-                    axi.range = [
-                        axi.l2r(axi._rl[0] - pix / axi._m),
-                        axi.l2r(axi._rl[1] - pix / axi._m)
-                    ];
-                }
-            }
-        }
-
         if(xActive === 'ew' || yActive === 'ns') {
             if(xActive) dragAxList(xa, dx);
             if(yActive) dragAxList(ya, dy);
             updateSubplots([xActive ? -dx : 0, yActive ? -dy : 0, pw, ph]);
             ticksAndAnnotations(yActive, xActive);
             return;
-        }
-
-        // common transform for dragging one end of an axis
-        // d>0 is compressing scale (cursor is over the plot,
-        //  the axis end should move with the cursor)
-        // d<0 is expanding (cursor is off the plot, axis end moves
-        //  nonlinearly so you can expand far)
-        function dZoom(d) {
-            return 1 - ((d >= 0) ? Math.min(d, 0.9) :
-                1 / (1 / Math.max(d, -0.3) + 3.222));
         }
 
         // dz: set a new value for one end (0 or 1) of an axis array axArray,
@@ -73399,6 +73792,15 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                 (movedAx._rl[end] - movedAx._rl[otherEnd]);
         }
 
+        if(isSubplotConstrained && xActive && yActive) {
+            // dragging a corner of a constrained subplot:
+            // respect the fixed corner, but harmonize dx and dy
+            var dxySign = ((xActive === 'w') === (yActive === 'n')) ? 1 : -1;
+            var dxyFraction = (dx / pw + dxySign * dy / ph) / 2;
+            dx = dxyFraction * pw;
+            dy = dxySign * dxyFraction * ph;
+        }
+
         if(xActive === 'w') dx = dz(xa, 0, dx);
         else if(xActive === 'e') dx = dz(xa, 1, -dx);
         else if(!xActive) dx = 0;
@@ -73407,12 +73809,32 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         else if(yActive === 's') dy = dz(ya, 0, -dy);
         else if(!yActive) dy = 0;
 
-        updateSubplots([
-            (xActive === 'w') ? dx : 0,
-            (yActive === 'n') ? dy : 0,
-            pw - dx,
-            ph - dy
-        ]);
+        var x0 = (xActive === 'w') ? dx : 0;
+        var y0 = (yActive === 'n') ? dy : 0;
+
+        if(isSubplotConstrained) {
+            var i;
+            if(!xActive && yActive.length === 1) {
+                // dragging one end of the y axis of a constrained subplot
+                // scale the other axis the same about its middle
+                for(i = 0; i < xa.length; i++) {
+                    xa[i].range = xa[i]._r.slice();
+                    scaleZoom(xa[i], 1 - dy / ph);
+                }
+                dx = dy * pw / ph;
+                x0 = dx / 2;
+            }
+            if(!yActive && xActive.length === 1) {
+                for(i = 0; i < ya.length; i++) {
+                    ya[i].range = ya[i]._r.slice();
+                    scaleZoom(ya[i], 1 - dx / pw);
+                }
+                dy = dx * ph / pw;
+                y0 = dy / 2;
+            }
+        }
+
+        updateSubplots([x0, y0, pw - dx, ph - dy]);
         ticksAndAnnotations(yActive, xActive);
     }
 
@@ -73426,20 +73848,28 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             }
         }
 
-        if(ew) pushActiveAxIds(xa);
-        if(ns) pushActiveAxIds(ya);
-
-        for(i = 0; i < activeAxIds.length; i++) {
-            Axes.doTicks(gd, activeAxIds[i], true);
+        if(ew || isSubplotConstrained) {
+            pushActiveAxIds(xa);
+            pushActiveAxIds(xaLinked);
+        }
+        if(ns || isSubplotConstrained) {
+            pushActiveAxIds(ya);
+            pushActiveAxIds(yaLinked);
         }
 
-        function redrawObjs(objArray, method) {
+        for(i = 0; i < activeAxIds.length; i++) {
+            doTicks(gd, activeAxIds[i], true);
+        }
+
+        function redrawObjs(objArray, method, shortCircuit) {
             for(i = 0; i < objArray.length; i++) {
                 var obji = objArray[i];
 
                 if((ew && activeAxIds.indexOf(obji.xref) !== -1) ||
                     (ns && activeAxIds.indexOf(obji.yref) !== -1)) {
                     method(gd, i);
+                    // once is enough for images (which doesn't use the `i` arg anyway)
+                    if(shortCircuit) return;
                 }
             }
         }
@@ -73449,7 +73879,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
 
         redrawObjs(fullLayout.annotations || [], Registry.getComponentMethod('annotations', 'drawOne'));
         redrawObjs(fullLayout.shapes || [], Registry.getComponentMethod('shapes', 'drawOne'));
-        redrawObjs(fullLayout.images || [], Registry.getComponentMethod('images', 'draw'));
+        redrawObjs(fullLayout.images || [], Registry.getComponentMethod('images', 'draw'), true);
     }
 
     function doubleClick() {
@@ -73461,13 +73891,48 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
 
         var ax, i, rangeInitial;
 
+        // For reset+autosize mode:
+        // If *any* of the main axes is not at its initial range
+        // (or autoranged, if we have no initial range, to match the logic in
+        // doubleClickConfig === 'reset' below), we reset.
+        // If they are *all* at their initial ranges, then we autosize.
+        if(doubleClickConfig === 'reset+autosize') {
+
+            doubleClickConfig = 'autosize';
+
+            for(i = 0; i < axList.length; i++) {
+                ax = axList[i];
+                if((ax._rangeInitial && (
+                        ax.range[0] !== ax._rangeInitial[0] ||
+                        ax.range[1] !== ax._rangeInitial[1]
+                    )) ||
+                    (!ax._rangeInitial && !ax.autorange)
+                ) {
+                    doubleClickConfig = 'reset';
+                    break;
+                }
+            }
+        }
+
         if(doubleClickConfig === 'autosize') {
+            // don't set the linked axes here, so relayout marks them as shrinkable
+            // and we autosize just to the requested axis/axes
             for(i = 0; i < axList.length; i++) {
                 ax = axList[i];
                 if(!ax.fixedrange) attrs[ax._name + '.autorange'] = true;
             }
         }
         else if(doubleClickConfig === 'reset') {
+            // when we're resetting, reset all linked axes too, so we get back
+            // to the fully-auto-with-constraints situation
+            if(xActive || isSubplotConstrained) axList = axList.concat(xaLinked);
+            if(yActive && !isSubplotConstrained) axList = axList.concat(yaLinked);
+
+            if(isSubplotConstrained) {
+                if(!xActive) axList = axList.concat(xa);
+                else if(!yActive) axList = axList.concat(ya);
+            }
+
             for(i = 0; i < axList.length; i++) {
                 ax = axList[i];
 
@@ -73475,50 +73940,39 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                     attrs[ax._name + '.autorange'] = true;
                 }
                 else {
-                    rangeInitial = ax._rangeInitial.slice();
-                    attrs[ax._name + '.range[0]'] = rangeInitial[0];
-                    attrs[ax._name + '.range[1]'] = rangeInitial[1];
-                }
-            }
-        }
-        else if(doubleClickConfig === 'reset+autosize') {
-            for(i = 0; i < axList.length; i++) {
-                ax = axList[i];
-
-                if(ax.fixedrange) continue;
-                if(ax._rangeInitial === undefined ||
-                    ax.range[0] === ax._rangeInitial[0] &&
-                    ax.range[1] === ax._rangeInitial[1]
-                ) {
-                    attrs[ax._name + '.autorange'] = true;
-                }
-                else {
-                    rangeInitial = ax._rangeInitial.slice();
+                    rangeInitial = ax._rangeInitial;
                     attrs[ax._name + '.range[0]'] = rangeInitial[0];
                     attrs[ax._name + '.range[1]'] = rangeInitial[1];
                 }
             }
         }
 
-        gd.emit('plotly_doubleclick', null);
+        gd.emit('plotly_doubleclick', axList);
         Plotly.relayout(gd, attrs);
     }
 
     // dragTail - finish a drag event with a redraw
     function dragTail(zoommode) {
+        if(zoommode === undefined) zoommode = (ew ? 'x' : '') + (ns ? 'y' : '');
+
         var attrs = {};
         // revert to the previous axis settings, then apply the new ones
         // through relayout - this lets relayout manage undo/redo
-        for(var i = 0; i < allaxes.length; i++) {
-            var axi = allaxes[i];
-            if(zoommode && zoommode.indexOf(axi._id.charAt(0)) === -1) {
-                continue;
-            }
+        var axesToModify;
+        if(zoommode === 'xy') axesToModify = xa.concat(ya);
+        else if(zoommode === 'x') axesToModify = xa;
+        else if(zoommode === 'y') axesToModify = ya;
+
+        for(var i = 0; i < axesToModify.length; i++) {
+            var axi = axesToModify[i];
             if(axi._r[0] !== axi.range[0]) attrs[axi._name + '.range[0]'] = axi.range[0];
             if(axi._r[1] !== axi.range[1]) attrs[axi._name + '.range[1]'] = axi.range[1];
 
-            axi.range = axi._r.slice();
+            axi.range = axi._input.range = axi._r.slice();
         }
+
+		pw = xa[0]._length;
+		ph = ya[0]._length;
 
         updateSubplots([0, 0, pw, ph]);
         Plotly.relayout(gd, attrs);
@@ -73528,70 +73982,115 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
     // affected by this drag, and update them. look for all plots
     // sharing an affected axis (including the one being dragged)
     function updateSubplots(viewBox) {
-        var j;
-        var plotinfos = fullLayout._plots,
-            subplots = Object.keys(plotinfos);
+        var plotinfos = fullLayout._plots;
+        var subplots = Object.keys(plotinfos);
+        var xScaleFactor = viewBox[2] / xa[0]._length;
+        var yScaleFactor = viewBox[3] / ya[0]._length;
+        var editX = ew || isSubplotConstrained;
+        var editY = ns || isSubplotConstrained;
 
-        for(var i = 0; i < subplots.length; i++) {
+        var i, xScaleFactor2, yScaleFactor2, clipDx, clipDy;
+
+        // Find the appropriate scaling for this axis, if it's linked to the
+        // dragged axes by constraints. 0 is special, it means this axis shouldn't
+        // ever be scaled (will be converted to 1 if the other axis is scaled)
+        function getLinkedScaleFactor(ax) {
+            if(ax.fixedrange) return 0;
+
+            if(editX && xaLinked.indexOf(ax) !== -1) {
+                return xScaleFactor;
+            }
+            if(editY && (isSubplotConstrained ? xaLinked : yaLinked).indexOf(ax) !== -1) {
+                return yScaleFactor;
+            }
+            return 0;
+        }
+
+        function scaleAndGetShift(ax, scaleFactor) {
+            if(scaleFactor) {
+                ax.range = ax._r.slice();
+                scaleZoom(ax, scaleFactor);
+                return ax._length * (1 - scaleFactor) / 2;
+            }
+            return 0;
+        }
+
+        for(i = 0; i < subplots.length; i++) {
 
             var subplot = plotinfos[subplots[i]],
                 xa2 = subplot.xaxis,
                 ya2 = subplot.yaxis,
-                editX = ew && !xa2.fixedrange,
-                editY = ns && !ya2.fixedrange;
+                editX2 = editX && !xa2.fixedrange && (xa.indexOf(xa2) !== -1),
+                editY2 = editY && !ya2.fixedrange && (ya.indexOf(ya2) !== -1);
 
-            if(editX) {
-                var isInX = false;
-                for(j = 0; j < xa.length; j++) {
-                    if(xa[j]._id === xa2._id) {
-                        isInX = true;
-                        break;
-                    }
-                }
-                editX = editX && isInX;
+            if(editX2) {
+                xScaleFactor2 = xScaleFactor;
+                clipDx = viewBox[0];
+            }
+            else {
+                xScaleFactor2 = getLinkedScaleFactor(xa2);
+                clipDx = scaleAndGetShift(xa2, xScaleFactor2);
             }
 
-            if(editY) {
-                var isInY = false;
-                for(j = 0; j < ya.length; j++) {
-                    if(ya[j]._id === ya2._id) {
-                        isInY = true;
-                        break;
-                    }
-                }
-                editY = editY && isInY;
+            if(editY2) {
+                yScaleFactor2 = yScaleFactor;
+                clipDy = viewBox[1];
+            }
+            else {
+                yScaleFactor2 = getLinkedScaleFactor(ya2);
+                clipDy = scaleAndGetShift(ya2, yScaleFactor2);
             }
 
-            var xScaleFactor = editX ? xa2._length / viewBox[2] : 1,
-                yScaleFactor = editY ? ya2._length / viewBox[3] : 1;
+            // don't scale at all if neither axis is scalable here
+            if(!xScaleFactor2 && !yScaleFactor2) continue;
 
-            var clipDx = editX ? viewBox[0] : 0,
-                clipDy = editY ? viewBox[1] : 0;
+            // but if only one is, reset the other axis scaling
+            if(!xScaleFactor2) xScaleFactor2 = 1;
+            if(!yScaleFactor2) yScaleFactor2 = 1;
 
-            var fracDx = editX ? (viewBox[0] / viewBox[2] * xa2._length) : 0,
-                fracDy = editY ? (viewBox[1] / viewBox[3] * ya2._length) : 0;
-
-            var plotDx = xa2._offset - fracDx,
-                plotDy = ya2._offset - fracDy;
+            var plotDx = xa2._offset - clipDx / xScaleFactor2,
+                plotDy = ya2._offset - clipDy / yScaleFactor2;
 
             fullLayout._defs.selectAll('#' + subplot.clipId)
                 .call(Drawing.setTranslate, clipDx, clipDy)
-                .call(Drawing.setScale, 1 / xScaleFactor, 1 / yScaleFactor);
+                .call(Drawing.setScale, xScaleFactor2, yScaleFactor2);
 
             subplot.plot
                 .call(Drawing.setTranslate, plotDx, plotDy)
-                .call(Drawing.setScale, xScaleFactor, yScaleFactor)
+                .call(Drawing.setScale, 1 / xScaleFactor2, 1 / yScaleFactor2)
 
                 // This is specifically directed at scatter traces, applying an inverse
                 // scale to individual points to counteract the scale of the trace
                 // as a whole:
                 .select('.scatterlayer').selectAll('.points').selectAll('.point')
-                    .call(Drawing.setPointGroupScale, 1 / xScaleFactor, 1 / yScaleFactor);
+                    .call(Drawing.setPointGroupScale, xScaleFactor2, yScaleFactor2);
         }
     }
 
     return dragger;
 };
+
+function makeDragger(plotinfo, dragClass, cursor, x, y, w, h) {
+    var dragger3 = plotinfo.draglayer.selectAll('.' + dragClass).data([0]);
+
+    dragger3.enter().append('rect')
+        .classed('drag', true)
+        .classed(dragClass, true)
+        .style({fill: 'transparent', 'stroke-width': 0})
+        .attr('data-subplot', plotinfo.id);
+
+    dragger3.call(Drawing.setRect, x, y, w, h)
+        .call(setCursor, cursor);
+
+    return dragger3.node();
+}
+
+function isDirectionActive(axList, activeVal) {
+    for(var i = 0; i < axList.length; i++) {
+        if(!axList[i].fixedrange) return activeVal;
+    }
+    return '';
+}
 
 function getEndText(ax, end) {
     var initialVal = ax.range[end],
@@ -73614,6 +74113,54 @@ function getEndText(ax, end) {
     }
 }
 
+function zoomAxRanges(axList, r0Fraction, r1Fraction, linkedAxes) {
+    var i,
+        axi,
+        axRangeLinear0,
+        axRangeLinearSpan;
+
+    for(i = 0; i < axList.length; i++) {
+        axi = axList[i];
+        if(axi.fixedrange) continue;
+
+        axRangeLinear0 = axi._rl[0];
+        axRangeLinearSpan = axi._rl[1] - axRangeLinear0;
+        axi.range = [
+            axi.l2r(axRangeLinear0 + axRangeLinearSpan * r0Fraction),
+            axi.l2r(axRangeLinear0 + axRangeLinearSpan * r1Fraction)
+        ];
+    }
+
+    // zoom linked axes about their centers
+    if(linkedAxes && linkedAxes.length) {
+        var linkedR0Fraction = (r0Fraction + (1 - r1Fraction)) / 2;
+
+        zoomAxRanges(linkedAxes, linkedR0Fraction, 1 - linkedR0Fraction);
+    }
+}
+
+function dragAxList(axList, pix) {
+    for(var i = 0; i < axList.length; i++) {
+        var axi = axList[i];
+        if(!axi.fixedrange) {
+            axi.range = [
+                axi.l2r(axi._rl[0] - pix / axi._m),
+                axi.l2r(axi._rl[1] - pix / axi._m)
+            ];
+        }
+    }
+}
+
+// common transform for dragging one end of an axis
+// d>0 is compressing scale (cursor is over the plot,
+//  the axis end should move with the cursor)
+// d<0 is expanding (cursor is off the plot, axis end moves
+//  nonlinearly so you can expand far)
+function dZoom(d) {
+    return 1 - ((d >= 0) ? Math.min(d, 0.9) :
+        1 / (1 / Math.max(d, -0.3) + 3.222));
+}
+
 function getDragCursor(nsew, dragmode) {
     if(!nsew) return 'pointer';
     if(nsew === 'nsew') {
@@ -73621,6 +74168,52 @@ function getDragCursor(nsew, dragmode) {
         return 'crosshair';
     }
     return nsew.toLowerCase() + '-resize';
+}
+
+function makeZoombox(zoomlayer, lum, xs, ys, path0) {
+    return zoomlayer.append('path')
+        .attr('class', 'zoombox')
+        .style({
+            'fill': lum > 0.2 ? 'rgba(0,0,0,0)' : 'rgba(255,255,255,0)',
+            'stroke-width': 0
+        })
+        .attr('transform', 'translate(' + xs + ', ' + ys + ')')
+        .attr('d', path0 + 'Z');
+}
+
+function makeCorners(zoomlayer, xs, ys) {
+    return zoomlayer.append('path')
+        .attr('class', 'zoombox-corners')
+        .style({
+            fill: Color.background,
+            stroke: Color.defaultLine,
+            'stroke-width': 1,
+            opacity: 0
+        })
+        .attr('transform', 'translate(' + xs + ', ' + ys + ')')
+        .attr('d', 'M0,0Z');
+}
+
+function clearSelect(zoomlayer) {
+    // until we get around to persistent selections, remove the outline
+    // here. The selection itself will be removed when the plot redraws
+    // at the end.
+    zoomlayer.selectAll('.select-outline').remove();
+}
+
+function updateZoombox(zb, corners, box, path0, dimmed, lum) {
+    zb.attr('d',
+        path0 + 'M' + (box.l) + ',' + (box.t) + 'v' + (box.h) +
+        'h' + (box.w) + 'v-' + (box.h) + 'h-' + (box.w) + 'Z');
+    if(!dimmed) {
+        zb.transition()
+            .style('fill', lum > 0.2 ? 'rgba(0,0,0,0.4)' :
+                'rgba(255,255,255,0.3)')
+            .duration(200);
+        corners.transition()
+            .style('opacity', 1)
+            .duration(200);
+    }
 }
 
 function removeZoombox(gd) {
@@ -73635,8 +74228,92 @@ function isSelectOrLasso(dragmode) {
     return modes.indexOf(dragmode) !== -1;
 }
 
-},{"../../components/color":225,"../../components/dragelement":246,"../../components/drawing":248,"../../lib":323,"../../lib/setcursor":338,"../../lib/svg_text_utils":340,"../../plotly":353,"../../registry":397,"./axes":358,"./constants":363,"./select":371,"d3":8,"tinycolor2":197}],365:[function(require,module,exports){
-/**
+function xCorners(box, y0) {
+    return 'M' +
+        (box.l - 0.5) + ',' + (y0 - MINZOOM - 0.5) +
+        'h-3v' + (2 * MINZOOM + 1) + 'h3ZM' +
+        (box.r + 0.5) + ',' + (y0 - MINZOOM - 0.5) +
+        'h3v' + (2 * MINZOOM + 1) + 'h-3Z';
+}
+
+function yCorners(box, x0) {
+    return 'M' +
+        (x0 - MINZOOM - 0.5) + ',' + (box.t - 0.5) +
+        'v-3h' + (2 * MINZOOM + 1) + 'v3ZM' +
+        (x0 - MINZOOM - 0.5) + ',' + (box.b + 0.5) +
+        'v3h' + (2 * MINZOOM + 1) + 'v-3Z';
+}
+
+function xyCorners(box) {
+    var clen = Math.floor(Math.min(box.b - box.t, box.r - box.l, MINZOOM) / 2);
+    return 'M' +
+        (box.l - 3.5) + ',' + (box.t - 0.5 + clen) + 'h3v' + (-clen) +
+            'h' + clen + 'v-3h-' + (clen + 3) + 'ZM' +
+        (box.r + 3.5) + ',' + (box.t - 0.5 + clen) + 'h-3v' + (-clen) +
+            'h' + (-clen) + 'v-3h' + (clen + 3) + 'ZM' +
+        (box.r + 3.5) + ',' + (box.b + 0.5 - clen) + 'h-3v' + clen +
+            'h' + (-clen) + 'v3h' + (clen + 3) + 'ZM' +
+        (box.l - 3.5) + ',' + (box.b + 0.5 - clen) + 'h3v' + clen +
+            'h' + clen + 'v3h-' + (clen + 3) + 'Z';
+}
+
+function calcLinks(constraintGroups, xIDs, yIDs) {
+    var isSubplotConstrained = false;
+    var xLinks = {};
+    var yLinks = {};
+    var i, j, k;
+
+    var group, xLinkID, yLinkID;
+    for(i = 0; i < constraintGroups.length; i++) {
+        group = constraintGroups[i];
+        // check if any of the x axes we're dragging is in this constraint group
+        for(j = 0; j < xIDs.length; j++) {
+            if(group[xIDs[j]]) {
+                // put the rest of these axes into xLinks, if we're not already
+                // dragging them, so we know to scale these axes automatically too
+                // to match the changes in the dragged x axes
+                for(xLinkID in group) {
+                    if((xLinkID.charAt(0) === 'x' ? xIDs : yIDs).indexOf(xLinkID) === -1) {
+                        xLinks[xLinkID] = 1;
+                    }
+                }
+
+                // check if the x and y axes of THIS drag are linked
+                for(k = 0; k < yIDs.length; k++) {
+                    if(group[yIDs[k]]) isSubplotConstrained = true;
+                }
+            }
+        }
+
+        // now check if any of the y axes we're dragging is in this constraint group
+        // only look for outside links, as we've already checked for links within the dragger
+        for(j = 0; j < yIDs.length; j++) {
+            if(group[yIDs[j]]) {
+                for(yLinkID in group) {
+                    if((yLinkID.charAt(0) === 'x' ? xIDs : yIDs).indexOf(yLinkID) === -1) {
+                        yLinks[yLinkID] = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    if(isSubplotConstrained) {
+        // merge xLinks and yLinks if the subplot is constrained,
+        // since we'll always apply both anyway and the two will contain
+        // duplicates
+        Lib.extendFlat(xLinks, yLinks);
+        yLinks = {};
+    }
+    return {
+        x: xLinks,
+        y: yLinks,
+        xy: isSubplotConstrained
+    };
+}
+
+},{"../../components/color":225,"../../components/dragelement":246,"../../components/drawing":248,"../../lib":323,"../../lib/setcursor":338,"../../lib/svg_text_utils":340,"../../plotly":353,"../../registry":401,"./axes":358,"./axis_ids":361,"./constants":363,"./scale_zoom":373,"./select":374,"d3":8,"tinycolor2":197}],367:[function(require,module,exports){
+ c/**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
 *
@@ -73767,6 +74444,21 @@ fx.init = function(gd) {
                 gd._fullLayout._lasthover = maindrag;
                 gd._fullLayout._hoversubplot = subplot;
             };
+            maindrag.addEventListener('touchmove', function(evt) {
+                // This is on `gd._fullLayout`, *not* fullLayout because the reference
+                // changes by the time this is called again.
+                gd._fullLayout._rehover = function() {
+                    if(gd._fullLayout._hoversubplot === subplot) {
+                        Fx.hover(gd, evt, subplot);
+                    }
+                };
+                Fx.hover(gd, evt, subplot);
+
+                // Note that we have *not* used the cached fullLayout variable here
+                // since that may be outdated when this is called as a callback later on
+                gd._fullLayout._lasthover = maindrag;
+                gd._fullLayout._hoversubplot = subplot;
+            });
 
             /*
              * IMPORTANT:
@@ -73923,7 +74615,7 @@ fx.hover = function(gd, evt, subplot) {
         clearTimeout(gd._hoverTimer);
         gd._hoverTimer = undefined;
     }
-    // Is it more than 100ms since the last update?  If so, force
+    // Is it more than 100ms since the last update?  If so,mousedownmousedown force
     // an update now (synchronously) and exit
     if(Date.now() > gd._lastHoverTime + constants.HOVERMINTIME) {
         hover(gd, evt, subplot);
@@ -73943,6 +74635,7 @@ fx.hover = function(gd, evt, subplot) {
 function hover(gd, evt, subplot) {
     if(subplot === 'pie') {
         gd.emit('plotly_hover', {
+            event: evt.originalEvent,
             points: [evt]
         });
         return;
@@ -74051,12 +74744,17 @@ function hover(gd, evt, subplot) {
 
         // [x|y]px: the pixels (from top left) of the mouse location
         // on the currently selected plot area
-        var xpx, ypx;
+        var hasUserCalledHover = !evt.target,
+            xpx, ypx;
 
-        // mouse event? ie is there a target element with
-        // clientX and clientY values?
-        if(evt.target && ('clientX' in evt) && ('clientY' in evt)) {
+        if(hasUserCalledHover) {
+            if('xpx' in evt) xpx = evt.xpx;
+            else xpx = xaArray[0]._length / 2;
 
+            if('ypx' in evt) ypx = evt.ypx;
+            else ypx = yaArray[0]._length / 2;
+        }
+        else {
             // fire the beforehover event and quit if it returns false
             // note that we're only calling this on real mouse events, so
             // manual calls to fx.hover will always run.
@@ -74074,13 +74772,6 @@ function hover(gd, evt, subplot) {
             if(xpx < 0 || xpx > dbb.width || ypx < 0 || ypx > dbb.height) {
                 return dragElement.unhoverRaw(gd, evt);
             }
-        }
-        else {
-            if('xpx' in evt) xpx = evt.xpx;
-            else xpx = xaArray[0]._length / 2;
-
-            if('ypx' in evt) ypx = evt.ypx;
-            else ypx = yaArray[0]._length / 2;
         }
 
         if('xval' in evt) xvalArray = flat(subplots, evt.xval);
@@ -74262,10 +74953,14 @@ function hover(gd, evt, subplot) {
     if(!hoverChanged(gd, evt, oldhoverdata)) return;
 
     if(oldhoverdata) {
-        gd.emit('plotly_unhover', { points: oldhoverdata });
+        gd.emit('plotly_unhover', {
+            event: evt,
+            points: oldhoverdata
+        });
     }
 
     gd.emit('plotly_hover', {
+        event: evt,
         points: gd._hoverdata,
         xaxes: xaArray,
         yaxes: yaArray,
@@ -74988,7 +75683,7 @@ function hoverChanged(gd, evt, oldhoverdata) {
 fx.click = function(gd, evt) {
     var annotationsDone = Registry.getComponentMethod('annotations', 'onClick')(gd, gd._hoverdata);
 
-    function emitClick() { gd.emit('plotly_click', {points: gd._hoverdata}); }
+    function emitClick() { gd.emit('plotly_click', {points: gd._hoverdata, event: evt}); }
 
     if(gd._hoverdata && evt && evt.target) {
         if(annotationsDone && annotationsDone.then) {
@@ -75017,7 +75712,7 @@ fx.inbox = function(v0, v1) {
     return Infinity;
 };
 
-},{"../../components/color":225,"../../components/dragelement":246,"../../components/drawing":248,"../../lib":323,"../../lib/events":317,"../../lib/override_cursor":332,"../../lib/svg_text_utils":340,"../../registry":397,"../layout_attributes":380,"./axes":358,"./constants":363,"./dragbox":364,"d3":8,"fast-isnumeric":12,"tinycolor2":197}],366:[function(require,module,exports){
+},{"../../components/color":225,"../../components/dragelement":246,"../../components/drawing":248,"../../lib":323,"../../lib/events":317,"../../lib/override_cursor":332,"../../lib/svg_text_utils":340,"../../registry":401,"../layout_attributes":384,"./axes":358,"./constants":363,"./dragbox":366,"d3":8,"fast-isnumeric":12,"tinycolor2":197}],368:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -75402,7 +76097,7 @@ function joinLayer(parent, nodeType, className) {
     return layer;
 }
 
-},{"../../lib":323,"../plots":389,"./attributes":357,"./axis_ids":361,"./constants":363,"./layout_attributes":367,"./transition_axes":376,"d3":8}],367:[function(require,module,exports){
+},{"../../lib":323,"../plots":393,"./attributes":357,"./axis_ids":361,"./constants":363,"./layout_attributes":369,"./transition_axes":379,"d3":8}],369:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -75468,10 +76163,27 @@ module.exports = {
         ],
         
     },
-
     fixedrange: {
         valType: 'boolean',
         dflt: false,
+        
+        
+    },
+    // scaleanchor: not used directly, just put here for reference
+    // values are any opposite-letter axis id
+    scaleanchor: {
+        valType: 'enumerated',
+        values: [
+            constants.idRegex.x.toString(),
+            constants.idRegex.y.toString()
+        ],
+        
+        
+    },
+    scaleratio: {
+        valType: 'number',
+        min: 0,
+        dflt: 1,
         
         
     },
@@ -75745,7 +76457,7 @@ module.exports = {
     }
 };
 
-},{"../../components/color/attributes":224,"../../lib/extend":318,"../font_attributes":378,"./constants":363}],368:[function(require,module,exports){
+},{"../../components/color/attributes":224,"../../lib/extend":318,"../font_attributes":382,"./constants":363}],370:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -75764,7 +76476,9 @@ var basePlotLayoutAttributes = require('../layout_attributes');
 
 var constants = require('./constants');
 var layoutAttributes = require('./layout_attributes');
+var handleTypeDefaults = require('./type_defaults');
 var handleAxisDefaults = require('./axis_defaults');
+var handleConstraintDefaults = require('./constraint_defaults');
 var handlePositionDefaults = require('./position_defaults');
 var axisIds = require('./axis_ids');
 
@@ -75863,7 +76577,7 @@ module.exports = function supplyLayoutDefaults(layoutIn, layoutOut, fullData) {
 
     var bgColor = Color.combine(plot_bgcolor, layoutOut.paper_bgcolor);
 
-    var axName, axLayoutIn, axLayoutOut;
+    var axName, axLetter, axLayoutIn, axLayoutOut;
 
     function coerce(attr, dflt) {
         return Lib.coerce(axLayoutIn, axLayoutOut, layoutAttributes, attr, dflt);
@@ -75873,6 +76587,8 @@ module.exports = function supplyLayoutDefaults(layoutIn, layoutOut, fullData) {
         var list = {x: yaList, y: xaList}[axLetter];
         return Lib.simpleMap(list, axisIds.name2id);
     }
+
+    var counterAxes = {x: getCounterAxes('x'), y: getCounterAxes('y')};
 
     function getOverlayableAxes(axLetter, axName) {
         var list = {x: xaList, y: yaList}[axLetter];
@@ -75889,6 +76605,7 @@ module.exports = function supplyLayoutDefaults(layoutIn, layoutOut, fullData) {
         return out;
     }
 
+    // first pass creates the containers, determines types, and handles most of the settings
     for(i = 0; i < axesList.length; i++) {
         axName = axesList[i];
 
@@ -75899,14 +76616,16 @@ module.exports = function supplyLayoutDefaults(layoutIn, layoutOut, fullData) {
         axLayoutIn = layoutIn[axName];
         axLayoutOut = layoutOut[axName] = {};
 
-        var axLetter = axName.charAt(0);
+        handleTypeDefaults(axLayoutIn, axLayoutOut, coerce, fullData, axName);
+
+        axLetter = axName.charAt(0);
+        var overlayableAxes = getOverlayableAxes(axLetter, axName);
 
         var defaultOptions = {
             letter: axLetter,
             font: layoutOut.font,
             outerTicks: outerTicks[axName],
             showGrid: !noGrids[axName],
-            name: axName,
             data: fullData,
             bgColor: bgColor,
             calendar: layoutOut.calendar
@@ -75916,8 +76635,8 @@ module.exports = function supplyLayoutDefaults(layoutIn, layoutOut, fullData) {
 
         var positioningOptions = {
             letter: axLetter,
-            counterAxes: getCounterAxes(axLetter),
-            overlayableAxes: getOverlayableAxes(axLetter, axName)
+            counterAxes: counterAxes[axLetter],
+            overlayableAxes: overlayableAxes
         };
 
         handlePositionDefaults(axLayoutIn, axLayoutOut, coerce, positioningOptions);
@@ -75964,9 +76683,28 @@ module.exports = function supplyLayoutDefaults(layoutIn, layoutOut, fullData) {
 
         coerce('fixedrange', fixedRangeDflt);
     }
+
+    // Finally, handle scale constraints. We need to do this after all axes have
+    // coerced both `type` (so we link only axes of the same type) and
+    // `fixedrange` (so we can avoid linking from OR TO a fixed axis).
+
+    // sets of axes linked by `scaleanchor` along with the scaleratios compounded
+    // together, populated in handleConstraintDefaults
+    layoutOut._axisConstraintGroups = [];
+    var allAxisIds = counterAxes.x.concat(counterAxes.y);
+
+    for(i = 0; i < axesList.length; i++) {
+        axName = axesList[i];
+        axLetter = axName.charAt(0);
+
+        axLayoutIn = layoutIn[axName];
+        axLayoutOut = layoutOut[axName];
+
+        handleConstraintDefaults(axLayoutIn, axLayoutOut, coerce, allAxisIds, layoutOut);
+    }
 };
 
-},{"../../components/color":225,"../../lib":323,"../../registry":397,"../layout_attributes":380,"./axis_defaults":360,"./axis_ids":361,"./constants":363,"./layout_attributes":367,"./position_defaults":370}],369:[function(require,module,exports){
+},{"../../components/color":225,"../../lib":323,"../../registry":401,"../layout_attributes":384,"./axis_defaults":360,"./axis_ids":361,"./constants":363,"./constraint_defaults":364,"./layout_attributes":369,"./position_defaults":372,"./type_defaults":380}],371:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -76045,7 +76783,7 @@ module.exports = function orderedCategories(axisLetter, categoryorder, categorya
     }
 };
 
-},{"d3":8}],370:[function(require,module,exports){
+},{"d3":8}],372:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -76110,7 +76848,32 @@ module.exports = function handlePositionDefaults(containerIn, containerOut, coer
     return containerOut;
 };
 
-},{"../../lib":323,"fast-isnumeric":12}],371:[function(require,module,exports){
+},{"../../lib":323,"fast-isnumeric":12}],373:[function(require,module,exports){
+/**
+* Copyright 2012-2017, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+module.exports = function scaleZoom(ax, factor, centerFraction) {
+    if(centerFraction === undefined) centerFraction = 0.5;
+
+    var rangeLinear = [ax.r2l(ax.range[0]), ax.r2l(ax.range[1])];
+    var center = rangeLinear[0] + (rangeLinear[1] - rangeLinear[0]) * centerFraction;
+    var newHalfSpan = (center - rangeLinear[0]) * factor;
+
+    ax.range = ax._input.range = [
+        ax.l2r(center - newHalfSpan),
+        ax.l2r(center + newHalfSpan)
+    ];
+};
+
+},{}],374:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -76310,7 +77073,7 @@ module.exports = function prepSelect(e, startX, startY, dragOptions, mode) {
     };
 };
 
-},{"../../components/color":225,"../../lib/polygon":333,"./axes":358,"./constants":363}],372:[function(require,module,exports){
+},{"../../components/color":225,"../../lib/polygon":333,"./axes":358,"./constants":363}],375:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -76630,6 +77393,38 @@ module.exports = function setConvert(ax, fullLayout) {
             }
         }
     };
+    /**
+     * 
+     * @param {} ax - Achse, welche gerade resized wird
+     * @param {} axLetter - Startbuchstabe der Achse
+     * @returns {} scaleAxes - Array mit Achsen, deren Labels relevant sind
+     */
+    function getScaleAxes(ax, axLetter) {
+        var scaleAxes = [];
+        var id = ax._id;
+        var idNumber;
+        if (axLetter === 'x') {
+            idNumber = id.replace('x', '') * 1;
+            id = 'y'
+        } else {
+            idNumber = id.replace('y', '') * 1;
+            id = 'x'
+        }
+
+        if (ax.side === 'top' || ax.side === 'right') {
+            idNumber -= 19937;
+        }
+        if (idNumber === 0 || idNumber == 1) idNumber = '';
+        var scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        if (idNumber === '') {
+            idNumber = 1;
+        }
+        idNumber += 19937;
+        scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        return scaleAxes;
+    }
 
     // set scaling to pixels
     ax.setScale = function(usePrivateRange) {
@@ -76657,15 +77452,83 @@ module.exports = function setConvert(ax, fullLayout) {
         var rl0 = ax.r2l(ax[rangeAttr][0], calendar),
             rl1 = ax.r2l(ax[rangeAttr][1], calendar);
 
-        if(axLetter === 'y') {
+        var labelWidth = 0;
+        var labelWidthRight = 0;
+
+        var scaleAxes = getScaleAxes(ax, axLetter);
+
+        // TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier noch angepasst werden
+        if (axLetter === 'y') {
+            var axLength;
+            if (scaleAxes[0]) {
+                var scaleAxis = scaleAxes[0];
+                labelWidth = getLabelWidth(scaleAxis);
+                // Sofern die LabelWidth bereits ermittelt wurde, wird diese verwendet (solange sie kleiner als die aktuelle ist)
+                // dies dient dazu, da ansonsten der Plot zu Beginn eine falsche Gr��e hat
+                if (scaleAxis._lastLabel && scaleAxis._lastLabel.autoangle === scaleAxis._lastangle) {
+                    if (scaleAxis._lastLabel && labelWidth < scaleAxis._lastLabel.lastLabelWidth) {
+                        labelWidth = scaleAxis._lastLabel.lastLabelWidth;
+                    }
+                }
+                var marginBottom = gs.b * 0.7;
+                if (labelWidth <= 1) labelWidth = marginBottom;
+
+                if (scaleAxis._lastangle === 30) marginBottom = gs.b * 0.5;
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + marginBottom;
+                scaleAxis._shortLabel = false;
+                if (!ax._lastangle || (ax._lastangle && ax._lastangle != 0)) {
+                    if (axLength < 100 && labelWidth > 0) {
+                        axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+                        scaleAxis._shortLabel = true;
+                    }
+                }
+            } else {
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+            }
+
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
-            ax._length = gs.h * (ax.domain[1] - ax.domain[0]);
+            ax._length = axLength;
             ax._m = ax._length / (rl0 - rl1);
             ax._b = -ax._m * rl1;
         }
         else {
-            ax._offset = gs.l + ax.domain[0] * gs.w;
-            ax._length = gs.w * (ax.domain[1] - ax.domain[0]);
+            var axLength;
+            var axOffset;
+            if (scaleAxes.length > 0) {
+                var scaleAxis = scaleAxes[0];
+                var scaleAxisRight;
+                labelWidth = getLabelWidth(scaleAxis);
+                var marginLeft = gs.l * 0.5;
+                if (labelWidth <= 1) labelWidth = marginLeft;
+                if (scaleAxes.length > 1) {
+                    scaleAxisRight = scaleAxes[1];
+                    labelWidthRight = getLabelWidth(scaleAxisRight);
+                }
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight) + marginLeft;
+                axOffset = gs.l + ax.domain[0] * gs.w + labelWidth - marginLeft;
+                if (axLength < 100 && labelWidthRight > 0) {
+                    axLength += labelWidthRight;
+                    scaleAxisRight._shortLabel = true;
+                } else if (scaleAxisRight) {
+                    scaleAxisRight._shortLabel = false;
+                }
+                if (axLength < 100 && labelWidth > 0) {
+                    axLength += labelWidth;
+                    axLength -= marginLeft;
+                    axOffset -= labelWidth;
+                    axOffset += marginLeft;
+                    scaleAxis._shortLabel = true;
+                } else if (scaleAxis) {
+                    scaleAxis._shortLabel = false;
+                }
+            } else {
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]);
+                axOffset = gs.l + ax.domain[0] * gs.w;
+            }
+
+            ax._offset = axOffset;
+            ax._length = axLength;
+
             ax._m = ax._length / (rl1 - rl0);
             ax._b = -ax._m * rl0;
         }
@@ -76677,7 +77540,62 @@ module.exports = function setConvert(ax, fullLayout) {
             fullLayout._replotting = false;
             throw new Error('axis scaling');
         }
-    };
+
+        if (scaleAxes.length > 0) {
+            scaleAxis = scaleAxes[0];
+            var lastLabel = {};
+            if (labelWidth > 1) {
+                lastLabel.lastLabelWidth = labelWidth;
+            }
+
+            if (labelWidthRight > 1) {
+                lastLabel.lastLabelWidthRight = labelWidthRight;
+            }
+
+            lastLabel.autoangle = scaleAxis._lastangle;
+            scaleAxis._lastLabel = lastLabel;
+        }
+
+        function getLabelWidth(scaleAxis) {
+            var highestLabel = 0;
+            var textLabel = '';
+            var sizeLabel = {width: 0, height:0 };
+            var labelWidth = 0;
+            if (scaleAxis._categories) {
+                scaleAxis._categories.forEach(function (d) {
+                    if (d.length > highestLabel) {
+                        highestLabel = d.length;
+                        textLabel = d;
+                    }
+                });
+                sizeLabel = textMeasurement(textLabel, fullLayout.font.size, fullLayout.font.family)
+
+                labelWidth = sizeLabel.width;
+                if (scaleAxis._lastangle === 30) {
+                    labelWidth = labelWidth * Math.sin(0.5235988) / Math.sin(1.5707963);
+                } else if (scaleAxis._lastangle === 0) {
+                    labelWidth = 0;
+                }
+            }
+            
+            return labelWidth;
+        }
+
+        // gets the size of a element
+        function textMeasurement(value, fontSizeString, fontFamily) {
+            var body = $('body');
+            if (fontFamily) {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            } else {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            }
+            var elem = $('#testObjectDashboardUtils');
+            var width = elem.innerWidth() + 1;
+            var height = elem.innerHeight() + 1;
+            elem.remove();
+            return { width: width, height: height }
+            }
+        };
 
     // makeCalcdata: takes an x or y array and converts it
     // to a position on the axis object "ax"
@@ -76740,7 +77658,7 @@ module.exports = function setConvert(ax, fullLayout) {
     delete ax._forceTick0;
 };
 
-},{"../../constants/numerical":309,"../../lib":323,"./axis_ids":361,"./constants":363,"d3":8,"fast-isnumeric":12}],373:[function(require,module,exports){
+},{"../../constants/numerical":309,"../../lib":323,"./axis_ids":361,"./constants":363,"d3":8,"fast-isnumeric":12}],376:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -76824,7 +77742,7 @@ function getShowAttrDflt(containerIn) {
     }
 }
 
-},{"../../lib":323}],374:[function(require,module,exports){
+},{"../../lib":323}],377:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -76857,7 +77775,7 @@ module.exports = function handleTickDefaults(containerIn, containerOut, coerce, 
     }
 };
 
-},{"../../lib":323,"./layout_attributes":367}],375:[function(require,module,exports){
+},{"../../lib":323,"./layout_attributes":369}],378:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -76941,7 +77859,7 @@ module.exports = function handleTickValueDefaults(containerIn, containerOut, coe
     }
 };
 
-},{"../../constants/numerical":309,"../../lib":323,"fast-isnumeric":12}],376:[function(require,module,exports){
+},{"../../constants/numerical":309,"../../lib":323,"fast-isnumeric":12}],379:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -77253,7 +78171,135 @@ module.exports = function transitionAxes(gd, newLayout, transitionOpts, makeOnCo
     return Promise.resolve();
 };
 
-},{"../../components/drawing":248,"../../plotly":353,"../../registry":397,"./axes":358,"d3":8}],377:[function(require,module,exports){
+},{"../../components/drawing":248,"../../plotly":353,"../../registry":401,"./axes":358,"d3":8}],380:[function(require,module,exports){
+/**
+* Copyright 2012-2017, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+var Registry = require('../../registry');
+var autoType = require('./axis_autotype');
+var name2id = require('./axis_ids').name2id;
+
+/*
+ *  data: the plot data to use in choosing auto type
+ *  name: axis object name (ie 'xaxis') if one should be stored
+ */
+module.exports = function handleTypeDefaults(containerIn, containerOut, coerce, data, name) {
+    // set up some private properties
+    if(name) {
+        containerOut._name = name;
+        containerOut._id = name2id(name);
+    }
+
+    var axType = coerce('type');
+    if(axType === '-') {
+        setAutoType(containerOut, data);
+
+        if(containerOut.type === '-') {
+            containerOut.type = 'linear';
+        }
+        else {
+            // copy autoType back to input axis
+            // note that if this object didn't exist
+            // in the input layout, we have to put it in
+            // this happens in the main supplyDefaults function
+            containerIn.type = containerOut.type;
+        }
+    }
+};
+
+function setAutoType(ax, data) {
+    // new logic: let people specify any type they want,
+    // only autotype if type is '-'
+    if(ax.type !== '-') return;
+
+    var id = ax._id,
+        axLetter = id.charAt(0);
+
+    // support 3d
+    if(id.indexOf('scene') !== -1) id = axLetter;
+
+    var d0 = getFirstNonEmptyTrace(data, id, axLetter);
+    if(!d0) return;
+
+    // first check for histograms, as the count direction
+    // should always default to a linear axis
+    if(d0.type === 'histogram' &&
+            axLetter === {v: 'y', h: 'x'}[d0.orientation || 'v']) {
+        ax.type = 'linear';
+        return;
+    }
+
+    var calAttr = axLetter + 'calendar',
+        calendar = d0[calAttr];
+
+    // check all boxes on this x axis to see
+    // if they're dates, numbers, or categories
+    if(isBoxWithoutPositionCoords(d0, axLetter)) {
+        var posLetter = getBoxPosLetter(d0),
+            boxPositions = [],
+            trace;
+
+        for(var i = 0; i < data.length; i++) {
+            trace = data[i];
+            if(!Registry.traceIs(trace, 'box') ||
+               (trace[axLetter + 'axis'] || axLetter) !== id) continue;
+
+            if(trace[posLetter] !== undefined) boxPositions.push(trace[posLetter][0]);
+            else if(trace.name !== undefined) boxPositions.push(trace.name);
+            else boxPositions.push('text');
+
+            if(trace[calAttr] !== calendar) calendar = undefined;
+        }
+
+        ax.type = autoType(boxPositions, calendar);
+    }
+    else {
+        ax.type = autoType(d0[axLetter] || [d0[axLetter + '0']], calendar);
+    }
+}
+
+function getFirstNonEmptyTrace(data, id, axLetter) {
+    for(var i = 0; i < data.length; i++) {
+        var trace = data[i];
+
+        if((trace[axLetter + 'axis'] || axLetter) === id) {
+            if(isBoxWithoutPositionCoords(trace, axLetter)) {
+                return trace;
+            }
+            else if((trace[axLetter] || []).length || trace[axLetter + '0']) {
+                return trace;
+            }
+        }
+    }
+}
+
+function getBoxPosLetter(trace) {
+    return {v: 'x', h: 'y'}[trace.orientation || 'v'];
+}
+
+function isBoxWithoutPositionCoords(trace, axLetter) {
+    var posLetter = getBoxPosLetter(trace),
+        isBox = Registry.traceIs(trace, 'box'),
+        isCandlestick = Registry.traceIs(trace._fullInput || {}, 'candlestick');
+
+    return (
+        isBox &&
+        !isCandlestick &&
+        axLetter === posLetter &&
+        trace[posLetter] === undefined &&
+        trace[posLetter + '0'] === undefined
+    );
+}
+
+},{"../../registry":401,"./axis_autotype":359,"./axis_ids":361}],381:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -77678,7 +78724,7 @@ function crawl(attrs, callback, path, depth) {
     });
 }
 
-},{"../lib":323,"../plotly":353}],378:[function(require,module,exports){
+},{"../lib":323,"../plotly":353}],382:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -77709,7 +78755,7 @@ module.exports = {
     }
 };
 
-},{}],379:[function(require,module,exports){
+},{}],383:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -77755,7 +78801,7 @@ module.exports = {
     }
 };
 
-},{}],380:[function(require,module,exports){
+},{}],384:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -77911,7 +78957,7 @@ module.exports = {
     }
 };
 
-},{"../components/color/attributes":224,"../lib":323,"./font_attributes":378}],381:[function(require,module,exports){
+},{"../components/color/attributes":224,"../lib":323,"./font_attributes":382}],385:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -77941,7 +78987,7 @@ module.exports = {
     mapOnErrorMsg: 'Mapbox error.'
 };
 
-},{}],382:[function(require,module,exports){
+},{}],386:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -78015,7 +79061,7 @@ module.exports = function convertTextOpts(textposition, iconSize) {
     return { anchor: anchor, offset: offset };
 };
 
-},{"../../lib":323}],383:[function(require,module,exports){
+},{"../../lib":323}],387:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -78158,7 +79204,7 @@ function findAccessToken(gd, mapboxIds) {
     return accessToken;
 }
 
-},{"../../constants/xmlns_namespaces":311,"../plots":389,"./constants":381,"./layout_attributes":385,"./layout_defaults":386,"./mapbox":387,"mapbox-gl":82}],384:[function(require,module,exports){
+},{"../../constants/xmlns_namespaces":311,"../plots":393,"./constants":385,"./layout_attributes":389,"./layout_defaults":390,"./mapbox":391,"mapbox-gl":82}],388:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -78383,7 +79429,7 @@ module.exports = function createMapboxLayer(mapbox, index, opts) {
     return mapboxLayer;
 };
 
-},{"../../lib":323,"./convert_text_opts":382}],385:[function(require,module,exports){
+},{"../../lib":323,"./convert_text_opts":386}],389:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -78587,7 +79633,7 @@ module.exports = {
 
 };
 
-},{"../../components/color":225,"../../lib":323,"../../traces/scatter/attributes":408,"../font_attributes":378}],386:[function(require,module,exports){
+},{"../../components/color":225,"../../lib":323,"../../traces/scatter/attributes":412,"../font_attributes":382}],390:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -78683,7 +79729,7 @@ function handleLayerDefaults(containerIn, containerOut) {
     }
 }
 
-},{"../../lib":323,"../subplot_defaults":396,"./layout_attributes":385}],387:[function(require,module,exports){
+},{"../../lib":323,"../subplot_defaults":400,"./layout_attributes":389}],391:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -78797,9 +79843,13 @@ proto.createMap = function(calcData, fullLayout, resolve, reject) {
     });
 
     // clear navigation container
-    var className = constants.controlContainerClassName,
-        controlContainer = self.div.getElementsByClassName(className)[0];
+    var className = constants.controlContainerClassName;
+    var controlContainer = self.div.getElementsByClassName(className)[0];
     self.div.removeChild(controlContainer);
+
+    // make sure canvas does not inherit left and top css
+    map._canvas.canvas.style.left = '0px';
+    map._canvas.canvas.style.top = '0px';
 
     self.rejectOnError(reject);
 
@@ -78852,8 +79902,8 @@ proto.createMap = function(calcData, fullLayout, resolve, reject) {
         Fx.hover(gd, evt, self.id);
     });
 
-    map.on('click', function() {
-        Fx.click(gd, { target: true });
+    map.on('click', function(evt) {
+        Fx.click(gd, evt.originalEvent);
     });
 
     function unhover() {
@@ -78862,7 +79912,6 @@ proto.createMap = function(calcData, fullLayout, resolve, reject) {
 
     map.on('dragstart', unhover);
     map.on('zoomstart', unhover);
-
 };
 
 proto.updateMap = function(calcData, fullLayout, resolve, reject) {
@@ -79144,7 +80193,7 @@ function convertCenter(center) {
     return [center.lon, center.lat];
 }
 
-},{"../../lib":323,"../cartesian/graph_interact":365,"./constants":381,"./layers":384,"./layout_attributes":385,"mapbox-gl":82}],388:[function(require,module,exports){
+},{"../../lib":323,"../cartesian/graph_interact":367,"./constants":385,"./layers":388,"./layout_attributes":389,"mapbox-gl":82}],392:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -79182,7 +80231,7 @@ module.exports = {
     }
 };
 
-},{}],389:[function(require,module,exports){
+},{}],393:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -79201,6 +80250,7 @@ var Plotly = require('../plotly');
 var Registry = require('../registry');
 var Lib = require('../lib');
 var Color = require('../components/color');
+var BADNUM = require('../constants/numerical').BADNUM;
 
 var plots = module.exports = {};
 
@@ -79442,6 +80492,9 @@ plots.previousPromises = function(gd) {
  * Add source links to your graph inside the 'showSources' config argument.
  */
 plots.addLinks = function(gd) {
+    // Do not do anything if showLink and showSources are not set to true in config
+    if(!gd._context.showLink && !gd._context.showSources) return;
+
     var fullLayout = gd._fullLayout;
 
     var linkContainer = fullLayout._paper
@@ -80009,14 +81062,15 @@ plots.supplyTraceDefaults = function(traceIn, traceOutIndex, layout, traceInInde
             coerce('legendgroup');
         }
 
-        supplyTransformDefaults(traceIn, traceOut, layout);
+        plots.supplyTransformDefaults(traceIn, traceOut, layout);
     }
 
     return traceOut;
 };
 
-function supplyTransformDefaults(traceIn, traceOut, layout) {
+plots.supplyTransformDefaults = function(traceIn, traceOut, layout) {
     var globalTransforms = layout._globalTransforms || [];
+    var transformModules = layout._transformModules || [];
 
     if(!Array.isArray(traceIn.transforms) && globalTransforms.length === 0) return;
 
@@ -80037,7 +81091,7 @@ function supplyTransformDefaults(traceIn, traceOut, layout) {
             transformOut.type = type;
             transformOut._module = _module;
 
-            Lib.pushUnique(layout._transformModules, _module);
+            Lib.pushUnique(transformModules, _module);
         }
         else {
             transformOut = Lib.extendFlat({}, transformIn);
@@ -80045,7 +81099,7 @@ function supplyTransformDefaults(traceIn, traceOut, layout) {
 
         containerOut.push(transformOut);
     }
-}
+};
 
 function applyTransforms(fullTrace, fullData, layout, fullLayout) {
     var container = fullTrace.transforms,
@@ -80484,6 +81538,9 @@ plots.doAutoMargin = function(gd) {
     gs.w = Math.round(fullLayout.width) - gs.l - gs.r;
     gs.h = Math.round(fullLayout.height) - gs.t - gs.b;
 
+	if (gs.w < 0) gs.w = Math.round(fullLayout.width) - fullLayout.margin.l - fullLayout.margin.r;
+	if (gs.h < 0) gs.h = Math.round(fullLayout.height) - fullLayout.margin.t - fullLayout.margin.b;
+	
     // if things changed and we're not already redrawing, trigger a redraw
     if(!fullLayout._replotting && oldmargins !== '{}' &&
             oldmargins !== JSON.stringify(fullLayout._size)) {
@@ -81197,11 +82254,8 @@ plots.doCalcdata = function(gd, traces) {
         //
         // This ensures there is a calcdata item for every trace,
         // even if cartesian logic doesn't handle it (for things like legends).
-        //
-        // Tag this artificial calc point with 'placeholder: true',
-        // to make it easier to skip over them in during the plot and hover step.
         if(!Array.isArray(cd) || !cd[0]) {
-            cd = [{x: false, y: false, placeholder: true}];
+            cd = [{x: BADNUM, y: BADNUM}];
         }
 
         // add the trace-wide properties to the first point,
@@ -81296,7 +82350,7 @@ plots.generalUpdatePerTraceModule = function(subplot, subplotCalcData, subplotLa
     subplot.traceHash = traceHash;
 };
 
-},{"../components/color":225,"../components/errorbars":254,"../lib":323,"../plotly":353,"../registry":397,"./animation_attributes":354,"./attributes":356,"./command":377,"./font_attributes":378,"./frame_attributes":379,"./layout_attributes":380,"d3":8,"fast-isnumeric":12}],390:[function(require,module,exports){
+},{"../components/color":225,"../components/errorbars":254,"../constants/numerical":309,"../lib":323,"../plotly":353,"../registry":401,"./animation_attributes":354,"./attributes":356,"./command":381,"./font_attributes":382,"./frame_attributes":383,"./layout_attributes":384,"d3":8,"fast-isnumeric":12}],394:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -81321,7 +82375,7 @@ module.exports = {
     }
 };
 
-},{"../../traces/scatter/attributes":408}],391:[function(require,module,exports){
+},{"../../traces/scatter/attributes":412}],395:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -81436,7 +82490,7 @@ module.exports = {
     }
 };
 
-},{"../../lib/extend":318,"../cartesian/layout_attributes":367}],392:[function(require,module,exports){
+},{"../../lib/extend":318,"../cartesian/layout_attributes":369}],396:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -81451,7 +82505,7 @@ var Polar = module.exports = require('./micropolar');
 
 Polar.manager = require('./micropolar_manager');
 
-},{"./micropolar":393,"./micropolar_manager":394}],393:[function(require,module,exports){
+},{"./micropolar":397,"./micropolar_manager":398}],397:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -82870,7 +83924,7 @@ var µ = module.exports = { version: '0.2.2' };
     return exports;
 };
 
-},{"../../lib":323,"d3":8}],394:[function(require,module,exports){
+},{"../../lib":323,"d3":8}],398:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -82956,7 +84010,7 @@ manager.fillLayout = function(_gd) {
     _gd._fullLayout = extendDeepAll(dflts, _gd.layout);
 };
 
-},{"../../components/color":225,"../../lib":323,"./micropolar":393,"./undo_manager":395,"d3":8}],395:[function(require,module,exports){
+},{"../../components/color":225,"../../lib":323,"./micropolar":397,"./undo_manager":399,"d3":8}],399:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83022,7 +84076,7 @@ module.exports = function UndoManager() {
     };
 };
 
-},{}],396:[function(require,module,exports){
+},{}],400:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83097,7 +84151,7 @@ module.exports = function handleSubplotDefaults(layoutIn, layoutOut, fullData, o
     }
 };
 
-},{"../lib":323,"./plots":389}],397:[function(require,module,exports){
+},{"../lib":323,"./plots":393}],401:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83288,7 +84342,7 @@ function getTraceType(traceType) {
     return traceType;
 }
 
-},{"./lib/loggers":326,"./lib/noop":330,"./lib/push_unique":334,"./plots/attributes":356}],398:[function(require,module,exports){
+},{"./lib/loggers":326,"./lib/noop":330,"./lib/push_unique":334,"./plots/attributes":356}],402:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83458,7 +84512,7 @@ module.exports = function clonePlot(graphObj, options) {
     return plotTile;
 };
 
-},{"../lib":323,"../plots/plots":389}],399:[function(require,module,exports){
+},{"../lib":323,"../plots/plots":393}],403:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83524,7 +84578,7 @@ function downloadImage(gd, opts) {
 
 module.exports = downloadImage;
 
-},{"../lib":323,"../plot_api/to_image":351,"./filesaver":400}],400:[function(require,module,exports){
+},{"../lib":323,"../plot_api/to_image":351,"./filesaver":404}],404:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83592,7 +84646,7 @@ var fileSaver = function(url, name) {
 
 module.exports = fileSaver;
 
-},{}],401:[function(require,module,exports){
+},{}],405:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83625,7 +84679,7 @@ exports.getRedrawFunc = function(gd) {
     };
 };
 
-},{}],402:[function(require,module,exports){
+},{}],406:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83651,7 +84705,7 @@ var Snapshot = {
 
 module.exports = Snapshot;
 
-},{"./cloneplot":398,"./download":399,"./helpers":401,"./svgtoimg":403,"./toimage":404,"./tosvg":405}],403:[function(require,module,exports){
+},{"./cloneplot":402,"./download":403,"./helpers":405,"./svgtoimg":407,"./toimage":408,"./tosvg":409}],407:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83782,7 +84836,7 @@ function svgToImg(opts) {
 
 module.exports = svgToImg;
 
-},{"../lib":323,"events":11}],404:[function(require,module,exports){
+},{"../lib":323,"events":11}],408:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83862,7 +84916,7 @@ function toImage(gd, opts) {
 
 module.exports = toImage;
 
-},{"../lib":323,"../plotly":353,"./cloneplot":398,"./helpers":401,"./svgtoimg":403,"./tosvg":405,"events":11}],405:[function(require,module,exports){
+},{"../lib":323,"../plotly":353,"./cloneplot":402,"./helpers":405,"./svgtoimg":407,"./tosvg":409,"events":11}],409:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -83981,7 +85035,7 @@ module.exports = function toSVG(gd, format) {
     return s;
 };
 
-},{"../components/color":225,"../components/drawing":248,"../constants/xmlns_namespaces":311,"../lib/svg_text_utils":340,"d3":8}],406:[function(require,module,exports){
+},{"../components/color":225,"../components/drawing":248,"../constants/xmlns_namespaces":311,"../lib/svg_text_utils":340,"d3":8}],410:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84008,7 +85062,7 @@ module.exports = function styleOne(s, pt, trace) {
     .call(Color.stroke, lineColor);
 };
 
-},{"../../components/color":225}],407:[function(require,module,exports){
+},{"../../components/color":225}],411:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84027,6 +85081,7 @@ var Lib = require('../../lib');
 module.exports = function arraysToCalcdata(cd, trace) {
 
     Lib.mergeArray(trace.text, cd, 'tx');
+    Lib.mergeArray(trace.hovertext, cd, 'htx');
     Lib.mergeArray(trace.customdata, cd, 'data');
     Lib.mergeArray(trace.textposition, cd, 'tp');
     if(trace.textfont) {
@@ -84050,7 +85105,7 @@ module.exports = function arraysToCalcdata(cd, trace) {
     }
 };
 
-},{"../../lib":323}],408:[function(require,module,exports){
+},{"../../lib":323}],412:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84111,6 +85166,13 @@ module.exports = {
         
     },
     text: {
+        valType: 'string',
+        
+        dflt: '',
+        arrayOk: true,
+        
+    },
+    hovertext: {
         valType: 'string',
         
         dflt: '',
@@ -84316,7 +85378,7 @@ module.exports = {
     error_x: errorBarAttrs
 };
 
-},{"../../components/colorbar/attributes":226,"../../components/colorscale/color_attributes":232,"../../components/drawing":248,"../../components/errorbars/attributes":250,"../../lib/extend":318,"./constants":413}],409:[function(require,module,exports){
+},{"../../components/colorbar/attributes":226,"../../components/colorscale/color_attributes":232,"../../components/drawing":248,"../../components/errorbars/attributes":250,"../../lib/extend":318,"./constants":417}],413:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84446,7 +85508,7 @@ module.exports = function calc(gd, trace) {
     return cd;
 };
 
-},{"../../plots/cartesian/axes":358,"./arrays_to_calcdata":407,"./colorscale_calc":412,"./subtypes":428,"fast-isnumeric":12}],410:[function(require,module,exports){
+},{"../../plots/cartesian/axes":358,"./arrays_to_calcdata":411,"./colorscale_calc":416,"./subtypes":432,"fast-isnumeric":12}],414:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84485,7 +85547,7 @@ module.exports = function cleanData(fullData) {
     }
 };
 
-},{}],411:[function(require,module,exports){
+},{}],415:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84541,7 +85603,7 @@ module.exports = function colorbar(gd, cd) {
         .options(marker.colorbar)();
 };
 
-},{"../../components/colorbar/draw":228,"../../components/colorscale":239,"../../lib":323,"../../plots/plots":389,"fast-isnumeric":12}],412:[function(require,module,exports){
+},{"../../components/colorbar/draw":228,"../../components/colorscale":239,"../../lib":323,"../../plots/plots":393,"fast-isnumeric":12}],416:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84574,7 +85636,7 @@ module.exports = function calcMarkerColorscale(trace) {
     }
 };
 
-},{"../../components/colorscale/calc":231,"../../components/colorscale/has_colorscale":238,"./subtypes":428}],413:[function(require,module,exports){
+},{"../../components/colorscale/calc":231,"../../components/colorscale/has_colorscale":238,"./subtypes":432}],417:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84590,7 +85652,7 @@ module.exports = {
     PTS_LINESONLY: 20
 };
 
-},{}],414:[function(require,module,exports){
+},{}],418:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84631,6 +85693,7 @@ module.exports = function supplyDefaults(traceIn, traceOut, defaultColor, layout
 
     coerce('customdata');
     coerce('text');
+    coerce('hovertext');
     coerce('mode', defaultMode);
     coerce('ids');
 
@@ -84671,7 +85734,7 @@ module.exports = function supplyDefaults(traceIn, traceOut, defaultColor, layout
     errorBarsSupplyDefaults(traceIn, traceOut, defaultColor, {axis: 'x', inherit: 'y'});
 };
 
-},{"../../components/errorbars/defaults":253,"../../lib":323,"./attributes":408,"./constants":413,"./fillcolor_defaults":415,"./line_defaults":419,"./line_shape_defaults":421,"./marker_defaults":424,"./subtypes":428,"./text_defaults":429,"./xy_defaults":430}],415:[function(require,module,exports){
+},{"../../components/errorbars/defaults":253,"../../lib":323,"./attributes":412,"./constants":417,"./fillcolor_defaults":419,"./line_defaults":423,"./line_shape_defaults":425,"./marker_defaults":428,"./subtypes":432,"./text_defaults":433,"./xy_defaults":434}],419:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84709,7 +85772,7 @@ module.exports = function fillColorDefaults(traceIn, traceOut, defaultColor, coe
     ));
 };
 
-},{"../../components/color":225}],416:[function(require,module,exports){
+},{"../../components/color":225}],420:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84762,7 +85825,7 @@ module.exports = function getTraceColor(trace, di) {
     }
 };
 
-},{"../../components/color":225,"./subtypes":428}],417:[function(require,module,exports){
+},{"../../components/color":225,"./subtypes":432}],421:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84837,7 +85900,9 @@ module.exports = function hoverPoints(pointData, xval, yval, hovermode) {
                 yLabelVal: di.y
             });
 
-            if(di.tx) pointData.text = di.tx;
+            if(di.htx) pointData.text = di.htx;
+            else if(trace.hovertext) pointData.text = trace.hovertext;
+            else if(di.tx) pointData.text = di.tx;
             else if(trace.text) pointData.text = trace.text;
 
             ErrorBars.hoverInfo(di, trace, pointData);
@@ -84931,7 +85996,7 @@ module.exports = function hoverPoints(pointData, xval, yval, hovermode) {
     }
 };
 
-},{"../../components/color":225,"../../components/errorbars":254,"../../lib":323,"../../plots/cartesian/constants":363,"../../plots/cartesian/graph_interact":365,"./get_trace_color":416}],418:[function(require,module,exports){
+},{"../../components/color":225,"../../components/errorbars":254,"../../lib":323,"../../plots/cartesian/constants":363,"../../plots/cartesian/graph_interact":367,"./get_trace_color":420}],422:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -84975,7 +86040,7 @@ Scatter.meta = {
 
 module.exports = Scatter;
 
-},{"../../plots/cartesian":366,"./arrays_to_calcdata":407,"./attributes":408,"./calc":409,"./clean_data":410,"./colorbar":411,"./defaults":414,"./hover":417,"./plot":425,"./select":426,"./style":427,"./subtypes":428}],419:[function(require,module,exports){
+},{"../../plots/cartesian":368,"./arrays_to_calcdata":411,"./attributes":412,"./calc":413,"./clean_data":414,"./colorbar":415,"./defaults":418,"./hover":421,"./plot":429,"./select":430,"./style":431,"./subtypes":432}],423:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -85008,7 +86073,7 @@ module.exports = function lineDefaults(traceIn, traceOut, defaultColor, layout, 
     coerce('line.dash');
 };
 
-},{"../../components/colorscale/defaults":234,"../../components/colorscale/has_colorscale":238}],420:[function(require,module,exports){
+},{"../../components/colorscale/defaults":234,"../../components/colorscale/has_colorscale":238}],424:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -85181,7 +86246,7 @@ module.exports = function linePoints(d, opts) {
     return segments;
 };
 
-},{"../../constants/numerical":309}],421:[function(require,module,exports){
+},{"../../constants/numerical":309}],425:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -85200,7 +86265,7 @@ module.exports = function handleLineShapeDefaults(traceIn, traceOut, coerce) {
     if(shape === 'spline') coerce('line.smoothing');
 };
 
-},{}],422:[function(require,module,exports){
+},{}],426:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -85241,7 +86306,7 @@ module.exports = function linkTraces(gd, plotinfo, cdscatter) {
     }
 };
 
-},{}],423:[function(require,module,exports){
+},{}],427:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -85283,7 +86348,7 @@ module.exports = function makeBubbleSizeFn(trace) {
     };
 };
 
-},{"fast-isnumeric":12}],424:[function(require,module,exports){
+},{"fast-isnumeric":12}],428:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -85343,7 +86408,7 @@ module.exports = function markerDefaults(traceIn, traceOut, defaultColor, layout
     }
 };
 
-},{"../../components/color":225,"../../components/colorscale/defaults":234,"../../components/colorscale/has_colorscale":238,"./subtypes":428}],425:[function(require,module,exports){
+},{"../../components/color":225,"../../components/colorscale/defaults":234,"../../components/colorscale/has_colorscale":238,"./subtypes":432}],429:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -85397,13 +86462,13 @@ module.exports = function plot(gd, plotinfo, cdscatter, transitionOpts, makeOnCo
     // Sort the traces, once created, so that the ordering is preserved even when traces
     // are shown and hidden. This is needed since we're not just wiping everything out
     // and recreating on every update.
-    for(i = 0, uids = []; i < cdscatter.length; i++) {
-        uids[i] = cdscatter[i][0].trace.uid;
+    for(i = 0, uids = {}; i < cdscatter.length; i++) {
+        uids[cdscatter[i][0].trace.uid] = i;
     }
 
     scatterlayer.selectAll('g.trace').sort(function(a, b) {
-        var idx1 = uids.indexOf(a[0].trace.uid);
-        var idx2 = uids.indexOf(b[0].trace.uid);
+        var idx1 = uids[a[0].trace.uid];
+        var idx2 = uids[b[0].trace.uid];
         return idx1 > idx2 ? 1 : -1;
     });
 
@@ -85883,7 +86948,7 @@ function selectMarkers(gd, idx, plotinfo, cdscatter, cdscatterAll) {
     });
 }
 
-},{"../../components/drawing":248,"../../components/errorbars":254,"../../lib":323,"../../lib/polygon":333,"./line_points":420,"./link_traces":422,"./subtypes":428,"d3":8}],426:[function(require,module,exports){
+},{"../../components/drawing":248,"../../components/errorbars":254,"../../lib":323,"../../lib/polygon":333,"./line_points":424,"./link_traces":426,"./subtypes":432,"d3":8}],430:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -85955,7 +87020,7 @@ module.exports = function selectPoints(searchInfo, polygon) {
     return selection;
 };
 
-},{"./subtypes":428}],427:[function(require,module,exports){
+},{"./subtypes":432}],431:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86001,7 +87066,7 @@ module.exports = function style(gd) {
     s.call(ErrorBars.style);
 };
 
-},{"../../components/drawing":248,"../../components/errorbars":254,"d3":8}],428:[function(require,module,exports){
+},{"../../components/drawing":248,"../../components/errorbars":254,"d3":8}],432:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86037,7 +87102,7 @@ module.exports = {
     }
 };
 
-},{"../../lib":323}],429:[function(require,module,exports){
+},{"../../lib":323}],433:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86058,7 +87123,7 @@ module.exports = function(traceIn, traceOut, layout, coerce) {
     Lib.coerceFont(coerce, 'textfont', layout.font);
 };
 
-},{"../../lib":323}],430:[function(require,module,exports){
+},{"../../lib":323}],434:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86108,7 +87173,7 @@ module.exports = function handleXYDefaults(traceIn, traceOut, layout, coerce) {
     return len;
 };
 
-},{"../../registry":397}],431:[function(require,module,exports){
+},{"../../registry":401}],435:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86156,6 +87221,10 @@ module.exports = {
     text: extendFlat({}, scatterAttrs.text, {
         
     }),
+    hovertext: extendFlat({}, scatterAttrs.hovertext, {
+        
+    }),
+
     textfont: scatterAttrs.textfont,
     textposition: scatterAttrs.textposition,
 
@@ -86197,7 +87266,51 @@ module.exports = {
     })
 };
 
-},{"../../components/colorscale/color_attributes":232,"../../lib/extend":318,"../../plots/attributes":356,"../scatter/attributes":408}],432:[function(require,module,exports){
+},{"../../components/colorscale/color_attributes":232,"../../lib/extend":318,"../../plots/attributes":356,"../scatter/attributes":412}],436:[function(require,module,exports){
+/**
+* Copyright 2012-2017, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+var isNumeric = require('fast-isnumeric');
+var BADNUM = require('../../constants/numerical').BADNUM;
+
+var calcMarkerColorscale = require('../scatter/colorscale_calc');
+var arraysToCalcdata = require('../scatter/arrays_to_calcdata');
+
+module.exports = function calc(gd, trace) {
+    var hasLocationData = Array.isArray(trace.locations);
+    var len = hasLocationData ? trace.locations.length : trace.lon.length;
+    var calcTrace = new Array(len);
+
+    for(var i = 0; i < len; i++) {
+        var calcPt = calcTrace[i] = {};
+
+        if(hasLocationData) {
+            var loc = trace.locations[i];
+            calcPt.loc = typeof loc === 'string' ? loc : null;
+        } else {
+            var lon = trace.lon[i];
+            var lat = trace.lat[i];
+
+            if(isNumeric(lon) && isNumeric(lat)) calcPt.lonlat = [+lon, +lat];
+            else calcPt.lonlat = [BADNUM, BADNUM];
+        }
+    }
+
+    arraysToCalcdata(calcTrace, trace);
+    calcMarkerColorscale(trace);
+
+    return calcTrace;
+};
+
+},{"../../constants/numerical":309,"../scatter/arrays_to_calcdata":411,"../scatter/colorscale_calc":416,"fast-isnumeric":12}],437:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86227,16 +87340,15 @@ module.exports = {
     // locations
     // locationmode
 
-    mode: {
-        valType: 'flaglist',
-        flags: ['lines', 'markers', 'text'],
+    mode: extendFlat({}, scatterAttrs.mode, {
         dflt: 'markers',
-        extras: ['none'],
         
-        
-    },
+    }),
 
     text: extendFlat({}, scatterAttrs.text, {
+        
+    }),
+    hovertext: extendFlat({}, scatterAttrs.hovertext, {
         
     }),
 
@@ -86289,110 +87401,7 @@ module.exports = {
     }),
 };
 
-},{"../../components/colorbar/attributes":226,"../../lib/extend":318,"../../plots/attributes":356,"../../plots/mapbox/layout_attributes":385,"../scatter/attributes":408,"../scattergeo/attributes":431}],433:[function(require,module,exports){
-/**
-* Copyright 2012-2017, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-var isNumeric = require('fast-isnumeric');
-
-var Lib = require('../../lib');
-var Colorscale = require('../../components/colorscale');
-
-var subtypes = require('../scatter/subtypes');
-var calcMarkerColorscale = require('../scatter/colorscale_calc');
-var makeBubbleSizeFn = require('../scatter/make_bubble_size_func');
-
-
-module.exports = function calc(gd, trace) {
-    var len = trace.lon.length,
-        marker = trace.marker;
-
-    var hasMarkers = subtypes.hasMarkers(trace),
-        hasColorArray = (hasMarkers && Array.isArray(marker.color)),
-        hasSizeArray = (hasMarkers && Array.isArray(marker.size)),
-        hasSymbolArray = (hasMarkers && Array.isArray(marker.symbol)),
-        hasTextArray = Array.isArray(trace.text);
-
-    calcMarkerColorscale(trace);
-
-    var colorFn = Colorscale.hasColorscale(trace, 'marker') ?
-            Colorscale.makeColorScaleFunc(
-                Colorscale.extractScale(
-                    marker.colorscale,
-                    marker.cmin,
-                    marker.cmax
-                )
-            ) :
-            Lib.identity;
-
-    var sizeFn = subtypes.isBubble(trace) ?
-            makeBubbleSizeFn(trace) :
-            Lib.identity;
-
-    var calcTrace = [],
-        cnt = 0;
-
-    // Different than cartesian calc step
-    // as skip over non-numeric lon, lat pairs.
-    // This makes the hover and convert calculations simpler.
-
-    for(var i = 0; i < len; i++) {
-        var lon = trace.lon[i],
-            lat = trace.lat[i];
-
-        if(!isNumeric(lon) || !isNumeric(lat)) {
-            if(cnt > 0) calcTrace[cnt - 1].gapAfter = true;
-            continue;
-        }
-
-        var calcPt = {};
-        cnt++;
-
-        // coerce numeric strings into numbers
-        calcPt.lonlat = [+lon, +lat];
-
-        if(hasMarkers) {
-
-            if(hasColorArray) {
-                var mc = marker.color[i];
-
-                calcPt.mc = mc;
-                calcPt.mcc = colorFn(mc);
-            }
-
-            if(hasSizeArray) {
-                var ms = marker.size[i];
-
-                calcPt.ms = ms;
-                calcPt.mrc = sizeFn(ms);
-            }
-
-            if(hasSymbolArray) {
-                var mx = marker.symbol[i];
-                calcPt.mx = (typeof mx === 'string') ? mx : 'circle';
-            }
-        }
-
-        if(hasTextArray) {
-            var tx = trace.text[i];
-            calcPt.tx = (typeof tx === 'string') ? tx : '';
-        }
-
-        calcTrace.push(calcPt);
-    }
-
-    return calcTrace;
-};
-
-},{"../../components/colorscale":239,"../../lib":323,"../scatter/colorscale_calc":412,"../scatter/make_bubble_size_func":423,"../scatter/subtypes":428,"fast-isnumeric":12}],434:[function(require,module,exports){
+},{"../../components/colorbar/attributes":226,"../../lib/extend":318,"../../plots/attributes":356,"../../plots/mapbox/layout_attributes":389,"../scatter/attributes":412,"../scattergeo/attributes":435}],438:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86405,8 +87414,11 @@ module.exports = function calc(gd, trace) {
 'use strict';
 
 var Lib = require('../../lib');
+var BADNUM = require('../../constants/numerical').BADNUM;
 var geoJsonUtils = require('../../lib/geojson_utils');
 
+var Colorscale = require('../../components/colorscale');
+var makeBubbleSizeFn = require('../scatter/make_bubble_size_func');
 var subTypes = require('../scatter/subtypes');
 var convertTextOpts = require('../../plots/mapbox/convert_text_opts');
 
@@ -86438,16 +87450,16 @@ module.exports = function convert(calcTrace) {
     };
 
     // early return if not visible or placeholder
-    if(!isVisible || calcTrace[0].placeholder) return opts;
+    if(!isVisible) return opts;
 
     // fill layer and line layer use the same coords
-    var coords;
+    var lineCoords;
     if(hasFill || hasLines) {
-        coords = geoJsonUtils.calcTraceToLineCoords(calcTrace);
+        lineCoords = geoJsonUtils.calcTraceToLineCoords(calcTrace);
     }
 
     if(hasFill) {
-        fill.geojson = geoJsonUtils.makePolygon(coords);
+        fill.geojson = geoJsonUtils.makePolygon(lineCoords);
         fill.layout.visibility = 'visible';
 
         Lib.extendFlat(fill.paint, {
@@ -86456,7 +87468,7 @@ module.exports = function convert(calcTrace) {
     }
 
     if(hasLines) {
-        line.geojson = geoJsonUtils.makeLine(coords);
+        line.geojson = geoJsonUtils.makeLine(lineCoords);
         line.layout.visibility = 'visible';
 
         Lib.extendFlat(line.paint, {
@@ -86550,12 +87562,30 @@ function initContainer() {
 //
 // The solution prove to be more robust than trying to generate
 // `stops` arrays from scale functions.
+//
+// TODO axe this when we bump mapbox-gl and rewrite this using
+// "identity" property functions.
+// See https://github.com/plotly/plotly.js/pull/1543
+//
 function makeCircleGeoJSON(calcTrace, hash) {
     var trace = calcTrace[0].trace;
+    var marker = trace.marker;
 
-    var marker = trace.marker,
-        hasColorArray = Array.isArray(marker.color),
-        hasSizeArray = Array.isArray(marker.size);
+    var colorFn;
+    if(Colorscale.hasColorscale(trace, 'marker')) {
+        colorFn = Colorscale.makeColorScaleFunc(
+             Colorscale.extractScale(marker.colorscale, marker.cmin, marker.cmax)
+         );
+    } else if(Array.isArray(marker.color)) {
+        colorFn = Lib.identity;
+    }
+
+    var sizeFn;
+    if(subTypes.isBubble(trace)) {
+        sizeFn = makeBubbleSizeFn(trace);
+    } else if(Array.isArray(marker.size)) {
+        sizeFn = Lib.identity;
+    }
 
     // Translate vals in trace arrayOk containers
     // into a val-to-index hash object
@@ -86569,16 +87599,19 @@ function makeCircleGeoJSON(calcTrace, hash) {
 
     for(var i = 0; i < calcTrace.length; i++) {
         var calcPt = calcTrace[i];
+        var lonlat = calcPt.lonlat;
+
+        if(isBADNUM(lonlat)) continue;
 
         var props = {};
-        if(hasColorArray) translate(props, COLOR_PROP, calcPt.mcc, i);
-        if(hasSizeArray) translate(props, SIZE_PROP, calcPt.mrc, i);
+        if(colorFn) translate(props, COLOR_PROP, colorFn(calcPt.mc), i);
+        if(sizeFn) translate(props, SIZE_PROP, sizeFn(calcPt.ms), i);
 
         features.push({
             type: 'Feature',
             geometry: {
                 type: 'Point',
-                coordinates: calcPt.lonlat
+                coordinates: lonlat
             },
             properties: props
         });
@@ -86609,6 +87642,8 @@ function makeSymbolGeoJSON(calcTrace) {
 
     for(var i = 0; i < calcTrace.length; i++) {
         var calcPt = calcTrace[i];
+
+        if(isBADNUM(calcPt.lonlat)) continue;
 
         features.push({
             type: 'Feature',
@@ -86701,7 +87736,12 @@ function getFillFunc(attr) {
 
 function blankFillFunc() { return ''; }
 
-},{"../../lib":323,"../../lib/geojson_utils":321,"../../plots/mapbox/convert_text_opts":382,"../scatter/subtypes":428}],435:[function(require,module,exports){
+// only need to check lon (OR lat)
+function isBADNUM(lonlat) {
+    return lonlat[0] === BADNUM;
+}
+
+},{"../../components/colorscale":239,"../../constants/numerical":309,"../../lib":323,"../../lib/geojson_utils":321,"../../plots/mapbox/convert_text_opts":386,"../scatter/make_bubble_size_func":427,"../scatter/subtypes":432}],439:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86746,6 +87786,7 @@ module.exports = function supplyDefaults(traceIn, traceOut, defaultColor, layout
     }
 
     coerce('text');
+    coerce('hovertext');
     coerce('mode');
 
     if(subTypes.hasLines(traceOut)) {
@@ -86789,7 +87830,7 @@ function handleLonLatDefaults(traceIn, traceOut, coerce) {
     return len;
 }
 
-},{"../../lib":323,"../scatter/attributes":408,"../scatter/fillcolor_defaults":415,"../scatter/line_defaults":419,"../scatter/marker_defaults":424,"../scatter/subtypes":428,"../scatter/text_defaults":429,"./attributes":432}],436:[function(require,module,exports){
+},{"../../lib":323,"../scatter/attributes":412,"../scatter/fillcolor_defaults":419,"../scatter/line_defaults":423,"../scatter/marker_defaults":428,"../scatter/subtypes":432,"../scatter/text_defaults":433,"./attributes":437}],440:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86809,7 +87850,7 @@ module.exports = function eventData(out, pt) {
     return out;
 };
 
-},{}],437:[function(require,module,exports){
+},{}],441:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86823,15 +87864,13 @@ module.exports = function eventData(out, pt) {
 
 var Fx = require('../../plots/cartesian/graph_interact');
 var getTraceColor = require('../scatter/get_trace_color');
-
+var BADNUM = require('../../constants/numerical').BADNUM;
 
 module.exports = function hoverPoints(pointData, xval, yval) {
     var cd = pointData.cd,
         trace = cd[0].trace,
         xa = pointData.xa,
         ya = pointData.ya;
-
-    if(cd[0].placeholder) return;
 
     // compute winding number about [-180, 180] globe
     var winding = (xval >= 0) ?
@@ -86843,10 +87882,13 @@ module.exports = function hoverPoints(pointData, xval, yval) {
     var xval2 = xval - lonShift;
 
     function distFn(d) {
-        var lonlat = d.lonlat,
-            dx = Math.abs(xa.c2p(lonlat) - xa.c2p([xval2, lonlat[1]])),
-            dy = Math.abs(ya.c2p(lonlat) - ya.c2p([lonlat[0], yval])),
-            rad = Math.max(3, d.mrc || 0);
+        var lonlat = d.lonlat;
+
+        if(lonlat[0] === BADNUM) return Infinity;
+
+        var dx = Math.abs(xa.c2p(lonlat) - xa.c2p([xval2, lonlat[1]]));
+        var dy = Math.abs(ya.c2p(lonlat) - ya.c2p([lonlat[0], yval]));
+        var rad = Math.max(3, d.mrc || 0);
 
         return Math.max(Math.sqrt(dx * dx + dy * dy) - rad, 1 - 3 / rad);
     }
@@ -86898,14 +87940,20 @@ function getExtraText(trace, di) {
     else if(hasLat) text.push('lat: ' + format(lonlat[1]));
 
     if(isAll || hoverinfo.indexOf('text') !== -1) {
-        var tx = di.tx || trace.text;
+        var tx;
+
+        if(di.htx) tx = di.htx;
+        else if(trace.hovertext) tx = trace.hovertext;
+        else if(di.tx) tx = di.tx;
+        else if(trace.text) tx = trace.text;
+
         if(!Array.isArray(tx)) text.push(tx);
     }
 
     return text.join('<br>');
 }
 
-},{"../../plots/cartesian/graph_interact":365,"../scatter/get_trace_color":416}],438:[function(require,module,exports){
+},{"../../constants/numerical":309,"../../plots/cartesian/graph_interact":367,"../scatter/get_trace_color":420}],442:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -86922,7 +87970,7 @@ var ScatterMapbox = {};
 ScatterMapbox.attributes = require('./attributes');
 ScatterMapbox.supplyDefaults = require('./defaults');
 ScatterMapbox.colorbar = require('../scatter/colorbar');
-ScatterMapbox.calc = require('./calc');
+ScatterMapbox.calc = require('../scattergeo/calc');
 ScatterMapbox.hoverPoints = require('./hover');
 ScatterMapbox.eventData = require('./event_data');
 ScatterMapbox.plot = require('./plot');
@@ -86938,7 +87986,7 @@ ScatterMapbox.meta = {
 
 module.exports = ScatterMapbox;
 
-},{"../../plots/mapbox":383,"../scatter/colorbar":411,"./attributes":432,"./calc":433,"./defaults":435,"./event_data":436,"./hover":437,"./plot":439}],439:[function(require,module,exports){
+},{"../../plots/mapbox":387,"../scatter/colorbar":415,"../scattergeo/calc":436,"./attributes":437,"./defaults":439,"./event_data":440,"./hover":441,"./plot":443}],443:[function(require,module,exports){
 /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
@@ -87062,5 +88110,5 @@ module.exports = function createScatterMapbox(mapbox, calcTrace) {
     return scatterMapbox;
 };
 
-},{"./convert":434}]},{},[4])(4)
+},{"./convert":438}]},{},[4])(4)
 });
