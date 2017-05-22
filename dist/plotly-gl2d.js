@@ -75830,7 +75830,7 @@ function calcLinks(constraintGroups, xIDs, yIDs) {
 }
 
 },{"../../components/color":221,"../../components/dragelement":242,"../../components/drawing":244,"../../lib":322,"../../lib/setcursor":337,"../../lib/svg_text_utils":341,"../../plotly":355,"../../registry":399,"./axes":360,"./axis_ids":363,"./constants":365,"./scale_zoom":375,"./select":376,"d3":60,"tinycolor2":194}],369:[function(require,module,exports){
- c/**
+ /**
 * Copyright 2012-2017, Plotly, Inc.
 * All rights reserved.
 *
