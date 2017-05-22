@@ -31271,7 +31271,7 @@ var ndarray   = require('ndarray')
 
 var nextPow2  = require('bit-twiddle').nextPow2
 
-var selectRange = require('cwise/lib/wrapper')({"args":["array",{"offset":[0,0,1],"array":0},{"offset":[0,0,2],"array":0},{"offset":[0,0,3],"array":0},"scalar","scalar","index"],"pre":{"body":"{this_closestD2=1e8,this_closestX=-1,this_closestY=-1}","args":[],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":[]},"body":{"body":"{if(_inline_52_arg0_<255||_inline_52_arg1_<255||_inline_52_arg2_<255||_inline_52_arg3_<255){var _inline_52_l=_inline_52_arg4_-_inline_52_arg6_[0],_inline_52_a=_inline_52_arg5_-_inline_52_arg6_[1],_inline_52_f=_inline_52_l*_inline_52_l+_inline_52_a*_inline_52_a;_inline_52_f<this_closestD2&&(this_closestD2=_inline_52_f,this_closestX=_inline_52_arg6_[0],this_closestY=_inline_52_arg6_[1])}}","args":[{"name":"_inline_52_arg0_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg4_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg6_","lvalue":false,"rvalue":true,"count":4}],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":["_inline_52_a","_inline_52_f","_inline_52_l"]},"post":{"body":"{return[this_closestX,this_closestY,this_closestD2]}","args":[],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64})
+var selectRange = require('cwise/lib/wrapper')({"args":["array",{"offset":[0,0,1],"array":0},{"offset":[0,0,2],"array":0},{"offset":[0,0,3],"array":0},"scalar","scalar","index"],"pre":{"body":"{this_closestD2=1e8,this_closestX=-1,this_closestY=-1}","args":[],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":[]},"body":{"body":"{if(_inline_55_arg0_<255||_inline_55_arg1_<255||_inline_55_arg2_<255||_inline_55_arg3_<255){var _inline_55_l=_inline_55_arg4_-_inline_55_arg6_[0],_inline_55_a=_inline_55_arg5_-_inline_55_arg6_[1],_inline_55_f=_inline_55_l*_inline_55_l+_inline_55_a*_inline_55_a;_inline_55_f<this_closestD2&&(this_closestD2=_inline_55_f,this_closestX=_inline_55_arg6_[0],this_closestY=_inline_55_arg6_[1])}}","args":[{"name":"_inline_55_arg0_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg4_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg6_","lvalue":false,"rvalue":true,"count":4}],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":["_inline_55_a","_inline_55_f","_inline_55_l"]},"post":{"body":"{return[this_closestX,this_closestY,this_closestD2]}","args":[],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64})
 
 function SelectResult(x, y, id, value, distance) {
   this.coord = [x, y]
@@ -75322,7 +75322,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                         yfrac = (gbb.bottom - ((mousePos2[1] + mousePos1[1]) / 2)) / gbb.height,
                         i;
                   }else{
-                    console.log('mouse')
                     var zoom = Math.exp(-Math.min(Math.max(wheelDelta, -20), 20) / 100),
                         gbb = mainplot.draglayer.select('.nsewdrag').node().getBoundingClientRect(),
                         xfrac = (e.clientX - gbb.left) / gbb.width,
@@ -75357,8 +75356,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                       scrollViewBox[3] *= zoom;
                       scrollViewBox[1] += scrollViewBox[3] * (1 - yfrac) * (1 / zoom - 1);
                   }
-
-                  console.log(scrollViewBox);
                   // viewbox redraw at first
                   updateSubplots(scrollViewBox);
                   ticksAndAnnotations(ns, ew);
@@ -75392,7 +75389,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
       redraw = false;
     }
 
-    function zoompinchMove(e) {
+    function zoomPinchMove(e) {
       if(e.touches.length == 2){
         if(!scaling){
           //redraw = false;
@@ -75418,8 +75415,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
       var pow1 = Math.pow(mousePos1[0] - mousePos2[0], 2);
       var pow2 = Math.pow(mousePos2[1] - mousePos1[1], 2);
       var result = Math.sqrt(pow1 + pow2);
-      //console.log('oldresult: ' + oldresult);
-      //console.log(result);
       if((result - oldresult) >= 30){
         oldresult = result;
         e.deltaY = -100;
@@ -76145,22 +76140,7 @@ fx.init = function(gd) {
                 // since that may be outdated when this is called as a callback later on
                 gd._fullLayout._lasthover = maindrag;
                 gd._fullLayout._hoversubplot = subplot;
-            };
-            maindrag.addEventListener('touchmove', function(evt) {
-                // This is on `gd._fullLayout`, *not* fullLayout because the reference
-                // changes by the time this is called again.
-                gd._fullLayout._rehover = function() {
-                    if(gd._fullLayout._hoversubplot === subplot) {
-                        Fx.hover(gd, evt, subplot);
-                    }
-                };
-                Fx.hover(gd, evt, subplot);
-
-                // Note that we have *not* used the cached fullLayout variable here
-                // since that may be outdated when this is called as a callback later on
-                gd._fullLayout._lasthover = maindrag;
-                gd._fullLayout._hoversubplot = subplot;
-            });
+            };           
 
             /*
              * IMPORTANT:

@@ -396,7 +396,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                         yfrac = (gbb.bottom - ((mousePos2[1] + mousePos1[1]) / 2)) / gbb.height,
                         i;
                   }else{
-                    console.log('mouse')
                     var zoom = Math.exp(-Math.min(Math.max(wheelDelta, -20), 20) / 100),
                         gbb = mainplot.draglayer.select('.nsewdrag').node().getBoundingClientRect(),
                         xfrac = (e.clientX - gbb.left) / gbb.width,
@@ -431,8 +430,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                       scrollViewBox[3] *= zoom;
                       scrollViewBox[1] += scrollViewBox[3] * (1 - yfrac) * (1 / zoom - 1);
                   }
-
-                  console.log(scrollViewBox);
                   // viewbox redraw at first
                   updateSubplots(scrollViewBox);
                   ticksAndAnnotations(ns, ew);
@@ -466,7 +463,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
       redraw = false;
     }
 
-    function zoompinchMove(e) {
+    function zoomPinchMove(e) {
       if(e.touches.length == 2){
         if(!scaling){
           //redraw = false;
@@ -492,8 +489,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
       var pow1 = Math.pow(mousePos1[0] - mousePos2[0], 2);
       var pow2 = Math.pow(mousePos2[1] - mousePos1[1], 2);
       var result = Math.sqrt(pow1 + pow2);
-      //console.log('oldresult: ' + oldresult);
-      //console.log(result);
       if((result - oldresult) >= 30){
         oldresult = result;
         e.deltaY = -100;
