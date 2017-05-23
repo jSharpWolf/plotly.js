@@ -449,6 +449,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                   return Lib.pauseEvent(e);
                 }
             }
+    //Add Eventlistener for touch zoom, no duplicates allowed
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].onpinchstart){

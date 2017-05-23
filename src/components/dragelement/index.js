@@ -66,6 +66,8 @@ dragElement.init = function init(options) {
         initialTarget,
         initialOnMouseMove;
     if(!gd._mouseDownTime) gd._mouseDownTime = 0;
+
+    //Add Eventlistener for touch move, no duplicates allowed
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].ontouchstart){

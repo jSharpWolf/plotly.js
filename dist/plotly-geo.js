@@ -17006,6 +17006,8 @@ dragElement.init = function init(options) {
         initialTarget,
         initialOnMouseMove;
     if(!gd._mouseDownTime) gd._mouseDownTime = 0;
+
+    //Add Eventlistener for touch move, no duplicates allowed
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].ontouchstart){
@@ -40566,6 +40568,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                   return Lib.pauseEvent(e);
                 }
             }
+    //Add Eventlistener for touch zoom, no duplicates allowed
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].onpinchstart){
@@ -44456,20 +44459,17 @@ module.exports = function setConvert(ax, fullLayout) {
 
         // gets the size of a element
         function textMeasurement(value, fontSizeString, fontFamily) {
-          var width = 500;
-          var height = 500;
-          return { width: width, height: height }
-            // var body = $('body');
-            // if (fontFamily) {
-            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
-            // } else {
-            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
-            // }
-            // var elem = $('#testObjectDashboardUtils');
-            // var width = elem.innerWidth() + 1;
-            // var height = elem.innerHeight() + 1;
-            // elem.remove();
-            // return { width: width, height: height }
+            var body = $('body');
+            if (fontFamily) {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            } else {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            }
+            var elem = $('#testObjectDashboardUtils');
+            var width = elem.innerWidth() + 1;
+            var height = elem.innerHeight() + 1;
+            elem.remove();
+            return { width: width, height: height }
             }
         };
 
