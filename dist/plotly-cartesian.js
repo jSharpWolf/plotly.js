@@ -16324,17 +16324,51 @@ dragElement.init = function init(options) {
         dragCover,
         initialTarget,
         initialOnMouseMove;
-
     if(!gd._mouseDownTime) gd._mouseDownTime = 0;
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].ontouchstart){
-        console.log('add');
         options.element.addEventListener('touchstart', touchstart);
         options.element.addEventListener('touchmove', touchmove);
         options.element.addEventListener('touchend', touchend);
         options.element.ontouchstart = touchstart;
       }
+    }
+
+    function onStart(e) {
+        // disable call to options.setCursor(evt)
+        options.element.onmousemove = initialOnMouseMove;
+
+        // make dragging and dragged into properties of gd
+        // so that others can look at and modify them
+        gd._dragged = false;
+        gd._dragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialTarget = e.target;
+
+        newMouseDownTime = (new Date()).getTime();
+        if(newMouseDownTime - gd._mouseDownTime < DBLCLICKDELAY) {
+            // in a click train
+            numClicks += 1;
+        }
+        else {
+            // new click train
+            numClicks = 1;
+            gd._mouseDownTime = newMouseDownTime;
+        }
+
+        if(options.prepFn) options.prepFn(e, startX, startY);
+
+        dragCover = coverSlip();
+
+        dragCover.onmousemove = onMove;
+        dragCover.onmouseup = onDone;
+        dragCover.onmouseout = onDone;
+
+        dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
+
+        return Lib.pauseEvent(e);
     }
 
     function touchstart(e) {
@@ -16367,7 +16401,6 @@ dragElement.init = function init(options) {
       //    gd._fullLayout.dragmode = 'zoom';
       //  }
        if(options.prepFn) options.prepFn(e, startX, startY);
-       console.log('start');
        return Lib.pauseEvent(e);
       }
     }
@@ -16408,49 +16441,10 @@ dragElement.init = function init(options) {
         mousePos2 = null;
         Lib.removeElement(dragCover);
         finishDrag(gd);
-        options.element.removeEventListener('touchstart', touchstart);
-        options.element.removeEventListener('touchmove', touchmove);
-        options.element.removeEventListener('touchend', touchend);
         gd._dragged = false;
         gd._dragging = false;
         console.log('end')
       }
-    }
-
-    function onStart(e) {
-        // disable call to options.setCursor(evt)
-        options.element.onmousemove = initialOnMouseMove;
-
-        // make dragging and dragged into properties of gd
-        // so that others can look at and modify them
-        gd._dragged = false;
-        gd._dragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialTarget = e.target;
-
-        newMouseDownTime = (new Date()).getTime();
-        if(newMouseDownTime - gd._mouseDownTime < DBLCLICKDELAY) {
-            // in a click train
-            numClicks += 1;
-        }
-        else {
-            // new click train
-            numClicks = 1;
-            gd._mouseDownTime = newMouseDownTime;
-        }
-
-        if(options.prepFn) options.prepFn(e, startX, startY);
-
-        dragCover = coverSlip();
-
-        dragCover.onmousemove = onMove;
-        dragCover.onmouseup = onDone;
-        dragCover.onmouseout = onDone;
-
-        dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
-
-        return Lib.pauseEvent(e);
     }
 
     function onMove(e) {
@@ -34509,7 +34503,7 @@ module.exports = {
     frameMargins: 0,
 
     // mousewheel or two-finger scroll zooms the plot
-    scrollZoom: false,
+    scrollZoom: true,
 
     // double click interaction (false, 'reset', 'autosize' or 'reset+autosize')
     doubleClick: 'reset+autosize',
@@ -39628,13 +39622,13 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                   // then replot after a delay to make sure
                   // no more scrolling is coming
 
-                  if(redraw){
+                  if(!e.touches){
                     redrawTimer = setTimeout(function() {
-                        scrollViewBox = [0, 0, pw, ph];
-                        var zoomMode;
-                        if(isSubplotConstrained) zoomMode = 'xy';
-                        else zoomMode = (ew ? 'x' : '') + (ns ? 'y' : '');
-                        dragTail(zoomMode);
+                      scrollViewBox = [0, 0, pw, ph];
+                      var zoomMode;
+                      if(isSubplotConstrained) zoomMode = 'xy';
+                      else zoomMode = (ew ? 'x' : '') + (ns ? 'y' : '');
+                      dragTail(zoomMode);
                     }, REDRAWDELAY);
                   }
                   return Lib.pauseEvent(e);
@@ -39642,6 +39636,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             }
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
+      console.log(result);
       if(!result[i].onpinchstart){
         dragger.addEventListener('touchstart', zoomPinchStart);
         dragger.addEventListener('touchmove', zoomPinchMove);
@@ -43341,7 +43336,7 @@ module.exports = function setConvert(ax, fullLayout) {
         }
     };
     /**
-     * 
+     *
      * @param {} ax - Achse, welche gerade resized wird
      * @param {} axLetter - Startbuchstabe der Achse
      * @returns {} scaleAxes - Array mit Achsen, deren Labels relevant sind
@@ -43524,23 +43519,26 @@ module.exports = function setConvert(ax, fullLayout) {
                     labelWidth = 0;
                 }
             }
-            
+
             return labelWidth;
         }
 
         // gets the size of a element
         function textMeasurement(value, fontSizeString, fontFamily) {
-            var body = $('body');
-            if (fontFamily) {
-                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
-            } else {
-                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
-            }
-            var elem = $('#testObjectDashboardUtils');
-            var width = elem.innerWidth() + 1;
-            var height = elem.innerHeight() + 1;
-            elem.remove();
-            return { width: width, height: height }
+          var width = 500;
+          var height = 500;
+          return { width: width, height: height }
+            // var body = $('body');
+            // if (fontFamily) {
+            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            // } else {
+            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            // }
+            // var elem = $('#testObjectDashboardUtils');
+            // var width = elem.innerWidth() + 1;
+            // var height = elem.innerHeight() + 1;
+            // elem.remove();
+            // return { width: width, height: height }
             }
         };
 

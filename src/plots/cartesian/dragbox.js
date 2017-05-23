@@ -437,13 +437,13 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
                   // then replot after a delay to make sure
                   // no more scrolling is coming
 
-                  if(redraw){
+                  if(!e.touches){
                     redrawTimer = setTimeout(function() {
-                        scrollViewBox = [0, 0, pw, ph];
-                        var zoomMode;
-                        if(isSubplotConstrained) zoomMode = 'xy';
-                        else zoomMode = (ew ? 'x' : '') + (ns ? 'y' : '');
-                        dragTail(zoomMode);
+                      scrollViewBox = [0, 0, pw, ph];
+                      var zoomMode;
+                      if(isSubplotConstrained) zoomMode = 'xy';
+                      else zoomMode = (ew ? 'x' : '') + (ns ? 'y' : '');
+                      dragTail(zoomMode);
                     }, REDRAWDELAY);
                   }
                   return Lib.pauseEvent(e);
@@ -451,6 +451,7 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             }
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
+      console.log(result);
       if(!result[i].onpinchstart){
         dragger.addEventListener('touchstart', zoomPinchStart);
         dragger.addEventListener('touchmove', zoomPinchMove);

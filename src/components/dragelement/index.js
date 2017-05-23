@@ -65,17 +65,51 @@ dragElement.init = function init(options) {
         dragCover,
         initialTarget,
         initialOnMouseMove;
-
     if(!gd._mouseDownTime) gd._mouseDownTime = 0;
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].ontouchstart){
-        console.log('add');
         options.element.addEventListener('touchstart', touchstart);
         options.element.addEventListener('touchmove', touchmove);
         options.element.addEventListener('touchend', touchend);
         options.element.ontouchstart = touchstart;
       }
+    }
+
+    function onStart(e) {
+        // disable call to options.setCursor(evt)
+        options.element.onmousemove = initialOnMouseMove;
+
+        // make dragging and dragged into properties of gd
+        // so that others can look at and modify them
+        gd._dragged = false;
+        gd._dragging = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialTarget = e.target;
+
+        newMouseDownTime = (new Date()).getTime();
+        if(newMouseDownTime - gd._mouseDownTime < DBLCLICKDELAY) {
+            // in a click train
+            numClicks += 1;
+        }
+        else {
+            // new click train
+            numClicks = 1;
+            gd._mouseDownTime = newMouseDownTime;
+        }
+
+        if(options.prepFn) options.prepFn(e, startX, startY);
+
+        dragCover = coverSlip();
+
+        dragCover.onmousemove = onMove;
+        dragCover.onmouseup = onDone;
+        dragCover.onmouseout = onDone;
+
+        dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
+
+        return Lib.pauseEvent(e);
     }
 
     function touchstart(e) {
@@ -108,7 +142,6 @@ dragElement.init = function init(options) {
       //    gd._fullLayout.dragmode = 'zoom';
       //  }
        if(options.prepFn) options.prepFn(e, startX, startY);
-       console.log('start');
        return Lib.pauseEvent(e);
       }
     }
@@ -149,49 +182,10 @@ dragElement.init = function init(options) {
         mousePos2 = null;
         Lib.removeElement(dragCover);
         finishDrag(gd);
-        options.element.removeEventListener('touchstart', touchstart);
-        options.element.removeEventListener('touchmove', touchmove);
-        options.element.removeEventListener('touchend', touchend);
         gd._dragged = false;
         gd._dragging = false;
         console.log('end')
       }
-    }
-
-    function onStart(e) {
-        // disable call to options.setCursor(evt)
-        options.element.onmousemove = initialOnMouseMove;
-
-        // make dragging and dragged into properties of gd
-        // so that others can look at and modify them
-        gd._dragged = false;
-        gd._dragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        initialTarget = e.target;
-
-        newMouseDownTime = (new Date()).getTime();
-        if(newMouseDownTime - gd._mouseDownTime < DBLCLICKDELAY) {
-            // in a click train
-            numClicks += 1;
-        }
-        else {
-            // new click train
-            numClicks = 1;
-            gd._mouseDownTime = newMouseDownTime;
-        }
-
-        if(options.prepFn) options.prepFn(e, startX, startY);
-
-        dragCover = coverSlip();
-
-        dragCover.onmousemove = onMove;
-        dragCover.onmouseup = onDone;
-        dragCover.onmouseout = onDone;
-
-        dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
-
-        return Lib.pauseEvent(e);
     }
 
     function onMove(e) {

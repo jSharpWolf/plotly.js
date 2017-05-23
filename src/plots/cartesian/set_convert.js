@@ -318,7 +318,7 @@ module.exports = function setConvert(ax, fullLayout) {
         }
     };
     /**
-     * 
+     *
      * @param {} ax - Achse, welche gerade resized wird
      * @param {} axLetter - Startbuchstabe der Achse
      * @returns {} scaleAxes - Array mit Achsen, deren Labels relevant sind
@@ -388,7 +388,7 @@ module.exports = function setConvert(ax, fullLayout) {
                 var scaleAxis = scaleAxes[0];
                 labelWidth = getLabelWidth(scaleAxis);
                 // Sofern die LabelWidth bereits ermittelt wurde, wird diese verwendet (solange sie kleiner als die aktuelle ist)
-                // dies dient dazu, da ansonsten der Plot zu Beginn eine falsche Größe hat
+                // dies dient dazu, da ansonsten der Plot zu Beginn eine falsche Grï¿½ï¿½e hat
                 if (scaleAxis._lastLabel && scaleAxis._lastLabel.autoangle === scaleAxis._lastangle) {
                     if (scaleAxis._lastLabel && labelWidth < scaleAxis._lastLabel.lastLabelWidth) {
                         labelWidth = scaleAxis._lastLabel.lastLabelWidth;
@@ -501,23 +501,26 @@ module.exports = function setConvert(ax, fullLayout) {
                     labelWidth = 0;
                 }
             }
-            
+
             return labelWidth;
         }
 
         // gets the size of a element
         function textMeasurement(value, fontSizeString, fontFamily) {
-            var body = $('body');
-            if (fontFamily) {
-                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
-            } else {
-                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
-            }
-            var elem = $('#testObjectDashboardUtils');
-            var width = elem.innerWidth() + 1;
-            var height = elem.innerHeight() + 1;
-            elem.remove();
-            return { width: width, height: height }
+          var width = 500;
+          var height = 500;
+          return { width: width, height: height }
+            // var body = $('body');
+            // if (fontFamily) {
+            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            // } else {
+            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            // }
+            // var elem = $('#testObjectDashboardUtils');
+            // var width = elem.innerWidth() + 1;
+            // var height = elem.innerHeight() + 1;
+            // elem.remove();
+            // return { width: width, height: height }
             }
         };
 
