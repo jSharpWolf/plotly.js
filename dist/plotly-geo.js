@@ -17119,13 +17119,16 @@ dragElement.init = function init(options) {
           gd._dragged = true;
         }
         doubleTouch = false;
+        if(!gd._dragging) {
+            gd._dragged = false;
+            return;
+        }
+        gd._dragging = false;
         if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
         mousePos1 = null;
         mousePos2 = null;
         Lib.removeElement(dragCover);
         finishDrag(gd);
-        gd._dragged = false;
-        gd._dragging = false;
       }
     }
 
