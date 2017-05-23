@@ -31556,7 +31556,8 @@ Plotly.plot = function(gd, data, layout, config) {
         // signal to drag handler that after everything else is done
         // we need to replot, because something has changed
         gd._replotPending = true;
-        return Promise.reject();
+        //causes Crash on fast switch between widgets on touchscreen
+        //return Promise.reject();
     } else {
         // we're going ahead with a replot now
         gd._replotPending = false;
