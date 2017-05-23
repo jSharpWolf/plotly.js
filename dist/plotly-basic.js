@@ -16345,7 +16345,6 @@ dragElement.init = function init(options) {
         finishDrag(gd);
         gd._dragged = false;
         gd._dragging = false;
-        console.log('end')
       }
     }
 
@@ -39538,7 +39537,6 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             }
     var result = document.getElementsByClassName("nsewdrag");
     for(var i = 0;i< result.length;i++){
-      console.log(result);
       if(!result[i].onpinchstart){
         dragger.addEventListener('touchstart', zoomPinchStart);
         dragger.addEventListener('touchmove', zoomPinchMove);

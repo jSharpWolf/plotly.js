@@ -184,7 +184,6 @@ dragElement.init = function init(options) {
         finishDrag(gd);
         gd._dragged = false;
         gd._dragging = false;
-        console.log('end')
       }
     }
 
