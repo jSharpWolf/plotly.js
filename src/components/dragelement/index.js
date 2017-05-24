@@ -21,7 +21,7 @@ var mousePos2;
 var doubleTouch;
 var doubleMove;
 var clickTimer = null;
-var first;
+
 
 dragElement.align = require('./align');
 dragElement.getCursor = require('./cursor');
@@ -64,6 +64,7 @@ dragElement.init = function init(options) {
         newMouseDownTime,
         dragCover,
         initialTarget,
+        drag,
         initialOnMouseMove;
     if(!gd._mouseDownTime) gd._mouseDownTime = 0;
 
@@ -115,26 +116,44 @@ dragElement.init = function init(options) {
     }
 
     function touchstart(e) {
-      if(!mousePos1){
-        if (clickTimer == null) {
-          clickTimer = setTimeout(function () {
-              clickTimer = null;
-
-          }, 200)
-        } else {
-          clearTimeout(clickTimer);
-          clickTimer = null;
-          doubleTouch = true;
-        }
-         mousePos1 = [
-                           e.changedTouches[0].pageX,
-                           e.changedTouches[0].pageY
-                         ];
-        first = true;
-      }
+      //placeholder;
     }
 
     function touchmove(e) {
+      drag = true;
+      if(drag){
+        if(!mousePos1){
+          if (clickTimer == null) {
+            clickTimer = setTimeout(function () {
+                clickTimer = null;
+
+            }, 200)
+          } else {
+            clearTimeout(clickTimer);
+            clickTimer = null;
+            doubleTouch = true;
+          }
+           mousePos1 = [
+                             e.changedTouches[0].pageX,
+                             e.changedTouches[0].pageY
+                           ];
+         gd._dragged = false;
+         gd._dragging = true;
+         startX = mousePos1[0];
+         startY = mousePos1[1];
+         //initialTarget = e.target;
+         dragCover = coverSlip();
+
+         dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
+        //  if(e.touches.length <= 1){
+        //    gd._fullLayout.dragmode = 'pan';
+        //  }else if(e.touches.length == 2){
+        //    gd._fullLayout.dragmode = 'zoom';
+        //  }
+         if(options.prepFn) options.prepFn(e, startX, startY);
+         return Lib.pauseEvent(e);
+        }
+      }
       if(e.touches.length <= 1){
         //gd._fullLayout.dragmode = 'pan';
         if(mousePos1){
@@ -147,36 +166,15 @@ dragElement.init = function init(options) {
         dx = mousePos2[0] - mousePos1[0],
         dy = mousePos2[1] - mousePos1[1]
         if(Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-          if(first){
-            gd._dragged = false;
-            gd._dragging = true;
-            startX = mousePos1[0];
-            startY = mousePos1[1];
-            //initialTarget = e.target;
-            dragCover = coverSlip();
-
-            dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
-            //  if(e.touches.length <= 1){
-            //    gd._fullLayout.dragmode = 'pan';
-            //  }else if(e.touches.length == 2){
-            //    gd._fullLayout.dragmode = 'zoom';
-            //  }
-            if(options.prepFn) options.prepFn(e, startX, startY);
-            first = false;
-            return Lib.pauseEvent(e);
-          }
-          gd._dragged = true;
-          dragElement.unhover(gd);
-          if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
+            gd._dragged = true;
+            dragElement.unhover(gd);
+            if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
         }
       }
     }
 
     function touchend(e) {
       if(mousePos1 || mousePos2) {
-          first = false;
-          mousePos1 = null;
-          mousePos2 = null;
 
         if(doubleTouch){
           numClicks = 2;
@@ -192,6 +190,8 @@ dragElement.init = function init(options) {
         }
         gd._dragging = false;
         if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
+        mousePos1 = null;
+        mousePos2 = null;
         Lib.removeElement(dragCover);
         finishDrag(gd);
       }

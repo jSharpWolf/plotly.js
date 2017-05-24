@@ -130,6 +130,16 @@ fx.init = function(gd) {
                 gd._fullLayout._hoversubplot = subplot;
             };
 
+            var result = document.getElementsByClassName("nsewdrag");
+            for(var i = 0;i< result.length;i++){
+              if(!result[i].ontouchselect){
+                maindrag.addEventListener('touchstart', function(e){
+                    fx.hover(gd, evt);
+                })
+                maindrag.ontouchselect = true;
+              }
+            }
+
             /*
              * IMPORTANT:
              * We must check for the presence of the drag cover here.
@@ -151,10 +161,6 @@ fx.init = function(gd) {
             maindrag.onclick = function(evt) {
                 fx.click(gd, evt);
             };
-
-            maindrag.addEventListener('touchstart',function(evt) {
-              fx.hover(gd, evt);
-            });
 
             // corner draggers
             if(gd._context.showAxisDragHandles) {
