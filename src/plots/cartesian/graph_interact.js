@@ -118,17 +118,17 @@ fx.init = function(gd) {
                 // changes by the time this is called again.
                 gd._fullLayout._rehover = function() {
                     if(gd._fullLayout._hoversubplot === subplot) {
+
                         fx.hover(gd, evt, subplot);
                     }
                 };
-
                 fx.hover(gd, evt, subplot);
 
                 // Note that we have *not* used the cached fullLayout variable here
                 // since that may be outdated when this is called as a callback later on
                 gd._fullLayout._lasthover = maindrag;
                 gd._fullLayout._hoversubplot = subplot;
-            };           
+            };
 
             /*
              * IMPORTANT:
@@ -151,6 +151,10 @@ fx.init = function(gd) {
             maindrag.onclick = function(evt) {
                 fx.click(gd, evt);
             };
+
+            maindrag.addEventListener('touchstart',function(evt) {
+              fx.hover(gd, evt);
+            });
 
             // corner draggers
             if(gd._context.showAxisDragHandles) {
@@ -434,8 +438,15 @@ function hover(gd, evt, subplot) {
 
             var dbb = evt.target.getBoundingClientRect();
 
-            xpx = evt.clientX - dbb.left;
-            ypx = evt.clientY - dbb.top;
+
+
+            if(evt.touches){
+              xpx = evt.touches[0].clientX - dbb.left;
+              ypx = evt.touches[0].clientY - dbb.top;
+            }else{
+              xpx = evt.clientX - dbb.left;
+              ypx = evt.clientY - dbb.top;
+            }
 
             // in case hover was called from mouseout into hovertext,
             // it's possible you're not actually over the plot anymore

@@ -134,7 +134,7 @@ dragElement.init = function init(options) {
        gd._dragging = true;
        startX = mousePos1[0];
        startY = mousePos1[1];
-       initialTarget = e.target;
+       //initialTarget = e.target;
        dragCover = coverSlip();
 
        dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
@@ -160,11 +160,11 @@ dragElement.init = function init(options) {
         var dx, dy
         dx = mousePos2[0] - mousePos1[0],
         dy = mousePos2[1] - mousePos1[1]
-        if(dx || dy) {
+        if(Math.abs(dx) > 100 || Math.abs(dy) > 10) {
             gd._dragged = true;
             dragElement.unhover(gd);
+            if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
         }
-        if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
       }
     }
 
