@@ -24606,7 +24606,7 @@ arguments[4][45][0].apply(exports,arguments)
 },{"dup":45}],84:[function(require,module,exports){
 
 
-exports.lineVertex    = "precision highp float;\n#define GLSLIFY 1\n\nattribute vec2 aHi, aLo, dHi, dLo;\n\nuniform vec2 scaleHi, translateHi, scaleLo, translateLo, screenShape;\nuniform float width;\n\nvarying vec2 direction;\n\n\nvec2 project_1_0(vec2 scHi, vec2 trHi, vec2 scLo, vec2 trLo, vec2 posHi, vec2 posLo) {\n  return (posHi + trHi) * scHi\n       + (posLo + trLo) * scHi\n       + (posHi + trHi) * scLo\n       + (posLo + trLo) * scLo;\n}\n\n\nvec2 project_2_1(vec2 scHi, vec2 scLo, vec2 posHi, vec2 posLo) {\n  return scHi * posHi\n       + scLo * posHi\n       + scHi * posLo\n       + scLo * posLo;\n}\n\nvoid main() {\n  vec2 p = project_1_0(scaleHi, translateHi, scaleLo, translateLo, aHi, aLo);\n  vec2 dir = project_2_1(scaleHi, scaleLo, dHi, dLo);\n  vec2 n = 0.5 * width * normalize(screenShape.yx * vec2(dir.y, -dir.x)) / screenShape.xy;\n  vec2 tangent = normalize(screenShape.xy * dir);\n  if(dir.x < 0.0 || (dir.x == 0.0 && dir.y < 0.0)) {\n    direction = -tangent;\n  } else {\n    direction = tangent;\n  }\n  gl_Position = vec4(p + n, 0.0, 1.0);\n}"
+exports.lineVertex    = "precision highp float;\n#define GLSLIFY 1\n\nattribute vec2 aHi, aLo, dHi, dLo;\n\nuniform vec2 scaleHi, translateHi, scaleLo, translateLo, screenShape;\nuniform float width;\n\nvarying vec2 direction;\n\n\nvec2 project_2_0(vec2 scHi, vec2 trHi, vec2 scLo, vec2 trLo, vec2 posHi, vec2 posLo) {\n  return (posHi + trHi) * scHi\n       + (posLo + trLo) * scHi\n       + (posHi + trHi) * scLo\n       + (posLo + trLo) * scLo;\n}\n\n\nvec2 project_1_1(vec2 scHi, vec2 scLo, vec2 posHi, vec2 posLo) {\n  return scHi * posHi\n       + scLo * posHi\n       + scHi * posLo\n       + scLo * posLo;\n}\n\nvoid main() {\n  vec2 p = project_2_0(scaleHi, translateHi, scaleLo, translateLo, aHi, aLo);\n  vec2 dir = project_1_1(scaleHi, scaleLo, dHi, dLo);\n  vec2 n = 0.5 * width * normalize(screenShape.yx * vec2(dir.y, -dir.x)) / screenShape.xy;\n  vec2 tangent = normalize(screenShape.xy * dir);\n  if(dir.x < 0.0 || (dir.x == 0.0 && dir.y < 0.0)) {\n    direction = -tangent;\n  } else {\n    direction = tangent;\n  }\n  gl_Position = vec4(p + n, 0.0, 1.0);\n}"
 exports.lineFragment  = "precision highp float;\n#define GLSLIFY 1\n\nuniform vec4 color;\nuniform vec2 screenShape;\nuniform sampler2D dashPattern;\nuniform float dashLength;\n\nvarying vec2 direction;\n\nvoid main() {\n  float t = fract(dot(direction, gl_FragCoord.xy) / dashLength);\n  vec4 pcolor = color * texture2D(dashPattern, vec2(t, 0.0)).r;\n  gl_FragColor = vec4(pcolor.rgb * pcolor.a, pcolor.a);\n}"
 exports.mitreVertex   = "precision highp float;\n#define GLSLIFY 1\n\nattribute vec2 aHi, aLo;\n\nuniform vec2 scaleHi, translateHi, scaleLo, translateLo;\nuniform float radius;\n\n\nvec2 project_1_0(vec2 scHi, vec2 trHi, vec2 scLo, vec2 trLo, vec2 posHi, vec2 posLo) {\n  return (posHi + trHi) * scHi\n       + (posLo + trLo) * scHi\n       + (posHi + trHi) * scLo\n       + (posLo + trLo) * scLo;\n}\n\n\nvoid main() {\n  vec2 p = project_1_0(scaleHi, translateHi, scaleLo, translateLo, aHi, aLo);\n  gl_Position = vec4(p, 0.0, 1.0);\n  gl_PointSize = radius;\n}"
 exports.mitreFragment = "precision mediump float;\n#define GLSLIFY 1\n\nuniform vec4 color;\n\nvoid main() {\n  if(length(gl_PointCoord.xy - 0.5) > 0.25) {\n    discard;\n  }\n  gl_FragColor = vec4(color.rgb, color.a);\n}"
@@ -51638,7 +51638,7 @@ dragElement.init = function init(options) {
        gd._dragging = true;
        startX = mousePos1[0];
        startY = mousePos1[1];
-       initialTarget = e.target;
+       //initialTarget = e.target;
        dragCover = coverSlip();
 
        dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
@@ -51664,11 +51664,11 @@ dragElement.init = function init(options) {
         var dx, dy
         dx = mousePos2[0] - mousePos1[0],
         dy = mousePos2[1] - mousePos1[1]
-        if(dx || dy) {
+        if(Math.abs(dx) > 100 || Math.abs(dy) > 10) {
             gd._dragged = true;
             dragElement.unhover(gd);
+            if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
         }
-        if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
       }
     }
 
@@ -75945,17 +75945,17 @@ fx.init = function(gd) {
                 // changes by the time this is called again.
                 gd._fullLayout._rehover = function() {
                     if(gd._fullLayout._hoversubplot === subplot) {
+
                         fx.hover(gd, evt, subplot);
                     }
                 };
-
                 fx.hover(gd, evt, subplot);
 
                 // Note that we have *not* used the cached fullLayout variable here
                 // since that may be outdated when this is called as a callback later on
                 gd._fullLayout._lasthover = maindrag;
                 gd._fullLayout._hoversubplot = subplot;
-            };           
+            };
 
             /*
              * IMPORTANT:
@@ -75978,6 +75978,10 @@ fx.init = function(gd) {
             maindrag.onclick = function(evt) {
                 fx.click(gd, evt);
             };
+
+            maindrag.addEventListener('touchstart',function(evt) {
+              fx.hover(gd, evt);
+            });
 
             // corner draggers
             if(gd._context.showAxisDragHandles) {
@@ -76261,8 +76265,15 @@ function hover(gd, evt, subplot) {
 
             var dbb = evt.target.getBoundingClientRect();
 
-            xpx = evt.clientX - dbb.left;
-            ypx = evt.clientY - dbb.top;
+
+
+            if(evt.touches){
+              xpx = evt.touches[0].clientX - dbb.left;
+              ypx = evt.touches[0].clientY - dbb.top;
+            }else{
+              xpx = evt.clientX - dbb.left;
+              ypx = evt.clientY - dbb.top;
+            }
 
             // in case hover was called from mouseout into hovertext,
             // it's possible you're not actually over the plot anymore
