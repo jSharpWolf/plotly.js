@@ -128,7 +128,17 @@ fx.init = function(gd) {
                 // since that may be outdated when this is called as a callback later on
                 gd._fullLayout._lasthover = maindrag;
                 gd._fullLayout._hoversubplot = subplot;
-            };           
+            };
+
+            var result = document.getElementsByClassName("nsewdrag");
+            for(var i = 0;i< result.length;i++){
+              if(!result[i].ontouchselect){
+                maindrag.addEventListener('touchstart', function(evt){
+                    fx.hover(gd, evt);
+                })
+                maindrag.ontouchselect = true;
+              }
+            }
 
             /*
              * IMPORTANT:
@@ -434,8 +444,13 @@ function hover(gd, evt, subplot) {
 
             var dbb = evt.target.getBoundingClientRect();
 
-            xpx = evt.clientX - dbb.left;
-            ypx = evt.clientY - dbb.top;
+            if(evt.touches){
+              xpx = evt.touches[0].clientX - dbb.left;
+              ypx = evt.touches[0].clientY - dbb.top;
+            }else{
+              xpx = evt.clientX - dbb.left;
+              ypx = evt.clientY - dbb.top;
+            }
 
             // in case hover was called from mouseout into hovertext,
             // it's possible you're not actually over the plot anymore
