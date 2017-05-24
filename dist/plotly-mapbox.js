@@ -50285,21 +50285,15 @@ dragElement.init = function init(options) {
                            e.changedTouches[0].pageX,
                            e.changedTouches[0].pageY
                          ];
-       gd._dragged = false;
-       gd._dragging = true;
-       startX = mousePos1[0];
-       startY = mousePos1[1];
-       initialTarget = e.target;
-       dragCover = coverSlip();
+        gd._dragged = false;
+      //  gd._dragging = true;
+        startX = mousePos1[0];
+        startY = mousePos1[1];
+        initialTarget = e.target;
+      //  dragCover = coverSlip();
 
-       dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
-      //  if(e.touches.length <= 1){
-      //    gd._fullLayout.dragmode = 'pan';
-      //  }else if(e.touches.length == 2){
-      //    gd._fullLayout.dragmode = 'zoom';
-      //  }
-       if(options.prepFn) options.prepFn(e, startX, startY);
-       return Lib.pauseEvent(e);
+        if(options.prepFn) options.prepFn(e, startX, startY);
+        return Lib.pauseEvent(e);
       }
     }
 
@@ -50315,17 +50309,19 @@ dragElement.init = function init(options) {
         var dx, dy
         dx = mousePos2[0] - mousePos1[0],
         dy = mousePos2[1] - mousePos1[1]
-        if(dx || dy) {
+        if(Math.abs(dx)  >= 10 || Math.abs(dy) >= 10) {
+            gd._dragging = true;
             gd._dragged = true;
             dragElement.unhover(gd);
+            if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
         }
-        if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
       }
     }
 
     function touchend(e) {
       if(mousePos1 || mousePos2) {
-
+        mousePos1 = null;
+        mousePos2 = null;
         if(doubleTouch){
           numClicks = 2;
           gd._dragged = false;
@@ -50340,8 +50336,6 @@ dragElement.init = function init(options) {
         }
         gd._dragging = false;
         if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
-        mousePos1 = null;
-        mousePos2 = null;
         Lib.removeElement(dragCover);
         finishDrag(gd);
       }
@@ -50358,9 +50352,7 @@ dragElement.init = function init(options) {
             gd._dragged = true;
             dragElement.unhover(gd);
         }
-
         if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
-
         return Lib.pauseEvent(e);
     }
 
@@ -74438,7 +74430,17 @@ fx.init = function(gd) {
                 // since that may be outdated when this is called as a callback later on
                 gd._fullLayout._lasthover = maindrag;
                 gd._fullLayout._hoversubplot = subplot;
-            };           
+            };
+
+            var result = document.getElementsByClassName("nsewdrag");
+            for(var i = 0;i< result.length;i++){
+              if(!result[i].ontouchselect){
+                maindrag.addEventListener('touchstart', function(evt){
+                    fx.hover(gd, evt);
+                })
+                maindrag.ontouchselect = true;
+              }
+            }
 
             /*
              * IMPORTANT:
@@ -74744,8 +74746,13 @@ function hover(gd, evt, subplot) {
 
             var dbb = evt.target.getBoundingClientRect();
 
-            xpx = evt.clientX - dbb.left;
-            ypx = evt.clientY - dbb.top;
+            if(evt.touches){
+              xpx = evt.touches[0].clientX - dbb.left;
+              ypx = evt.touches[0].clientY - dbb.top;
+            }else{
+              xpx = evt.clientX - dbb.left;
+              ypx = evt.clientY - dbb.top;
+            }
 
             // in case hover was called from mouseout into hovertext,
             // it's possible you're not actually over the plot anymore
