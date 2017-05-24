@@ -50310,11 +50310,14 @@ dragElement.init = function init(options) {
         dx = mousePos2[0] - mousePos1[0],
         dy = mousePos2[1] - mousePos1[1]
         if(Math.abs(dx)  >= 10 || Math.abs(dy) >= 10) {
-            gd._dragging = true;
             gd._dragged = true;
             dragElement.unhover(gd);
-            if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
+        }else{
+          dx = 0;
+          dy = 0;
         }
+        gd._dragging = true;
+        if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
       }
     }
 

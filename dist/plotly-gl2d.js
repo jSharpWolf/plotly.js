@@ -24606,7 +24606,7 @@ arguments[4][45][0].apply(exports,arguments)
 },{"dup":45}],84:[function(require,module,exports){
 
 
-exports.lineVertex    = "precision highp float;\n#define GLSLIFY 1\n\nattribute vec2 aHi, aLo, dHi, dLo;\n\nuniform vec2 scaleHi, translateHi, scaleLo, translateLo, screenShape;\nuniform float width;\n\nvarying vec2 direction;\n\n\nvec2 project_2_0(vec2 scHi, vec2 trHi, vec2 scLo, vec2 trLo, vec2 posHi, vec2 posLo) {\n  return (posHi + trHi) * scHi\n       + (posLo + trLo) * scHi\n       + (posHi + trHi) * scLo\n       + (posLo + trLo) * scLo;\n}\n\n\nvec2 project_1_1(vec2 scHi, vec2 scLo, vec2 posHi, vec2 posLo) {\n  return scHi * posHi\n       + scLo * posHi\n       + scHi * posLo\n       + scLo * posLo;\n}\n\nvoid main() {\n  vec2 p = project_2_0(scaleHi, translateHi, scaleLo, translateLo, aHi, aLo);\n  vec2 dir = project_1_1(scaleHi, scaleLo, dHi, dLo);\n  vec2 n = 0.5 * width * normalize(screenShape.yx * vec2(dir.y, -dir.x)) / screenShape.xy;\n  vec2 tangent = normalize(screenShape.xy * dir);\n  if(dir.x < 0.0 || (dir.x == 0.0 && dir.y < 0.0)) {\n    direction = -tangent;\n  } else {\n    direction = tangent;\n  }\n  gl_Position = vec4(p + n, 0.0, 1.0);\n}"
+exports.lineVertex    = "precision highp float;\n#define GLSLIFY 1\n\nattribute vec2 aHi, aLo, dHi, dLo;\n\nuniform vec2 scaleHi, translateHi, scaleLo, translateLo, screenShape;\nuniform float width;\n\nvarying vec2 direction;\n\n\nvec2 project_1_0(vec2 scHi, vec2 trHi, vec2 scLo, vec2 trLo, vec2 posHi, vec2 posLo) {\n  return (posHi + trHi) * scHi\n       + (posLo + trLo) * scHi\n       + (posHi + trHi) * scLo\n       + (posLo + trLo) * scLo;\n}\n\n\nvec2 project_2_1(vec2 scHi, vec2 scLo, vec2 posHi, vec2 posLo) {\n  return scHi * posHi\n       + scLo * posHi\n       + scHi * posLo\n       + scLo * posLo;\n}\n\nvoid main() {\n  vec2 p = project_1_0(scaleHi, translateHi, scaleLo, translateLo, aHi, aLo);\n  vec2 dir = project_2_1(scaleHi, scaleLo, dHi, dLo);\n  vec2 n = 0.5 * width * normalize(screenShape.yx * vec2(dir.y, -dir.x)) / screenShape.xy;\n  vec2 tangent = normalize(screenShape.xy * dir);\n  if(dir.x < 0.0 || (dir.x == 0.0 && dir.y < 0.0)) {\n    direction = -tangent;\n  } else {\n    direction = tangent;\n  }\n  gl_Position = vec4(p + n, 0.0, 1.0);\n}"
 exports.lineFragment  = "precision highp float;\n#define GLSLIFY 1\n\nuniform vec4 color;\nuniform vec2 screenShape;\nuniform sampler2D dashPattern;\nuniform float dashLength;\n\nvarying vec2 direction;\n\nvoid main() {\n  float t = fract(dot(direction, gl_FragCoord.xy) / dashLength);\n  vec4 pcolor = color * texture2D(dashPattern, vec2(t, 0.0)).r;\n  gl_FragColor = vec4(pcolor.rgb * pcolor.a, pcolor.a);\n}"
 exports.mitreVertex   = "precision highp float;\n#define GLSLIFY 1\n\nattribute vec2 aHi, aLo;\n\nuniform vec2 scaleHi, translateHi, scaleLo, translateLo;\nuniform float radius;\n\n\nvec2 project_1_0(vec2 scHi, vec2 trHi, vec2 scLo, vec2 trLo, vec2 posHi, vec2 posLo) {\n  return (posHi + trHi) * scHi\n       + (posLo + trLo) * scHi\n       + (posHi + trHi) * scLo\n       + (posLo + trLo) * scLo;\n}\n\n\nvoid main() {\n  vec2 p = project_1_0(scaleHi, translateHi, scaleLo, translateLo, aHi, aLo);\n  gl_Position = vec4(p, 0.0, 1.0);\n  gl_PointSize = radius;\n}"
 exports.mitreFragment = "precision mediump float;\n#define GLSLIFY 1\n\nuniform vec4 color;\n\nvoid main() {\n  if(length(gl_PointCoord.xy - 0.5) > 0.25) {\n    discard;\n  }\n  gl_FragColor = vec4(color.rgb, color.a);\n}"
@@ -51659,11 +51659,14 @@ dragElement.init = function init(options) {
         dx = mousePos2[0] - mousePos1[0],
         dy = mousePos2[1] - mousePos1[1]
         if(Math.abs(dx)  >= 10 || Math.abs(dy) >= 10) {
-            gd._dragging = true;
             gd._dragged = true;
             dragElement.unhover(gd);
-            if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
+        }else{
+          dx = 0;
+          dy = 0;
         }
+        gd._dragging = true;
+        if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
       }
     }
 
