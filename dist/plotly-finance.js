@@ -16224,7 +16224,7 @@ var mousePos2;
 var doubleTouch;
 var doubleMove;
 var clickTimer = null;
-
+var first;
 
 dragElement.align = require('./align');
 dragElement.getCursor = require('./cursor');
@@ -16333,21 +16333,7 @@ dragElement.init = function init(options) {
                            e.changedTouches[0].pageX,
                            e.changedTouches[0].pageY
                          ];
-       gd._dragged = false;
-       gd._dragging = true;
-       startX = mousePos1[0];
-       startY = mousePos1[1];
-       //initialTarget = e.target;
-       dragCover = coverSlip();
-
-       dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
-      //  if(e.touches.length <= 1){
-      //    gd._fullLayout.dragmode = 'pan';
-      //  }else if(e.touches.length == 2){
-      //    gd._fullLayout.dragmode = 'zoom';
-      //  }
-       if(options.prepFn) options.prepFn(e, startX, startY);
-       return Lib.pauseEvent(e);
+        first = true;
       }
     }
 
@@ -16363,16 +16349,37 @@ dragElement.init = function init(options) {
         var dx, dy
         dx = mousePos2[0] - mousePos1[0],
         dy = mousePos2[1] - mousePos1[1]
-        if(Math.abs(dx) > 100 || Math.abs(dy) > 10) {
-            gd._dragged = true;
-            dragElement.unhover(gd);
-            if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
+        if(Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+          if(first){
+            gd._dragged = false;
+            gd._dragging = true;
+            startX = mousePos1[0];
+            startY = mousePos1[1];
+            //initialTarget = e.target;
+            dragCover = coverSlip();
+
+            dragCover.style.cursor = window.getComputedStyle(options.element).cursor;
+            //  if(e.touches.length <= 1){
+            //    gd._fullLayout.dragmode = 'pan';
+            //  }else if(e.touches.length == 2){
+            //    gd._fullLayout.dragmode = 'zoom';
+            //  }
+            if(options.prepFn) options.prepFn(e, startX, startY);
+            first = false;
+            return Lib.pauseEvent(e);
+          }
+          gd._dragged = true;
+          dragElement.unhover(gd);
+          if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
         }
       }
     }
 
     function touchend(e) {
       if(mousePos1 || mousePos2) {
+          first = false;
+          mousePos1 = null;
+          mousePos2 = null;
 
         if(doubleTouch){
           numClicks = 2;
@@ -16388,8 +16395,6 @@ dragElement.init = function init(options) {
         }
         gd._dragging = false;
         if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
-        mousePos1 = null;
-        mousePos2 = null;
         Lib.removeElement(dragCover);
         finishDrag(gd);
       }
@@ -43485,17 +43490,21 @@ module.exports = function setConvert(ax, fullLayout) {
 
         // gets the size of a element
         function textMeasurement(value, fontSizeString, fontFamily) {
-            var body = $('body');
-            if (fontFamily) {
-                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
-            } else {
-                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
-            }
-            var elem = $('#testObjectDashboardUtils');
-            var width = elem.innerWidth() + 1;
-            var height = elem.innerHeight() + 1;
-            elem.remove();
-            return { width: width, height: height }
+          var height = 500;
+          var width = 500;
+          return { width: width, height: height }
+
+            // var body = $('body');
+            // if (fontFamily) {
+            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            // } else {
+            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            // }
+            // var elem = $('#testObjectDashboardUtils');
+            // var width = elem.innerWidth() + 1;
+            // var height = elem.innerHeight() + 1;
+            // elem.remove();
+            // return { width: width, height: height }
             }
         };
 
