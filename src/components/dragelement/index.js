@@ -120,7 +120,7 @@ dragElement.init = function init(options) {
           clickTimer = setTimeout(function () {
               clickTimer = null;
 
-          }, 200)
+          }, 300)
         } else {
           clearTimeout(clickTimer);
           clickTimer = null;

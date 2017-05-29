@@ -140,7 +140,7 @@ fx.init = function(gd) {
                       tapped=setTimeout(function(){
                         tapped=null
                         if(move){
-                          fx.hover(gd, evt);
+                          fx.hover(gd, evt, subplot);
                         }
                         //insert things you want to do when single tapped
                       },300);   //wait 300ms then run single click code
@@ -149,7 +149,7 @@ fx.init = function(gd) {
                       tapped=null
                       //insert things you want to do when double tapped
                     }
-                    evt.preventDefault()
+                    //evt.preventDefault()
                 })
                 maindrag.addEventListener('touchmove', function(evt){
                   move = false;
