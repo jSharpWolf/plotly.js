@@ -40302,6 +40302,8 @@ var layoutAttributes = require('../layout_attributes');
 
 
 var fx = module.exports = {};
+var move = true;
+var tapped = false;
 
 // TODO remove this in version 2.0
 // copy on Fx for backward compatible
@@ -40407,7 +40409,26 @@ fx.init = function(gd) {
             for(var i = 0;i< result.length;i++){
               if(!result[i].ontouchselect){
                 maindrag.addEventListener('touchstart', function(evt){
-                    fx.hover(gd, evt);
+                    if(!tapped){ //if tap is not set, set up single tap
+                      tapped=setTimeout(function(){
+                        tapped=null
+                        if(move){
+                          fx.hover(gd, evt);
+                        }
+                        //insert things you want to do when single tapped
+                      },300);   //wait 300ms then run single click code
+                    } else {    //tapped within 300ms of last tap. double tap
+                      clearTimeout(tapped); //stop single tap callback
+                      tapped=null
+                      //insert things you want to do when double tapped
+                    }
+                    evt.preventDefault()
+                })
+                maindrag.addEventListener('touchmove', function(evt){
+                  move = false;
+                })
+                maindrag.addEventListener('touchend', function(evt){
+                  move = true;
                 })
                 maindrag.ontouchselect = true;
               }
