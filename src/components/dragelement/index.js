@@ -69,6 +69,7 @@ dragElement.init = function init(options) {
 
     //Add Eventlistener for touch move, no duplicates allowed
     var result = document.getElementsByClassName("nsewdrag");
+    var resultB = document.getElementsByClassName("ewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].ontouchstart){
         options.element.addEventListener('touchstart', touchstart);
@@ -120,7 +121,7 @@ dragElement.init = function init(options) {
           clickTimer = setTimeout(function () {
               clickTimer = null;
 
-          }, 300)
+          }, 200)
         } else {
           clearTimeout(clickTimer);
           clickTimer = null;
@@ -173,20 +174,22 @@ dragElement.init = function init(options) {
         if(doubleTouch){
           numClicks = 2;
           gd._dragged = false;
-        }else{
+          if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
           numClicks = 1;
+          doubleTouch = false;
+          gd._dragging = false;
+        }else{
+          if(!gd._dragging) {
+              gd._dragged = false;
+              return;
+          }
+          gd._dragging = false;
+          if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
+          Lib.removeElement(dragCover);
+          finishDrag(gd);
+          gd._dragged = false;
+          return Lib.pauseEvent(e);
         }
-        doubleTouch = false;
-        if(!gd._dragging) {
-            gd._dragged = false;
-            return;
-        }
-        gd._dragging = false;
-        if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
-        Lib.removeElement(dragCover);
-        finishDrag(gd);
-        gd._dragged = false;
-        return Lib.pauseEvent(e);
       }
     }
 

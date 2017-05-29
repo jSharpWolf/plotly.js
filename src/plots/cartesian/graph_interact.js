@@ -29,8 +29,6 @@ var layoutAttributes = require('../layout_attributes');
 
 
 var fx = module.exports = {};
-var move = true;
-var tapped = false;
 
 // TODO remove this in version 2.0
 // copy on Fx for backward compatible
@@ -112,6 +110,8 @@ fx.init = function(gd) {
         if(!plotinfo.mainplot) {
             // main dragger goes over the grids and data, so we use its
             // mousemove events for all data hover effects
+            var move = true;
+            var tapped = false;
             var maindrag = dragBox(gd, plotinfo, 0, 0,
                 xa._length, ya._length, 'ns', 'ew');
 
@@ -143,16 +143,18 @@ fx.init = function(gd) {
                           fx.hover(gd, evt, subplot);
                         }
                         //insert things you want to do when single tapped
-                      },300);   //wait 300ms then run single click code
+                      },200);   //wait 300ms then run single click code
                     } else {    //tapped within 300ms of last tap. double tap
                       clearTimeout(tapped); //stop single tap callback
                       tapped=null
+                      dragElement.unhover(gd, evt);
                       //insert things you want to do when double tapped
                     }
                     //evt.preventDefault()
                 })
                 maindrag.addEventListener('touchmove', function(evt){
                   move = false;
+                  dragElement.unhover(gd, evt);
                 })
                 maindrag.addEventListener('touchend', function(evt){
                   move = true;
