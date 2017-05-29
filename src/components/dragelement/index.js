@@ -175,7 +175,6 @@ dragElement.init = function init(options) {
           gd._dragged = false;
         }else{
           numClicks = 1;
-          gd._dragged = true;
         }
         doubleTouch = false;
         if(!gd._dragging) {
@@ -186,6 +185,8 @@ dragElement.init = function init(options) {
         if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
         Lib.removeElement(dragCover);
         finishDrag(gd);
+        gd._dragged = false;
+        return Lib.pauseEvent(e);
       }
     }
 
