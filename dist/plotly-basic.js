@@ -16230,6 +16230,7 @@ dragElement.init = function init(options) {
 
     //Add Eventlistener for touch move, no duplicates allowed
     var result = document.getElementsByClassName("nsewdrag");
+    var resultB = document.getElementsByClassName("ewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].ontouchstart){
         options.element.addEventListener('touchstart', touchstart);
@@ -16281,7 +16282,7 @@ dragElement.init = function init(options) {
           clickTimer = setTimeout(function () {
               clickTimer = null;
 
-          }, 300)
+          }, 200)
         } else {
           clearTimeout(clickTimer);
           clickTimer = null;
@@ -16334,20 +16335,22 @@ dragElement.init = function init(options) {
         if(doubleTouch){
           numClicks = 2;
           gd._dragged = false;
-        }else{
+          if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
           numClicks = 1;
+          doubleTouch = false;
+          gd._dragging = false;
+        }else{
+          if(!gd._dragging) {
+              gd._dragged = false;
+              return;
+          }
+          gd._dragging = false;
+          if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
+          Lib.removeElement(dragCover);
+          finishDrag(gd);
+          gd._dragged = false;
+          return Lib.pauseEvent(e);
         }
-        doubleTouch = false;
-        if(!gd._dragging) {
-            gd._dragged = false;
-            return;
-        }
-        gd._dragging = false;
-        if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
-        Lib.removeElement(dragCover);
-        finishDrag(gd);
-        gd._dragged = false;
-        return Lib.pauseEvent(e);
       }
     }
 
@@ -40204,8 +40207,6 @@ var layoutAttributes = require('../layout_attributes');
 
 
 var fx = module.exports = {};
-var move = true;
-var tapped = false;
 
 // TODO remove this in version 2.0
 // copy on Fx for backward compatible
@@ -40287,6 +40288,8 @@ fx.init = function(gd) {
         if(!plotinfo.mainplot) {
             // main dragger goes over the grids and data, so we use its
             // mousemove events for all data hover effects
+            var move = true;
+            var tapped = false;
             var maindrag = dragBox(gd, plotinfo, 0, 0,
                 xa._length, ya._length, 'ns', 'ew');
 
@@ -40318,16 +40321,18 @@ fx.init = function(gd) {
                           fx.hover(gd, evt, subplot);
                         }
                         //insert things you want to do when single tapped
-                      },300);   //wait 300ms then run single click code
+                      },200);   //wait 300ms then run single click code
                     } else {    //tapped within 300ms of last tap. double tap
                       clearTimeout(tapped); //stop single tap callback
                       tapped=null
+                      dragElement.unhover(gd, evt);
                       //insert things you want to do when double tapped
                     }
                     //evt.preventDefault()
                 })
                 maindrag.addEventListener('touchmove', function(evt){
                   move = false;
+                  dragElement.unhover(gd, evt);
                 })
                 maindrag.addEventListener('touchend', function(evt){
                   move = true;

@@ -28980,7 +28980,7 @@ var ndarray   = require('ndarray')
 
 var nextPow2  = require('bit-twiddle').nextPow2
 
-var selectRange = require('cwise/lib/wrapper')({"args":["array",{"offset":[0,0,1],"array":0},{"offset":[0,0,2],"array":0},{"offset":[0,0,3],"array":0},"scalar","scalar","index"],"pre":{"body":"{this_closestD2=1e8,this_closestX=-1,this_closestY=-1}","args":[],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":[]},"body":{"body":"{if(_inline_55_arg0_<255||_inline_55_arg1_<255||_inline_55_arg2_<255||_inline_55_arg3_<255){var _inline_55_l=_inline_55_arg4_-_inline_55_arg6_[0],_inline_55_a=_inline_55_arg5_-_inline_55_arg6_[1],_inline_55_f=_inline_55_l*_inline_55_l+_inline_55_a*_inline_55_a;_inline_55_f<this_closestD2&&(this_closestD2=_inline_55_f,this_closestX=_inline_55_arg6_[0],this_closestY=_inline_55_arg6_[1])}}","args":[{"name":"_inline_55_arg0_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg4_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_55_arg6_","lvalue":false,"rvalue":true,"count":4}],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":["_inline_55_a","_inline_55_f","_inline_55_l"]},"post":{"body":"{return[this_closestX,this_closestY,this_closestD2]}","args":[],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64})
+var selectRange = require('cwise/lib/wrapper')({"args":["array",{"offset":[0,0,1],"array":0},{"offset":[0,0,2],"array":0},{"offset":[0,0,3],"array":0},"scalar","scalar","index"],"pre":{"body":"{this_closestD2=1e8,this_closestX=-1,this_closestY=-1}","args":[],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":[]},"body":{"body":"{if(_inline_52_arg0_<255||_inline_52_arg1_<255||_inline_52_arg2_<255||_inline_52_arg3_<255){var _inline_52_l=_inline_52_arg4_-_inline_52_arg6_[0],_inline_52_a=_inline_52_arg5_-_inline_52_arg6_[1],_inline_52_f=_inline_52_l*_inline_52_l+_inline_52_a*_inline_52_a;_inline_52_f<this_closestD2&&(this_closestD2=_inline_52_f,this_closestX=_inline_52_arg6_[0],this_closestY=_inline_52_arg6_[1])}}","args":[{"name":"_inline_52_arg0_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg1_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg2_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg3_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg4_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg5_","lvalue":false,"rvalue":true,"count":1},{"name":"_inline_52_arg6_","lvalue":false,"rvalue":true,"count":4}],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":["_inline_52_a","_inline_52_f","_inline_52_l"]},"post":{"body":"{return[this_closestX,this_closestY,this_closestD2]}","args":[],"thisVars":["this_closestD2","this_closestX","this_closestY"],"localVars":[]},"debug":false,"funcName":"cwise","blockSize":64})
 
 function SelectResult(x, y, id, value, distance) {
   this.coord = [x, y]
@@ -51573,6 +51573,7 @@ dragElement.init = function init(options) {
 
     //Add Eventlistener for touch move, no duplicates allowed
     var result = document.getElementsByClassName("nsewdrag");
+    var resultB = document.getElementsByClassName("ewdrag");
     for(var i = 0;i< result.length;i++){
       if(!result[i].ontouchstart){
         options.element.addEventListener('touchstart', touchstart);
@@ -51624,7 +51625,7 @@ dragElement.init = function init(options) {
           clickTimer = setTimeout(function () {
               clickTimer = null;
 
-          }, 300)
+          }, 200)
         } else {
           clearTimeout(clickTimer);
           clickTimer = null;
@@ -51677,20 +51678,22 @@ dragElement.init = function init(options) {
         if(doubleTouch){
           numClicks = 2;
           gd._dragged = false;
-        }else{
+          if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
           numClicks = 1;
+          doubleTouch = false;
+          gd._dragging = false;
+        }else{
+          if(!gd._dragging) {
+              gd._dragged = false;
+              return;
+          }
+          gd._dragging = false;
+          if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
+          Lib.removeElement(dragCover);
+          finishDrag(gd);
+          gd._dragged = false;
+          return Lib.pauseEvent(e);
         }
-        doubleTouch = false;
-        if(!gd._dragging) {
-            gd._dragged = false;
-            return;
-        }
-        gd._dragging = false;
-        if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
-        Lib.removeElement(dragCover);
-        finishDrag(gd);
-        gd._dragged = false;
-        return Lib.pauseEvent(e);
       }
     }
 
@@ -75852,8 +75855,6 @@ var layoutAttributes = require('../layout_attributes');
 
 
 var fx = module.exports = {};
-var move = true;
-var tapped = false;
 
 // TODO remove this in version 2.0
 // copy on Fx for backward compatible
@@ -75935,6 +75936,8 @@ fx.init = function(gd) {
         if(!plotinfo.mainplot) {
             // main dragger goes over the grids and data, so we use its
             // mousemove events for all data hover effects
+            var move = true;
+            var tapped = false;
             var maindrag = dragBox(gd, plotinfo, 0, 0,
                 xa._length, ya._length, 'ns', 'ew');
 
@@ -75966,16 +75969,18 @@ fx.init = function(gd) {
                           fx.hover(gd, evt, subplot);
                         }
                         //insert things you want to do when single tapped
-                      },300);   //wait 300ms then run single click code
+                      },200);   //wait 300ms then run single click code
                     } else {    //tapped within 300ms of last tap. double tap
                       clearTimeout(tapped); //stop single tap callback
                       tapped=null
+                      dragElement.unhover(gd, evt);
                       //insert things you want to do when double tapped
                     }
                     //evt.preventDefault()
                 })
                 maindrag.addEventListener('touchmove', function(evt){
                   move = false;
+                  dragElement.unhover(gd, evt);
                 })
                 maindrag.addEventListener('touchend', function(evt){
                   move = true;
