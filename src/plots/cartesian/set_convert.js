@@ -507,18 +507,16 @@ module.exports = function setConvert(ax, fullLayout) {
 
         // gets the size of a element
         function textMeasurement(value, fontSizeString, fontFamily) {
-            // var body = $('body');
-            // if (fontFamily) {
-            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
-            // } else {
-            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
-            // }
-            // var elem = $('#testObjectDashboardUtils');
-            // var width = elem.innerWidth() + 1;
-            // var height = elem.innerHeight() + 1;
-            // elem.remove();
-            var height = 500;
-            var width = 500;
+            var body = $('body');
+            if (fontFamily) {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            } else {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            }
+            var elem = $('#testObjectDashboardUtils');
+            var width = elem.innerWidth() + 1;
+            var height = elem.innerHeight() + 1;
+            elem.remove();
             return { width: width, height: height }
             }
         };
