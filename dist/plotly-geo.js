@@ -17092,9 +17092,11 @@ dragElement.init = function init(options) {
                              e.changedTouches[0].pageY
                            ];
         }
-        var dx, dy
-        dx = mousePos2[0] - mousePos1[0],
-        dy = mousePos2[1] - mousePos1[1]
+        var dx, dy;
+        if(mousePos1 && mousePos2){
+          dx = mousePos2[0] - mousePos1[0];
+          dy = mousePos2[1] - mousePos1[1];
+        }
         if(Math.abs(dx)  >= 10 || Math.abs(dy) >= 10) {
             gd._dragged = true;
             dragElement.unhover(gd);
@@ -40616,13 +40618,11 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         oldresult = result;
         e.deltaY = -100;
         e.wheelDelta = 12;
-        //zoomTouch(e);
         zoomWheel(e);
       }else if((result - oldresult) <= -30){
         oldresult = result;
         e.deltaY = 100;
         e.wheelDelta = -12;
-        //zoomTouch(e);
         zoomWheel(e);
         }
       }
@@ -44500,16 +44500,18 @@ module.exports = function setConvert(ax, fullLayout) {
 
         // gets the size of a element
         function textMeasurement(value, fontSizeString, fontFamily) {
-            var body = $('body');
-            if (fontFamily) {
-                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
-            } else {
-                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
-            }
-            var elem = $('#testObjectDashboardUtils');
-            var width = elem.innerWidth() + 1;
-            var height = elem.innerHeight() + 1;
-            elem.remove();
+            // var body = $('body');
+            // if (fontFamily) {
+            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            // } else {
+            //     body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            // }
+            // var elem = $('#testObjectDashboardUtils');
+            // var width = elem.innerWidth() + 1;
+            // var height = elem.innerHeight() + 1;
+            // elem.remove();
+            var height = 500;
+            var width = 500;
             return { width: width, height: height }
             }
         };

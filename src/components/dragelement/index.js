@@ -152,9 +152,11 @@ dragElement.init = function init(options) {
                              e.changedTouches[0].pageY
                            ];
         }
-        var dx, dy
-        dx = mousePos2[0] - mousePos1[0],
-        dy = mousePos2[1] - mousePos1[1]
+        var dx, dy;
+        if(mousePos1 && mousePos2){
+          dx = mousePos2[0] - mousePos1[0];
+          dy = mousePos2[1] - mousePos1[1];
+        }
         if(Math.abs(dx)  >= 10 || Math.abs(dy) >= 10) {
             gd._dragged = true;
             dragElement.unhover(gd);

@@ -494,13 +494,11 @@ module.exports = function dragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         oldresult = result;
         e.deltaY = -100;
         e.wheelDelta = 12;
-        //zoomTouch(e);
         zoomWheel(e);
       }else if((result - oldresult) <= -30){
         oldresult = result;
         e.deltaY = 100;
         e.wheelDelta = -12;
-        //zoomTouch(e);
         zoomWheel(e);
         }
       }
