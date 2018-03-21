@@ -187,9 +187,3 @@ module.exports = function initInteractions(gd) {
         fullLayout._lasthover.onmousedown(evt);
     };
 };
-
-            if(evt.touches){
-              xpx = evt.touches[0].clientX - dbb.left;
-              ypx = evt.touches[0].clientY - dbb.top;
-            }else{
-            }
