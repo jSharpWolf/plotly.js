@@ -1,9 +1,3 @@
-/**
-* plotly.js (cartesian) v1.35.2
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-* Licensed under the MIT license
-*/
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Plotly = f()}})(function(){var define,module,exports;
 var _$d3_15 = { exports: {} };
 !function() {
@@ -13172,9 +13166,11 @@ _$coerce_161.valObjectMeta = {
     info_array: {
         
         
-        // set dimensions=2 for a 2D array
+        // set `dimensions=2` for a 2D array or '1-2' for either
         // `items` may be a single object instead of an array, in which case
         // `freeLength` must be true.
+        // if `dimensions='1-2'` and items is a 1D array, then the value can
+        // either be a matching 1D array or an array of such matching 1D arrays
         
         coerceFunction: function(v, propOut, dflt, opts) {
 
@@ -13190,7 +13186,7 @@ _$coerce_161.valObjectMeta = {
                 return out;
             }
 
-            var twoD = opts.dimensions === 2;
+            var twoD = opts.dimensions === 2 || (opts.dimensions === '1-2' && Array.isArray(v) && Array.isArray(v[0]));
 
             if(!Array.isArray(v)) {
                 propOut.set(dflt);
@@ -13200,19 +13196,28 @@ _$coerce_161.valObjectMeta = {
             var items = opts.items;
             var vOut = [];
             var arrayItems = Array.isArray(items);
-            var len = arrayItems ? items.length : v.length;
+            var arrayItems2D = arrayItems && twoD && Array.isArray(items[0]);
+            var innerItemsOnly = twoD && arrayItems && !arrayItems2D;
+            var len = (arrayItems && !innerItemsOnly) ? items.length : v.length;
 
-            var i, j, len2, vNew;
+            var i, j, row, item, len2, vNew;
 
             dflt = Array.isArray(dflt) ? dflt : [];
 
             if(twoD) {
                 for(i = 0; i < len; i++) {
                     vOut[i] = [];
-                    var row = Array.isArray(v[i]) ? v[i] : [];
-                    len2 = arrayItems ? items[i].length : row.length;
+                    row = Array.isArray(v[i]) ? v[i] : [];
+                    if(innerItemsOnly) len2 = items.length;
+                    else if(arrayItems) len2 = items[i].length;
+                    else len2 = row.length;
+
                     for(j = 0; j < len2; j++) {
-                        vNew = coercePart(row[j], arrayItems ? items[i][j] : items, (dflt[i] || [])[j]);
+                        if(innerItemsOnly) item = items[j];
+                        else if(arrayItems) item = items[i][j];
+                        else item = items;
+
+                        vNew = coercePart(row[j], item, (dflt[i] || [])[j]);
                         if(vNew !== undefined) vOut[i][j] = vNew;
                     }
                 }
@@ -17673,6 +17678,38 @@ var _$setConvert_232 = function setConvert(ax, fullLayout) {
             }
         }
     };
+    /**
+     * 
+     * @param {} ax - Achse, welche gerade resized wird
+     * @param {} axLetter - Startbuchstabe der Achse
+     * @returns {} scaleAxes - Array mit Achsen, deren Labels relevant sind
+     */
+    function getScaleAxes(ax, axLetter) {
+        var scaleAxes = [];
+        var id = ax._id;
+        var idNumber;
+        if (axLetter === 'x') {
+            idNumber = id.replace('x', '') * 1;
+            id = 'y'
+        } else {
+            idNumber = id.replace('y', '') * 1;
+            id = 'x'
+        }
+
+        if (ax.side === 'top' || ax.side === 'right') {
+            idNumber -= 19937;
+        }
+        if (idNumber === 0 || idNumber == 1) idNumber = '';
+        var scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        if (idNumber === '') {
+            idNumber = 1;
+        }
+        idNumber += 19937;
+        scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        return scaleAxes;
+    }
 
     // set scaling to pixels
     ax.setScale = function(usePrivateRange) {
@@ -17701,15 +17738,83 @@ var _$setConvert_232 = function setConvert(ax, fullLayout) {
         var rl0 = ax.r2l(ax[rangeAttr][0], calendar),
             rl1 = ax.r2l(ax[rangeAttr][1], calendar);
 
-        if(axLetter === 'y') {
+        var labelWidth = 0;
+        var labelWidthRight = 0;
+
+        var scaleAxes = getScaleAxes(ax, axLetter);
+
+        // TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier noch angepasst werden
+        if (axLetter === 'y') {
+            var axLength;
+            if (scaleAxes[0]) {
+                var scaleAxis = scaleAxes[0];
+                labelWidth = getLabelWidth(scaleAxis);
+                // Sofern die LabelWidth bereits ermittelt wurde, wird diese verwendet (solange sie kleiner als die aktuelle ist)
+                // dies dient dazu, da ansonsten der Plot zu Beginn eine falsche Gr��e hat
+                if (scaleAxis._lastLabel && scaleAxis._lastLabel.autoangle === scaleAxis._lastangle) {
+                    if (scaleAxis._lastLabel && labelWidth < scaleAxis._lastLabel.lastLabelWidth) {
+                        labelWidth = scaleAxis._lastLabel.lastLabelWidth;
+                    }
+                }
+                var marginBottom = gs.b * 0.7;
+                if (labelWidth <= 1) labelWidth = marginBottom;
+
+                if (scaleAxis._lastangle === 30) marginBottom = gs.b * 0.5;
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + marginBottom;
+                scaleAxis._shortLabel = false;
+                if (!ax._lastangle || (ax._lastangle && ax._lastangle != 0)) {
+                    if (axLength < 100 && labelWidth > 0) {
+                        axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+                        scaleAxis._shortLabel = true;
+                    }
+                }
+            } else {
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+            }
+
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
-            ax._length = gs.h * (ax.domain[1] - ax.domain[0]);
+            ax._length = axLength;
             ax._m = ax._length / (rl0 - rl1);
             ax._b = -ax._m * rl1;
         }
         else {
-            ax._offset = gs.l + ax.domain[0] * gs.w;
-            ax._length = gs.w * (ax.domain[1] - ax.domain[0]);
+            var axLength;
+            var axOffset;
+            if (scaleAxes.length > 0) {
+                var scaleAxis = scaleAxes[0];
+                var scaleAxisRight;
+                labelWidth = getLabelWidth(scaleAxis);
+                var marginLeft = gs.l * 0.5;
+                if (labelWidth <= 1) labelWidth = marginLeft;
+                if (scaleAxes.length > 1) {
+                    scaleAxisRight = scaleAxes[1];
+                    labelWidthRight = getLabelWidth(scaleAxisRight);
+                }
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight) + marginLeft;
+                axOffset = gs.l + ax.domain[0] * gs.w + labelWidth - marginLeft;
+                if (axLength < 100 && labelWidthRight > 0) {
+                    axLength += labelWidthRight;
+                    scaleAxisRight._shortLabel = true;
+                } else if (scaleAxisRight) {
+                    scaleAxisRight._shortLabel = false;
+                }
+                if (axLength < 100 && labelWidth > 0) {
+                    axLength += labelWidth;
+                    axLength -= marginLeft;
+                    axOffset -= labelWidth;
+                    axOffset += marginLeft;
+                    scaleAxis._shortLabel = true;
+                } else if (scaleAxis) {
+                    scaleAxis._shortLabel = false;
+                }
+            } else {
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]);
+                axOffset = gs.l + ax.domain[0] * gs.w;
+            }
+
+            ax._offset = axOffset;
+            ax._length = axLength;
+
             ax._m = ax._length / (rl1 - rl0);
             ax._b = -ax._m * rl0;
         }
@@ -17718,7 +17823,62 @@ var _$setConvert_232 = function setConvert(ax, fullLayout) {
             fullLayout._replotting = false;
             throw new Error('Something went wrong with axis scaling');
         }
-    };
+
+        if (scaleAxes.length > 0) {
+            scaleAxis = scaleAxes[0];
+            var lastLabel = {};
+            if (labelWidth > 1) {
+                lastLabel.lastLabelWidth = labelWidth;
+            }
+
+            if (labelWidthRight > 1) {
+                lastLabel.lastLabelWidthRight = labelWidthRight;
+            }
+
+            lastLabel.autoangle = scaleAxis._lastangle;
+            scaleAxis._lastLabel = lastLabel;
+        }
+
+        function getLabelWidth(scaleAxis) {
+            var highestLabel = 0;
+            var textLabel = '';
+            var sizeLabel = {width: 0, height:0 };
+            var labelWidth = 0;
+            if (scaleAxis._categories) {
+                scaleAxis._categories.forEach(function (d) {
+                    if (d.length > highestLabel) {
+                        highestLabel = d.length;
+                        textLabel = d;
+                    }
+                });
+                sizeLabel = textMeasurement(textLabel, fullLayout.font.size, fullLayout.font.family)
+
+                labelWidth = sizeLabel.width;
+                if (scaleAxis._lastangle === 30) {
+                    labelWidth = labelWidth * Math.sin(0.5235988) / Math.sin(1.5707963);
+                } else if (scaleAxis._lastangle === 0) {
+                    labelWidth = 0;
+                }
+            }
+            
+            return labelWidth;
+        }
+
+        // gets the size of a element
+        function textMeasurement(value, fontSizeString, fontFamily) {
+            var body = $('body');
+            if (fontFamily) {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            } else {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            }
+            var elem = $('#testObjectDashboardUtils');
+            var width = elem.innerWidth() + 1;
+            var height = elem.innerHeight() + 1;
+            elem.remove();
+            return { width: width, height: height }
+            }
+        };
 
     // makeCalcdata: takes an x or y array and converts it
     // to a position on the axis object "ax"
@@ -20698,7 +20858,10 @@ function buildSVGText(containerNode, str) {
                         var dummyAnchor = document.createElement('a');
                         dummyAnchor.href = href;
                         if(PROTOCOLS.indexOf(dummyAnchor.protocol) !== -1) {
-                            nodeSpec.href = encodeURI(href);
+                            // Decode href to allow both already encoded and not encoded
+                            // URIs. Without decoding prior encoding, an already encoded
+                            // URI would be encoded twice producing a semantically different URI.
+                            nodeSpec.href = encodeURI(decodeURI(href));
                             nodeSpec.target = getQuotedMatch(extra, TARGETMATCH) || '_blank';
                             nodeSpec.popup = getQuotedMatch(extra, POPUPMATCH);
                         }
@@ -25519,6 +25682,9 @@ plots.doAutoMargin = function(gd) {
     gs.w = Math.round(fullLayout.width) - gs.l - gs.r;
     gs.h = Math.round(fullLayout.height) - gs.t - gs.b;
 
+	if (gs.w < 0) gs.w = Math.round(fullLayout.width) - fullLayout.margin.l - fullLayout.margin.r;
+	if (gs.h < 0) gs.h = Math.round(fullLayout.height) - fullLayout.margin.t - fullLayout.margin.b;
+	
     // if things changed and we're not already redrawing, trigger a redraw
     if(!fullLayout._replotting && oldmargins !== '{}' &&
             oldmargins !== JSON.stringify(fullLayout._size)) {
@@ -28691,12 +28857,19 @@ axes.doTicks = function(gd, axid, skipTitle) {
                 // alter later
                 .attr('text-anchor', 'middle')
                 .each(function(d) {
+                    var labelText = d.text;
+					if (ax._shortLabel) {
+						if (labelText.length > 9) {
+							labelText = labelText.substring(0, 6);
+							labelText += '...';
+						}
+					}
                     var thisLabel = _$d3_15.select(this),
                         newPromise = gd._promises.length;
                     thisLabel
                         .call(_$svg_text_utils_192.positionText, labelx(d), labely(d))
                         .call(_$drawing_76.font, d.font, d.fontSize, d.fontColor)
-                        .text(d.text)
+                        .text(labelText)
                         .call(_$svg_text_utils_192.convertToTspans, gd);
                     newPromise = gd._promises[newPromise];
                     if(newPromise) {
@@ -28797,7 +28970,7 @@ axes.doTicks = function(gd, axid, skipTitle) {
             // don't auto-angle at all for log axes with
             // base and digit format
             if(axLetter === 'x' && !_$fastIsnumeric_18(ax.tickangle) &&
-                    (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
+                (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
                 var lbbArray = [];
                 tickLabels.each(function(d) {
                     var s = _$d3_15.select(this),
@@ -28818,23 +28991,23 @@ axes.doTicks = function(gd, axid, skipTitle) {
                         width: bb.width + 2
                     });
                 });
-                for(i = 0; i < lbbArray.length - 1; i++) {
-                    if(_$lib_171.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
-                        // any overlap at all - set 30 degrees
-                        autoangle = 30;
-                        break;
-                    }
-                }
-                if(autoangle) {
-                    var tickspacing = Math.abs(
-                            (vals[vals.length - 1].x - vals[0].x) * ax._m
-                        ) / (vals.length - 1);
-                    if(tickspacing < maxFontSize * 2.5) {
-                        autoangle = 90;
-                    }
-                    positionLabels(tickLabels, autoangle);
-                }
-                ax._lastangle = autoangle;
+				for (i = 0; i < lbbArray.length - 1; i++) {
+					if (_$lib_171.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
+						// any overlap at all - set 30 degrees
+						autoangle = 30;
+						break;
+					}
+				}
+				if (autoangle) {
+					var tickspacing = Math.abs(
+							(vals[vals.length - 1].x - vals[0].x) * ax._m
+						) / (vals.length - 1);
+					if (tickspacing < maxFontSize * 2.5) {
+						autoangle = 90;
+					}
+					positionLabels(tickLabels, autoangle);
+				}
+				ax._lastangle = autoangle;
             }
 
             // update the axis title
@@ -38705,7 +38878,7 @@ var _$makeBoundArray_328 = function makeBoundArray(trace, arrayIn, v0In, dvIn, n
 'use strict';
 
 
-var _$doAvg_335 = function doAvg(size, counts) {
+var _$doAvg_344 = function doAvg(size, counts) {
     var nMax = size.length,
         total = 0;
     for(var i = 0; i < nMax; i++) {
@@ -38732,7 +38905,7 @@ var _$doAvg_335 = function doAvg(size, counts) {
 /* removed: var _$fastIsnumeric_18 = require('fast-isnumeric'); */;
 
 
-var _$bin_functions_337 = {
+var _$bin_functions_346 = {
     count: function(n, i, size) {
         size[n]++;
         return 1;
@@ -38825,7 +38998,7 @@ var tickIncrement = _$axes_213.tickIncrement;
  * @return {function(v, isRightEdge)}:
  *   find the start (isRightEdge is falsy) or end (truthy) label value for a bin edge `v`
  */
-var _$getBinSpanLabelRound_338 = function getBinSpanLabelRound(leftGap, rightGap, binEdges, pa, calendar) {
+var _$getBinSpanLabelRound_347 = function getBinSpanLabelRound(leftGap, rightGap, binEdges, pa, calendar) {
     // the rounding digit is the largest digit that changes in *all* of 4 regions:
     // - inside the rightGap before binEdges[0] (shifted 10% to the left)
     // - inside the leftGap after binEdges[0] (expanded by 10% of rightGap on each end)
@@ -38983,8 +39156,8 @@ function dateParts(v, pa, calendar) {
 /* removed: var _$fastIsnumeric_18 = require('fast-isnumeric'); */;
 var cleanDate = _$lib_171.cleanDate;
 /* removed: var _$numerical_154 = require('../../constants/numerical'); */;
-var __ONEDAY_340 = _$numerical_154.ONEDAY;
-var __BADNUM_340 = _$numerical_154.BADNUM;
+var __ONEDAY_349 = _$numerical_154.ONEDAY;
+var __BADNUM_349 = _$numerical_154.BADNUM;
 
 /*
  * cleanBins: validate attributes autobin[xy] and [xy]bins.(start, end, size)
@@ -38995,7 +39168,7 @@ var __BADNUM_340 = _$numerical_154.BADNUM;
  * after trace supplyDefaults are completed. So this gets called during the
  * calc step, when data are inserted into bins.
  */
-var _$cleanBins_340 = function cleanBins(trace, ax, binDirection) {
+var _$cleanBins_349 = function cleanBins(trace, ax, binDirection) {
     var axType = ax.type,
         binAttr = binDirection + 'bins',
         bins = trace[binAttr];
@@ -39003,7 +39176,7 @@ var _$cleanBins_340 = function cleanBins(trace, ax, binDirection) {
     if(!bins) bins = trace[binAttr] = {};
 
     var cleanBound = (axType === 'date') ?
-        function(v) { return (v || v === 0) ? cleanDate(v, __BADNUM_340, bins.calendar) : null; } :
+        function(v) { return (v || v === 0) ? cleanDate(v, __BADNUM_349, bins.calendar) : null; } :
         function(v) { return _$fastIsnumeric_18(v) ? Number(v) : null; };
 
     bins.start = cleanBound(bins.start);
@@ -39012,7 +39185,7 @@ var _$cleanBins_340 = function cleanBins(trace, ax, binDirection) {
     // logic for bin size is very similar to dtick (cartesian/tick_value_defaults)
     // but without the extra string options for log axes
     // ie the only strings we accept are M<n> for months
-    var sizeDflt = (axType === 'date') ? __ONEDAY_340 : 1,
+    var sizeDflt = (axType === 'date') ? __ONEDAY_349 : 1,
         binSize = bins.size;
 
     if(_$fastIsnumeric_18(binSize)) {
@@ -39061,7 +39234,7 @@ var _$cleanBins_340 = function cleanBins(trace, ax, binDirection) {
 'use strict';
 
 
-var _$norm_functions_345 = {
+var _$norm_functions_354 = {
     percent: function(size, total) {
         var nMax = size.length,
             norm = 100 / total;
@@ -39097,14 +39270,14 @@ var _$norm_functions_345 = {
 /* removed: var _$lib_171 = require('../../lib'); */;
 /* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
 
-/* removed: var _$bin_functions_337 = require('../histogram/bin_functions'); */;
-/* removed: var _$norm_functions_345 = require('../histogram/norm_functions'); */;
-/* removed: var _$doAvg_335 = require('../histogram/average'); */;
-/* removed: var _$cleanBins_340 = require('../histogram/clean_bins'); */;
-/* removed: var _$getBinSpanLabelRound_338 = require('../histogram/bin_label_vals'); */;
+/* removed: var _$bin_functions_346 = require('../histogram/bin_functions'); */;
+/* removed: var _$norm_functions_354 = require('../histogram/norm_functions'); */;
+/* removed: var _$doAvg_344 = require('../histogram/average'); */;
+/* removed: var _$cleanBins_349 = require('../histogram/clean_bins'); */;
+/* removed: var _$getBinSpanLabelRound_347 = require('../histogram/bin_label_vals'); */;
 
 
-var _$calc_347 = function calc(gd, trace) {
+var _$calc_335 = function calc(gd, trace) {
     var xa = _$axes_213.getFromId(gd, trace.xaxis || 'x');
     var x = trace.x ? xa.makeCalcdata(trace, 'x') : [];
     var ya = _$axes_213.getFromId(gd, trace.yaxis || 'y');
@@ -39144,8 +39317,8 @@ var _$calc_347 = function calc(gd, trace) {
     var densitynorm = (norm.indexOf('density') !== -1);
     var extremefunc = (func === 'max' || func === 'min');
     var sizeinit = (extremefunc ? null : 0);
-    var binfunc = _$bin_functions_337.count;
-    var normfunc = _$norm_functions_345[norm];
+    var binfunc = _$bin_functions_346.count;
+    var normfunc = _$norm_functions_354[norm];
     var doavg = false;
     var xinc = [];
     var yinc = [];
@@ -39161,7 +39334,7 @@ var _$calc_347 = function calc(gd, trace) {
             trace.marker.color : '');
     if(rawCounterData && func !== 'count') {
         doavg = func === 'avg';
-        binfunc = _$bin_functions_337[func];
+        binfunc = _$bin_functions_346[func];
     }
 
     // decrease end a little in case of rounding errors
@@ -39247,7 +39420,7 @@ var _$calc_347 = function calc(gd, trace) {
     }
     // normalize, if needed
     if(doavg) {
-        for(m = 0; m < ny; m++) total += _$doAvg_335(z[m], counts[m]);
+        for(m = 0; m < ny; m++) total += _$doAvg_344(z[m], counts[m]);
     }
     if(normfunc) {
         for(m = 0; m < ny; m++) normfunc(z[m], total, xinc, yinc[m]);
@@ -39272,7 +39445,7 @@ function cleanAndAutobin(trace, axLetter, data, ax, r2c, c2r, calendar) {
     var autoBinAttr = 'autobin' + axLetter;
     var binSpec = trace[binSpecAttr];
 
-    _$cleanBins_340(trace, ax, axLetter);
+    _$cleanBins_349(trace, ax, axLetter);
 
     if(trace[autoBinAttr] || !binSpec || binSpec.start === null || binSpec.end === null) {
         binSpec = _$axes_213.autoBin(data, ax, trace['nbins' + axLetter], '2d', calendar);
@@ -39324,7 +39497,7 @@ function getRanges(edges, uniqueVals, gapLow, gapHigh, ax, calendar) {
         for(i = 0; i < len; i++) out[i] = [uniqueVals[i], uniqueVals[i]];
     }
     else {
-        var roundFn = _$getBinSpanLabelRound_338(gapLow, gapHigh, edges, ax, calendar);
+        var roundFn = _$getBinSpanLabelRound_347(gapLow, gapHigh, edges, ax, calendar);
         for(i = 0; i < len; i++) out[i] = [roundFn(edges[i]), roundFn(edges[i + 1], true)];
     }
     return out;
@@ -39345,7 +39518,7 @@ function getRanges(edges, uniqueVals, gapLow, gapHigh, ax, calendar) {
 /* removed: var _$lib_171 = require('../../lib'); */;
 /* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
 
-/* removed: var _$calc_347 = require('../histogram2d/calc'); */;
+/* removed: var _$calc_335 = require('../histogram2d/calc'); */;
 /* removed: var _$calc_58 = require('../../components/colorscale/calc'); */;
 /* removed: var _$has_columns_324 = require('./has_columns'); */;
 /* removed: var _$convertColumnData_321 = require('./convert_column_xyz'); */;
@@ -39380,7 +39553,7 @@ var _$calc_318 = function calc(gd, trace) {
     ya._minDtick = 0;
 
     if(isHist) {
-        binned = _$calc_347(gd, trace);
+        binned = _$calc_335(gd, trace);
         x = binned.x;
         x0 = binned.x0;
         dx = binned.dx;
@@ -43787,7 +43960,7 @@ _$es6Promise_16 = _$es6Promise_16.exports
  * circles, for which it's irrelevant.
  */
 
-var _$arrow_paths_35 = [
+var _$arrow_paths_40 = [
     // no arrow
     {
         path: '',
@@ -43842,12 +44015,12 @@ var _$arrow_paths_35 = [
 
 'use strict';
 
-/* removed: var _$arrow_paths_35 = require('./arrow_paths'); */;
+/* removed: var _$arrow_paths_40 = require('./arrow_paths'); */;
 /* removed: var _$font_attributes_240 = require('../../plots/font_attributes'); */;
 /* removed: var _$constants_218 = require('../../plots/cartesian/constants'); */;
 
 
-var _$attributes_36 = {
+var _$attributes_41 = {
     _isLinkedToArray: 'annotation',
 
     visible: {
@@ -43964,7 +44137,7 @@ var _$attributes_36 = {
     arrowhead: {
         valType: 'integer',
         min: 0,
-        max: _$arrow_paths_35.length,
+        max: _$arrow_paths_40.length,
         dflt: 1,
         
         editType: 'arraydraw',
@@ -43973,7 +44146,7 @@ var _$attributes_36 = {
     startarrowhead: {
         valType: 'integer',
         min: 0,
-        max: _$arrow_paths_35.length,
+        max: _$arrow_paths_40.length,
         dflt: 1,
         
         editType: 'arraydraw',
@@ -44198,11 +44371,398 @@ var _$attributes_36 = {
 
 'use strict';
 
+/* removed: var _$attributes_41 = require('../annotations/attributes'); */;
+var __overrideAll_34 = _$edit_types_198.overrideAll;
+
+var _$attributes_34 = __overrideAll_34({
+    _isLinkedToArray: 'annotation',
+
+    visible: _$attributes_41.visible,
+    x: {
+        valType: 'any',
+        
+        
+    },
+    y: {
+        valType: 'any',
+        
+        
+    },
+    z: {
+        valType: 'any',
+        
+        
+    },
+    ax: {
+        valType: 'number',
+        
+        
+    },
+    ay: {
+        valType: 'number',
+        
+        
+    },
+
+    xanchor: _$attributes_41.xanchor,
+    xshift: _$attributes_41.xshift,
+    yanchor: _$attributes_41.yanchor,
+    yshift: _$attributes_41.yshift,
+
+    text: _$attributes_41.text,
+    textangle: _$attributes_41.textangle,
+    font: _$attributes_41.font,
+    width: _$attributes_41.width,
+    height: _$attributes_41.height,
+    opacity: _$attributes_41.opacity,
+    align: _$attributes_41.align,
+    valign: _$attributes_41.valign,
+    bgcolor: _$attributes_41.bgcolor,
+    bordercolor: _$attributes_41.bordercolor,
+    borderpad: _$attributes_41.borderpad,
+    borderwidth: _$attributes_41.borderwidth,
+    showarrow: _$attributes_41.showarrow,
+    arrowcolor: _$attributes_41.arrowcolor,
+    arrowhead: _$attributes_41.arrowhead,
+    startarrowhead: _$attributes_41.startarrowhead,
+    arrowside: _$attributes_41.arrowside,
+    arrowsize: _$attributes_41.arrowsize,
+    startarrowsize: _$attributes_41.startarrowsize,
+    arrowwidth: _$attributes_41.arrowwidth,
+    standoff: _$attributes_41.standoff,
+    startstandoff: _$attributes_41.startstandoff,
+    hovertext: _$attributes_41.hovertext,
+    hoverlabel: _$attributes_41.hoverlabel,
+    captureevents: _$attributes_41.captureevents,
+
+    // maybes later?
+    // clicktoshow: annAtts.clicktoshow,
+    // xclick: annAtts.xclick,
+    // yclick: annAtts.yclick,
+
+    // not needed!
+    // axref: 'pixel'
+    // ayref: 'pixel'
+    // xref: 'x'
+    // yref: 'y
+    // zref: 'z'
+}, 'calc', 'from-root');
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_171 = require('../../lib'); */;
+/* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
+
+var _$convert_35 = function convert(scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var anns = fullSceneLayout.annotations;
+
+    for(var i = 0; i < anns.length; i++) {
+        mockAnnAxes(anns[i], scene);
+    }
+
+    scene.fullLayout._infolayer
+        .selectAll('.annotation-' + scene.id)
+        .remove();
+};
+
+function mockAnnAxes(ann, scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var domain = fullSceneLayout.domain;
+    var size = scene.fullLayout._size;
+
+    var base = {
+        // this gets fill in on render
+        pdata: null,
+
+        // to get setConvert to not execute cleanly
+        type: 'linear',
+
+        // don't try to update them on `editable: true`
+        autorange: false,
+
+        // set infinite range so that annotation draw routine
+        // does not try to remove 'outside-range' annotations,
+        // this case is handled in the render loop
+        range: [-Infinity, Infinity]
+    };
+
+    ann._xa = {};
+    _$lib_171.extendFlat(ann._xa, base);
+    _$axes_213.setConvert(ann._xa);
+    ann._xa._offset = size.l + domain.x[0] * size.w;
+    ann._xa.l2p = function() {
+        return 0.5 * (1 + ann._pdata[0] / ann._pdata[3]) * size.w * (domain.x[1] - domain.x[0]);
+    };
+
+    ann._ya = {};
+    _$lib_171.extendFlat(ann._ya, base);
+    _$axes_213.setConvert(ann._ya);
+    ann._ya._offset = size.t + (1 - domain.y[1]) * size.h;
+    ann._ya.l2p = function() {
+        return 0.5 * (1 - ann._pdata[1] / ann._pdata[3]) * size.h * (domain.y[1] - domain.y[0]);
+    };
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_171 = require('../../lib'); */;
+/* removed: var _$color_51 = require('../color'); */;
+
+// defaults common to 'annotations' and 'annotations3d'
+var _$handleAnnotationCommonDefaults_44 = function handleAnnotationCommonDefaults(annIn, annOut, fullLayout, coerce) {
+    coerce('opacity');
+    var bgColor = coerce('bgcolor');
+
+    var borderColor = coerce('bordercolor');
+    var borderOpacity = _$color_51.opacity(borderColor);
+
+    coerce('borderpad');
+
+    var borderWidth = coerce('borderwidth');
+    var showArrow = coerce('showarrow');
+
+    coerce('text', showArrow ? ' ' : fullLayout._dfltTitle.annotation);
+    coerce('textangle');
+    _$lib_171.coerceFont(coerce, 'font', fullLayout.font);
+
+    coerce('width');
+    coerce('align');
+
+    var h = coerce('height');
+    if(h) coerce('valign');
+
+    if(showArrow) {
+        var arrowside = coerce('arrowside');
+        var arrowhead;
+        var arrowsize;
+
+        if(arrowside.indexOf('end') !== -1) {
+            arrowhead = coerce('arrowhead');
+            arrowsize = coerce('arrowsize');
+        }
+
+        if(arrowside.indexOf('start') !== -1) {
+            coerce('startarrowhead', arrowhead);
+            coerce('startarrowsize', arrowsize);
+        }
+        coerce('arrowcolor', borderOpacity ? annOut.bordercolor : _$color_51.defaultLine);
+        coerce('arrowwidth', ((borderOpacity && borderWidth) || 1) * 2);
+        coerce('standoff');
+        coerce('startstandoff');
+
+    }
+
+    var hoverText = coerce('hovertext');
+    var globalHoverLabel = fullLayout.hoverlabel || {};
+
+    if(hoverText) {
+        var hoverBG = coerce('hoverlabel.bgcolor', globalHoverLabel.bgcolor ||
+            (_$color_51.opacity(bgColor) ? _$color_51.rgb(bgColor) : _$color_51.defaultLine)
+        );
+
+        var hoverBorder = coerce('hoverlabel.bordercolor', globalHoverLabel.bordercolor ||
+            _$color_51.contrast(hoverBG)
+        );
+
+        _$lib_171.coerceFont(coerce, 'hoverlabel.font', {
+            family: globalHoverLabel.font.family,
+            size: globalHoverLabel.font.size,
+            color: globalHoverLabel.font.color || hoverBorder
+        });
+    }
+
+    coerce('captureevents', !!hoverText);
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_171 = require('../lib'); */;
+
+/** Convenience wrapper for making array container logic DRY and consistent
+ *
+ * @param {object} parentObjIn
+ *  user input object where the container in question is linked
+ *  (i.e. either a user trace object or the user layout object)
+ *
+ * @param {object} parentObjOut
+ *  full object where the coerced container will be linked
+ *  (i.e. either a full trace object or the full layout object)
+ *
+ * @param {object} opts
+ *  options object:
+ *   - name {string}
+ *      name of the key linking the container in question
+ *   - handleItemDefaults {function}
+ *      defaults method to be called on each item in the array container in question
+ *
+ *      Its arguments are:
+ *          - itemIn {object} item in user layout
+ *          - itemOut {object} item in full layout
+ *          - parentObj {object} (as in closure)
+ *          - opts {object} (as in closure)
+ *          - itemOpts {object}
+ *              - itemIsNotPlainObject {boolean}
+ * N.B.
+ *
+ *  - opts is passed to handleItemDefaults so it can also store
+ *    links to supplementary data (e.g. fullData for layout components)
+ *
+ */
+var _$handleArrayContainerDefaults_209 = function handleArrayContainerDefaults(parentObjIn, parentObjOut, opts) {
+    var name = opts.name;
+
+    var previousContOut = parentObjOut[name];
+
+    var contIn = _$lib_171.isArrayOrTypedArray(parentObjIn[name]) ? parentObjIn[name] : [],
+        contOut = parentObjOut[name] = [],
+        i;
+
+    for(i = 0; i < contIn.length; i++) {
+        var itemIn = contIn[i],
+            itemOut = {},
+            itemOpts = {};
+
+        if(!_$lib_171.isPlainObject(itemIn)) {
+            itemOpts.itemIsNotPlainObject = true;
+            itemIn = {};
+        }
+
+        opts.handleItemDefaults(itemIn, itemOut, parentObjOut, opts, itemOpts);
+
+        itemOut._input = itemIn;
+        itemOut._index = i;
+
+        contOut.push(itemOut);
+    }
+
+    // in case this array gets its defaults rebuilt independent of the whole layout,
+    // relink the private keys just for this array.
+    if(_$lib_171.isArrayOrTypedArray(previousContOut)) {
+        var len = Math.min(previousContOut.length, contOut.length);
+        for(i = 0; i < len; i++) {
+            _$lib_171.relinkPrivateKeys(contOut[i], previousContOut[i]);
+        }
+    }
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_171 = require('../../lib'); */;
+/* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
+/* removed: var _$handleArrayContainerDefaults_209 = require('../../plots/array_container_defaults'); */;
+/* removed: var _$handleAnnotationCommonDefaults_44 = require('../annotations/common_defaults'); */;
+/* removed: var _$attributes_34 = require('./attributes'); */;
+
+var _$handleDefaults_36 = function handleDefaults(sceneLayoutIn, sceneLayoutOut, opts) {
+    _$handleArrayContainerDefaults_209(sceneLayoutIn, sceneLayoutOut, {
+        name: 'annotations',
+        handleItemDefaults: handleAnnotationDefaults,
+        fullLayout: opts.fullLayout
+    });
+};
+
+function handleAnnotationDefaults(annIn, annOut, sceneLayout, opts, itemOpts) {
+    function coerce(attr, dflt) {
+        return _$lib_171.coerce(annIn, annOut, _$attributes_34, attr, dflt);
+    }
+
+    function coercePosition(axLetter) {
+        var axName = axLetter + 'axis';
+
+        // mock in such way that getFromId grabs correct 3D axis
+        var gdMock = { _fullLayout: {} };
+        gdMock._fullLayout[axName] = sceneLayout[axName];
+
+        return _$axes_213.coercePosition(annOut, gdMock, coerce, axLetter, axLetter, 0.5);
+    }
+
+
+    var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
+    if(!visible) return annOut;
+
+    _$handleAnnotationCommonDefaults_44(annIn, annOut, opts.fullLayout, coerce);
+
+    coercePosition('x');
+    coercePosition('y');
+    coercePosition('z');
+
+    // if you have one coordinate you should all three
+    _$lib_171.noneOrAll(annIn, annOut, ['x', 'y', 'z']);
+
+    // hard-set here for completeness
+    annOut.xref = 'x';
+    annOut.yref = 'y';
+    annOut.zref = 'z';
+
+    coerce('xanchor');
+    coerce('yanchor');
+    coerce('xshift');
+    coerce('yshift');
+
+    if(annOut.showarrow) {
+        annOut.axref = 'pixel';
+        annOut.ayref = 'pixel';
+
+        // TODO maybe default values should be bigger than the 2D case?
+        coerce('ax', -10);
+        coerce('ay', -30);
+
+        // if you have one part of arrow length you should have both
+        _$lib_171.noneOrAll(annIn, annOut, ['ax', 'ay']);
+    }
+
+    return annOut;
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
 /* removed: var _$d3_15 = require('d3'); */;
 
 /* removed: var _$color_51 = require('../color'); */;
 
-/* removed: var _$arrow_paths_35 = require('./arrow_paths'); */;
+/* removed: var _$arrow_paths_40 = require('./arrow_paths'); */;
 
 /**
  * Add arrowhead(s) to a path or line element
@@ -44224,10 +44784,10 @@ var _$attributes_36 = {
  *     of both the line and head has opacity applied to it so there isn't greater opacity
  *     where they overlap.
  */
-var _$drawArrowHead_43 = function drawArrowHead(el3, ends, options) {
+var _$drawArrowHead_48 = function drawArrowHead(el3, ends, options) {
     var el = el3.node();
-    var headStyle = _$arrow_paths_35[options.arrowhead || 0];
-    var startHeadStyle = _$arrow_paths_35[options.startarrowhead || 0];
+    var headStyle = _$arrow_paths_40[options.arrowhead || 0];
+    var startHeadStyle = _$arrow_paths_40[options.startarrowhead || 0];
     var scale = (options.arrowwidth || 1) * (options.arrowsize || 1);
     var startScale = (options.arrowwidth || 1) * (options.startarrowsize || 1);
     var doStart = ends.indexOf('start') >= 0;
@@ -44362,7 +44922,7 @@ var _$drawArrowHead_43 = function drawArrowHead(el3, ends, options) {
 /* removed: var _$svg_text_utils_192 = require('../../lib/svg_text_utils'); */;
 /* removed: var _$setCursor_190 = require('../../lib/setcursor'); */;
 /* removed: var _$dragelement_73 = require('../dragelement'); */;
-/* removed: var _$drawArrowHead_43 = require('./draw_arrow_head'); */;
+/* removed: var _$drawArrowHead_48 = require('./draw_arrow_head'); */;
 
 // Annotations are stored in gd.layout.annotations, an array of objects
 // index can point to one item in this array,
@@ -44373,8 +44933,8 @@ var _$drawArrowHead_43 = function drawArrowHead(el3, ends, options) {
 // if opt is blank, val can be 'add' or a full options object to add a new
 //  annotation at that point in the array, or 'remove' to delete this one
 
-var _$draw_42 = {
-    draw: __draw_42,
+var _$draw_47 = {
+    draw: __draw_47,
     drawOne: drawOne,
     drawRaw: drawRaw
 };
@@ -44382,7 +44942,7 @@ var _$draw_42 = {
 /*
  * draw: draw all annotations without any new modifications
  */
-function __draw_42(gd) {
+function __draw_47(gd) {
     var fullLayout = gd._fullLayout;
 
     fullLayout._infolayer.selectAll('.annotation').remove();
@@ -44860,7 +45420,7 @@ function drawRaw(gd, options, index, subplotId, xa, ya) {
                 .style('stroke-width', strokewidth + 'px')
                 .call(_$color_51.stroke, _$color_51.rgb(arrowColor));
 
-            _$drawArrowHead_43(arrow, arrowSide, options);
+            _$drawArrowHead_48(arrow, arrowSide, options);
 
             // the arrow dragger is a small square right at the head, then a line to the tail,
             // all expanded by a stroke width of 6px plus the arrow line width
@@ -45057,13 +45617,144 @@ function drawRaw(gd, options, index, subplotId, xa, ya) {
 
 'use strict';
 
+function xformMatrix(m, v) {
+    var out = [0, 0, 0, 0];
+    var i, j;
+
+    for(i = 0; i < 4; ++i) {
+        for(j = 0; j < 4; ++j) {
+            out[j] += m[4 * i + j] * v[i];
+        }
+    }
+
+    return out;
+}
+
+function project(camera, v) {
+    var p = xformMatrix(camera.projection,
+        xformMatrix(camera.view,
+        xformMatrix(camera.model, [v[0], v[1], v[2], 1])));
+    return p;
+}
+
+var _$project_243 = project;
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+var __drawRaw_37 = _$draw_47.drawRaw;
+/* removed: var _$project_243 = require('../../plots/gl3d/project'); */;
+var axLetters = ['x', 'y', 'z'];
+
+var _$draw_37 = function draw(scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var dataScale = scene.dataScale;
+    var anns = fullSceneLayout.annotations;
+
+    for(var i = 0; i < anns.length; i++) {
+        var ann = anns[i];
+        var annotationIsOffscreen = false;
+
+        for(var j = 0; j < 3; j++) {
+            var axLetter = axLetters[j];
+            var pos = ann[axLetter];
+            var ax = fullSceneLayout[axLetter + 'axis'];
+            var posFraction = ax.r2fraction(pos);
+
+            if(posFraction < 0 || posFraction > 1) {
+                annotationIsOffscreen = true;
+                break;
+            }
+        }
+
+        if(annotationIsOffscreen) {
+            scene.fullLayout._infolayer
+                .select('.annotation-' + scene.id + '[data-index="' + i + '"]')
+                .remove();
+        } else {
+            ann._pdata = _$project_243(scene.glplot.cameraParams, [
+                fullSceneLayout.xaxis.r2l(ann.x) * dataScale[0],
+                fullSceneLayout.yaxis.r2l(ann.y) * dataScale[1],
+                fullSceneLayout.zaxis.r2l(ann.z) * dataScale[2]
+            ]);
+
+            __drawRaw_37(scene.graphDiv, ann, i, scene.id, ann._xa, ann._ya);
+        }
+    }
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$registry_261 = require('../../registry'); */;
+/* removed: var _$lib_171 = require('../../lib'); */;
+
+var _$annotations3d_38 = {
+    moduleType: 'component',
+    name: 'annotations3d',
+
+    schema: {
+        subplots: {
+            scene: {annotations: _$attributes_34}
+        }
+    },
+
+    layoutAttributes: _$attributes_34,
+    handleDefaults: _$handleDefaults_36,
+    includeBasePlot: includeGL3D,
+
+    convert: _$convert_35,
+    draw: _$draw_37
+};
+
+function includeGL3D(layoutIn, layoutOut) {
+    var GL3D = _$registry_261.subplotsRegistry.gl3d;
+    if(!GL3D) return;
+
+    var attrRegex = GL3D.attrRegex;
+
+    var keys = Object.keys(layoutIn);
+    for(var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        if(attrRegex.test(k) && (layoutIn[k].annotations || []).length) {
+            _$lib_171.pushUnique(layoutOut._basePlotModules, GL3D);
+            _$lib_171.pushUnique(layoutOut._subplots.gl3d, k);
+        }
+    }
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
 /* removed: var _$lib_171 = require('../../lib'); */;
 /* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
 
-var __draw_37 = _$draw_42.draw;
+var __draw_42 = _$draw_47.draw;
 
 
-var _$calcAutorange_37 = function calcAutorange(gd) {
+var _$calcAutorange_42 = function calcAutorange(gd) {
     var fullLayout = gd._fullLayout,
         annotationList = _$lib_171.filterVisible(fullLayout.annotations);
 
@@ -45079,7 +45770,7 @@ var _$calcAutorange_37 = function calcAutorange(gd) {
         var ax = _$axes_213.getFromId(gd, axId);
         if(ax && ax.autorange) {
             return _$lib_171.syncOrAsync([
-                __draw_37,
+                __draw_42,
                 annAutorange
             ], gd);
         }
@@ -45169,7 +45860,7 @@ function annAutorange(gd) {
 
 /* removed: var _$registry_261 = require('../../registry'); */;
 
-var _$click_38 = {
+var _$click_43 = {
     hasClickToShow: hasClickToShow,
     onClick: onClick
 };
@@ -45315,7 +46006,7 @@ function clickData2r(d, ax) {
  *     Use this to make the changes as it's aware if any other changes in the
  *     same relayout call should override this conversion.
  */
-var _$convertCoords_40 = function convertCoords(gd, ax, newType, doExtra) {
+var _$convertCoords_45 = function convertCoords(gd, ax, newType, doExtra) {
     ax = ax || {};
 
     var toLog = (newType === 'log') && (ax.type === 'linear'),
@@ -45358,100 +46049,21 @@ var _$convertCoords_40 = function convertCoords(gd, ax, newType, doExtra) {
 * LICENSE file in the root directory of this source tree.
 */
 
-'use strict';
-
-/* removed: var _$lib_171 = require('../../lib'); */;
-/* removed: var _$color_51 = require('../color'); */;
-
-// defaults common to 'annotations' and 'annotations3d'
-var _$handleAnnotationCommonDefaults_39 = function handleAnnotationCommonDefaults(annIn, annOut, fullLayout, coerce) {
-    coerce('opacity');
-    var bgColor = coerce('bgcolor');
-
-    var borderColor = coerce('bordercolor');
-    var borderOpacity = _$color_51.opacity(borderColor);
-
-    coerce('borderpad');
-
-    var borderWidth = coerce('borderwidth');
-    var showArrow = coerce('showarrow');
-
-    coerce('text', showArrow ? ' ' : fullLayout._dfltTitle.annotation);
-    coerce('textangle');
-    _$lib_171.coerceFont(coerce, 'font', fullLayout.font);
-
-    coerce('width');
-    coerce('align');
-
-    var h = coerce('height');
-    if(h) coerce('valign');
-
-    if(showArrow) {
-        var arrowside = coerce('arrowside');
-        var arrowhead;
-        var arrowsize;
-
-        if(arrowside.indexOf('end') !== -1) {
-            arrowhead = coerce('arrowhead');
-            arrowsize = coerce('arrowsize');
-        }
-
-        if(arrowside.indexOf('start') !== -1) {
-            coerce('startarrowhead', arrowhead);
-            coerce('startarrowsize', arrowsize);
-        }
-        coerce('arrowcolor', borderOpacity ? annOut.bordercolor : _$color_51.defaultLine);
-        coerce('arrowwidth', ((borderOpacity && borderWidth) || 1) * 2);
-        coerce('standoff');
-        coerce('startstandoff');
-
-    }
-
-    var hoverText = coerce('hovertext');
-    var globalHoverLabel = fullLayout.hoverlabel || {};
-
-    if(hoverText) {
-        var hoverBG = coerce('hoverlabel.bgcolor', globalHoverLabel.bgcolor ||
-            (_$color_51.opacity(bgColor) ? _$color_51.rgb(bgColor) : _$color_51.defaultLine)
-        );
-
-        var hoverBorder = coerce('hoverlabel.bordercolor', globalHoverLabel.bordercolor ||
-            _$color_51.contrast(hoverBG)
-        );
-
-        _$lib_171.coerceFont(coerce, 'hoverlabel.font', {
-            family: globalHoverLabel.font.family,
-            size: globalHoverLabel.font.size,
-            color: globalHoverLabel.font.color || hoverBorder
-        });
-    }
-
-    coerce('captureevents', !!hoverText);
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
 
 'use strict';
 
 /* removed: var _$lib_171 = require('../../lib'); */;
 /* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
-/* removed: var _$handleAnnotationCommonDefaults_39 = require('./common_defaults'); */;
-/* removed: var _$attributes_36 = require('./attributes'); */;
+/* removed: var _$handleAnnotationCommonDefaults_44 = require('./common_defaults'); */;
+/* removed: var _$attributes_41 = require('./attributes'); */;
 
 
-var _$handleAnnotationDefaults_34 = function handleAnnotationDefaults(annIn, annOut, fullLayout, opts, itemOpts) {
+var _$handleAnnotationDefaults_39 = function handleAnnotationDefaults(annIn, annOut, fullLayout, opts, itemOpts) {
     opts = opts || {};
     itemOpts = itemOpts || {};
 
     function coerce(attr, dflt) {
-        return _$lib_171.coerce(annIn, annOut, _$attributes_36, attr, dflt);
+        return _$lib_171.coerce(annIn, annOut, _$attributes_41, attr, dflt);
     }
 
     var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
@@ -45459,7 +46071,7 @@ var _$handleAnnotationDefaults_34 = function handleAnnotationDefaults(annIn, ann
 
     if(!(visible || clickToShow)) return annOut;
 
-    _$handleAnnotationCommonDefaults_39(annIn, annOut, fullLayout, coerce);
+    _$handleAnnotationCommonDefaults_44(annIn, annOut, fullLayout, coerce);
 
     var showArrow = annOut.showarrow;
 
@@ -45533,96 +46145,17 @@ var _$handleAnnotationDefaults_34 = function handleAnnotationDefaults(annIn, ann
 * LICENSE file in the root directory of this source tree.
 */
 
-'use strict';
-
-/* removed: var _$lib_171 = require('../lib'); */;
-
-/** Convenience wrapper for making array container logic DRY and consistent
- *
- * @param {object} parentObjIn
- *  user input object where the container in question is linked
- *  (i.e. either a user trace object or the user layout object)
- *
- * @param {object} parentObjOut
- *  full object where the coerced container will be linked
- *  (i.e. either a full trace object or the full layout object)
- *
- * @param {object} opts
- *  options object:
- *   - name {string}
- *      name of the key linking the container in question
- *   - handleItemDefaults {function}
- *      defaults method to be called on each item in the array container in question
- *
- *      Its arguments are:
- *          - itemIn {object} item in user layout
- *          - itemOut {object} item in full layout
- *          - parentObj {object} (as in closure)
- *          - opts {object} (as in closure)
- *          - itemOpts {object}
- *              - itemIsNotPlainObject {boolean}
- * N.B.
- *
- *  - opts is passed to handleItemDefaults so it can also store
- *    links to supplementary data (e.g. fullData for layout components)
- *
- */
-var _$handleArrayContainerDefaults_209 = function handleArrayContainerDefaults(parentObjIn, parentObjOut, opts) {
-    var name = opts.name;
-
-    var previousContOut = parentObjOut[name];
-
-    var contIn = _$lib_171.isArrayOrTypedArray(parentObjIn[name]) ? parentObjIn[name] : [],
-        contOut = parentObjOut[name] = [],
-        i;
-
-    for(i = 0; i < contIn.length; i++) {
-        var itemIn = contIn[i],
-            itemOut = {},
-            itemOpts = {};
-
-        if(!_$lib_171.isPlainObject(itemIn)) {
-            itemOpts.itemIsNotPlainObject = true;
-            itemIn = {};
-        }
-
-        opts.handleItemDefaults(itemIn, itemOut, parentObjOut, opts, itemOpts);
-
-        itemOut._input = itemIn;
-        itemOut._index = i;
-
-        contOut.push(itemOut);
-    }
-
-    // in case this array gets its defaults rebuilt independent of the whole layout,
-    // relink the private keys just for this array.
-    if(_$lib_171.isArrayOrTypedArray(previousContOut)) {
-        var len = Math.min(previousContOut.length, contOut.length);
-        for(i = 0; i < len; i++) {
-            _$lib_171.relinkPrivateKeys(contOut[i], previousContOut[i]);
-        }
-    }
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
 
 'use strict';
 
 /* removed: var _$handleArrayContainerDefaults_209 = require('../../plots/array_container_defaults'); */;
-/* removed: var _$handleAnnotationDefaults_34 = require('./annotation_defaults'); */;
+/* removed: var _$handleAnnotationDefaults_39 = require('./annotation_defaults'); */;
 
 
-var _$supplyLayoutDefaults_41 = function supplyLayoutDefaults(layoutIn, layoutOut) {
+var _$supplyLayoutDefaults_46 = function supplyLayoutDefaults(layoutIn, layoutOut) {
     var opts = {
         name: 'annotations',
-        handleItemDefaults: _$handleAnnotationDefaults_34
+        handleItemDefaults: _$handleAnnotationDefaults_39
     };
 
     _$handleArrayContainerDefaults_209(layoutIn, layoutOut, opts);
@@ -45713,387 +46246,27 @@ var _$makeIncludeComponents_223 = function makeIncludeComponents(containerArrayN
 
 'use strict';
 
-/* removed: var _$draw_42 = require('./draw'); */;
-/* removed: var _$click_38 = require('./click'); */;
+/* removed: var _$draw_47 = require('./draw'); */;
+/* removed: var _$click_43 = require('./click'); */;
 
-var _$annotations_44 = {
+var _$annotations_49 = {
     moduleType: 'component',
     name: 'annotations',
 
-    layoutAttributes: _$attributes_36,
-    supplyLayoutDefaults: _$supplyLayoutDefaults_41,
+    layoutAttributes: _$attributes_41,
+    supplyLayoutDefaults: _$supplyLayoutDefaults_46,
     includeBasePlot: _$makeIncludeComponents_223('annotations'),
 
-    calcAutorange: _$calcAutorange_37,
-    draw: _$draw_42.draw,
-    drawOne: _$draw_42.drawOne,
-    drawRaw: _$draw_42.drawRaw,
+    calcAutorange: _$calcAutorange_42,
+    draw: _$draw_47.draw,
+    drawOne: _$draw_47.drawOne,
+    drawRaw: _$draw_47.drawRaw,
 
-    hasClickToShow: _$click_38.hasClickToShow,
-    onClick: _$click_38.onClick,
+    hasClickToShow: _$click_43.hasClickToShow,
+    onClick: _$click_43.onClick,
 
-    convertCoords: _$convertCoords_40
+    convertCoords: _$convertCoords_45
 };
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-/* removed: var _$attributes_36 = require('../annotations/attributes'); */;
-var __overrideAll_45 = _$edit_types_198.overrideAll;
-
-var _$attributes_45 = __overrideAll_45({
-    _isLinkedToArray: 'annotation',
-
-    visible: _$attributes_36.visible,
-    x: {
-        valType: 'any',
-        
-        
-    },
-    y: {
-        valType: 'any',
-        
-        
-    },
-    z: {
-        valType: 'any',
-        
-        
-    },
-    ax: {
-        valType: 'number',
-        
-        
-    },
-    ay: {
-        valType: 'number',
-        
-        
-    },
-
-    xanchor: _$attributes_36.xanchor,
-    xshift: _$attributes_36.xshift,
-    yanchor: _$attributes_36.yanchor,
-    yshift: _$attributes_36.yshift,
-
-    text: _$attributes_36.text,
-    textangle: _$attributes_36.textangle,
-    font: _$attributes_36.font,
-    width: _$attributes_36.width,
-    height: _$attributes_36.height,
-    opacity: _$attributes_36.opacity,
-    align: _$attributes_36.align,
-    valign: _$attributes_36.valign,
-    bgcolor: _$attributes_36.bgcolor,
-    bordercolor: _$attributes_36.bordercolor,
-    borderpad: _$attributes_36.borderpad,
-    borderwidth: _$attributes_36.borderwidth,
-    showarrow: _$attributes_36.showarrow,
-    arrowcolor: _$attributes_36.arrowcolor,
-    arrowhead: _$attributes_36.arrowhead,
-    startarrowhead: _$attributes_36.startarrowhead,
-    arrowside: _$attributes_36.arrowside,
-    arrowsize: _$attributes_36.arrowsize,
-    startarrowsize: _$attributes_36.startarrowsize,
-    arrowwidth: _$attributes_36.arrowwidth,
-    standoff: _$attributes_36.standoff,
-    startstandoff: _$attributes_36.startstandoff,
-    hovertext: _$attributes_36.hovertext,
-    hoverlabel: _$attributes_36.hoverlabel,
-    captureevents: _$attributes_36.captureevents,
-
-    // maybes later?
-    // clicktoshow: annAtts.clicktoshow,
-    // xclick: annAtts.xclick,
-    // yclick: annAtts.yclick,
-
-    // not needed!
-    // axref: 'pixel'
-    // ayref: 'pixel'
-    // xref: 'x'
-    // yref: 'y
-    // zref: 'z'
-}, 'calc', 'from-root');
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_171 = require('../../lib'); */;
-/* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
-
-var _$convert_46 = function convert(scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var anns = fullSceneLayout.annotations;
-
-    for(var i = 0; i < anns.length; i++) {
-        mockAnnAxes(anns[i], scene);
-    }
-
-    scene.fullLayout._infolayer
-        .selectAll('.annotation-' + scene.id)
-        .remove();
-};
-
-function mockAnnAxes(ann, scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var domain = fullSceneLayout.domain;
-    var size = scene.fullLayout._size;
-
-    var base = {
-        // this gets fill in on render
-        pdata: null,
-
-        // to get setConvert to not execute cleanly
-        type: 'linear',
-
-        // don't try to update them on `editable: true`
-        autorange: false,
-
-        // set infinite range so that annotation draw routine
-        // does not try to remove 'outside-range' annotations,
-        // this case is handled in the render loop
-        range: [-Infinity, Infinity]
-    };
-
-    ann._xa = {};
-    _$lib_171.extendFlat(ann._xa, base);
-    _$axes_213.setConvert(ann._xa);
-    ann._xa._offset = size.l + domain.x[0] * size.w;
-    ann._xa.l2p = function() {
-        return 0.5 * (1 + ann._pdata[0] / ann._pdata[3]) * size.w * (domain.x[1] - domain.x[0]);
-    };
-
-    ann._ya = {};
-    _$lib_171.extendFlat(ann._ya, base);
-    _$axes_213.setConvert(ann._ya);
-    ann._ya._offset = size.t + (1 - domain.y[1]) * size.h;
-    ann._ya.l2p = function() {
-        return 0.5 * (1 - ann._pdata[1] / ann._pdata[3]) * size.h * (domain.y[1] - domain.y[0]);
-    };
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_171 = require('../../lib'); */;
-/* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
-/* removed: var _$handleArrayContainerDefaults_209 = require('../../plots/array_container_defaults'); */;
-/* removed: var _$handleAnnotationCommonDefaults_39 = require('../annotations/common_defaults'); */;
-/* removed: var _$attributes_45 = require('./attributes'); */;
-
-var _$handleDefaults_47 = function handleDefaults(sceneLayoutIn, sceneLayoutOut, opts) {
-    _$handleArrayContainerDefaults_209(sceneLayoutIn, sceneLayoutOut, {
-        name: 'annotations',
-        handleItemDefaults: __handleAnnotationDefaults_47,
-        fullLayout: opts.fullLayout
-    });
-};
-
-function __handleAnnotationDefaults_47(annIn, annOut, sceneLayout, opts, itemOpts) {
-    function coerce(attr, dflt) {
-        return _$lib_171.coerce(annIn, annOut, _$attributes_45, attr, dflt);
-    }
-
-    function coercePosition(axLetter) {
-        var axName = axLetter + 'axis';
-
-        // mock in such way that getFromId grabs correct 3D axis
-        var gdMock = { _fullLayout: {} };
-        gdMock._fullLayout[axName] = sceneLayout[axName];
-
-        return _$axes_213.coercePosition(annOut, gdMock, coerce, axLetter, axLetter, 0.5);
-    }
-
-
-    var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
-    if(!visible) return annOut;
-
-    _$handleAnnotationCommonDefaults_39(annIn, annOut, opts.fullLayout, coerce);
-
-    coercePosition('x');
-    coercePosition('y');
-    coercePosition('z');
-
-    // if you have one coordinate you should all three
-    _$lib_171.noneOrAll(annIn, annOut, ['x', 'y', 'z']);
-
-    // hard-set here for completeness
-    annOut.xref = 'x';
-    annOut.yref = 'y';
-    annOut.zref = 'z';
-
-    coerce('xanchor');
-    coerce('yanchor');
-    coerce('xshift');
-    coerce('yshift');
-
-    if(annOut.showarrow) {
-        annOut.axref = 'pixel';
-        annOut.ayref = 'pixel';
-
-        // TODO maybe default values should be bigger than the 2D case?
-        coerce('ax', -10);
-        coerce('ay', -30);
-
-        // if you have one part of arrow length you should have both
-        _$lib_171.noneOrAll(annIn, annOut, ['ax', 'ay']);
-    }
-
-    return annOut;
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-function xformMatrix(m, v) {
-    var out = [0, 0, 0, 0];
-    var i, j;
-
-    for(i = 0; i < 4; ++i) {
-        for(j = 0; j < 4; ++j) {
-            out[j] += m[4 * i + j] * v[i];
-        }
-    }
-
-    return out;
-}
-
-function project(camera, v) {
-    var p = xformMatrix(camera.projection,
-        xformMatrix(camera.view,
-        xformMatrix(camera.model, [v[0], v[1], v[2], 1])));
-    return p;
-}
-
-var _$project_243 = project;
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-var __drawRaw_48 = _$draw_42.drawRaw;
-/* removed: var _$project_243 = require('../../plots/gl3d/project'); */;
-var axLetters = ['x', 'y', 'z'];
-
-var _$draw_48 = function draw(scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var dataScale = scene.dataScale;
-    var anns = fullSceneLayout.annotations;
-
-    for(var i = 0; i < anns.length; i++) {
-        var ann = anns[i];
-        var annotationIsOffscreen = false;
-
-        for(var j = 0; j < 3; j++) {
-            var axLetter = axLetters[j];
-            var pos = ann[axLetter];
-            var ax = fullSceneLayout[axLetter + 'axis'];
-            var posFraction = ax.r2fraction(pos);
-
-            if(posFraction < 0 || posFraction > 1) {
-                annotationIsOffscreen = true;
-                break;
-            }
-        }
-
-        if(annotationIsOffscreen) {
-            scene.fullLayout._infolayer
-                .select('.annotation-' + scene.id + '[data-index="' + i + '"]')
-                .remove();
-        } else {
-            ann._pdata = _$project_243(scene.glplot.cameraParams, [
-                fullSceneLayout.xaxis.r2l(ann.x) * dataScale[0],
-                fullSceneLayout.yaxis.r2l(ann.y) * dataScale[1],
-                fullSceneLayout.zaxis.r2l(ann.z) * dataScale[2]
-            ]);
-
-            __drawRaw_48(scene.graphDiv, ann, i, scene.id, ann._xa, ann._ya);
-        }
-    }
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$registry_261 = require('../../registry'); */;
-/* removed: var _$lib_171 = require('../../lib'); */;
-
-var _$annotations3d_49 = {
-    moduleType: 'component',
-    name: 'annotations3d',
-
-    schema: {
-        subplots: {
-            scene: {annotations: _$attributes_45}
-        }
-    },
-
-    layoutAttributes: _$attributes_45,
-    handleDefaults: _$handleDefaults_47,
-    includeBasePlot: includeGL3D,
-
-    convert: _$convert_46,
-    draw: _$draw_48
-};
-
-function includeGL3D(layoutIn, layoutOut) {
-    var GL3D = _$registry_261.subplotsRegistry.gl3d;
-    if(!GL3D) return;
-
-    var attrRegex = GL3D.attrRegex;
-
-    var keys = Object.keys(layoutIn);
-    for(var i = 0; i < keys.length; i++) {
-        var k = keys[i];
-        if(attrRegex.test(k) && (layoutIn[k].annotations || []).length) {
-            _$lib_171.pushUnique(layoutOut._basePlotModules, GL3D);
-            _$lib_171.pushUnique(layoutOut._subplots.gl3d, k);
-        }
-    }
-}
 
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -50997,7 +51170,7 @@ var _$rangeslider_129 = {
 
 'use strict';
 
-/* removed: var _$attributes_36 = require('../annotations/attributes'); */;
+/* removed: var _$attributes_41 = require('../annotations/attributes'); */;
 var __scatterLineAttrs_131 = _$attributes_368.line;
 var __dash_131 = _$attributes_75.dash;
 var __extendFlat_131 = _$extend_165.extendFlat;
@@ -51030,7 +51203,7 @@ var _$attributes_131 = {
         
     },
 
-    xref: __extendFlat_131({}, _$attributes_36.xref, {
+    xref: __extendFlat_131({}, _$attributes_41.xref, {
         
     }),
     x0: {
@@ -51046,7 +51219,7 @@ var _$attributes_131 = {
         
     },
 
-    yref: __extendFlat_131({}, _$attributes_36.yref, {
+    yref: __extendFlat_131({}, _$attributes_41.yref, {
         
     }),
     y0: {
@@ -59783,7 +59956,7 @@ function makeDragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             }
         }
 
-        gd.emit('plotly_doubleclick', null);
+        gd.emit('plotly_doubleclick', axList);
         _$registry_261.call('relayout', gd, attrs);
     }
 
@@ -59792,6 +59965,9 @@ function makeDragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         // put the subplot viewboxes back to default (Because we're going to)
         // be repositioning the data in the relayout. But DON'T call
         // ticksAndAnnotations again - it's unnecessary and would overwrite `updates`
+		pw = xa[0]._length;
+		ph = ya[0]._length;
+		
         updateSubplots([0, 0, pw, ph]);
 
         // since we may have been redrawing some things during the drag, we may have
@@ -69459,8 +69635,8 @@ register(_$Scatter_380);
 register([
     _$fx_93,
     _$legend_111,
-    _$annotations_44,
-    _$annotations3d_49,
+    _$annotations_49,
+    _$annotations3d_38,
     _$shapes_137,
     _$images_102,
     _$updatemenus_149,
@@ -69669,7 +69845,7 @@ var _$heatmap_7 = _$Heatmap_326;
 
 /* removed: var _$attributes_271 = require('../bar/attributes'); */;
 
-var _$attributes_334 = {
+var _$attributes_343 = {
     x: {
         valType: 'data_array',
         editType: 'calc+clearAxisTypes',
@@ -69837,14 +70013,14 @@ function makeBinsAttr(axLetter) {
 /* removed: var _$axes_213 = require('../../plots/cartesian/axes'); */;
 
 /* removed: var _$arraysToCalcdata_270 = require('../bar/arrays_to_calcdata'); */;
-/* removed: var _$bin_functions_337 = require('./bin_functions'); */;
-/* removed: var _$norm_functions_345 = require('./norm_functions'); */;
-/* removed: var _$doAvg_335 = require('./average'); */;
-/* removed: var _$cleanBins_340 = require('./clean_bins'); */;
-var __oneMonth_339 = _$numerical_154.ONEAVGMONTH;
-/* removed: var _$getBinSpanLabelRound_338 = require('./bin_label_vals'); */;
+/* removed: var _$bin_functions_346 = require('./bin_functions'); */;
+/* removed: var _$norm_functions_354 = require('./norm_functions'); */;
+/* removed: var _$doAvg_344 = require('./average'); */;
+/* removed: var _$cleanBins_349 = require('./clean_bins'); */;
+var __oneMonth_348 = _$numerical_154.ONEAVGMONTH;
+/* removed: var _$getBinSpanLabelRound_347 = require('./bin_label_vals'); */;
 
-var _$calc_339 = function calc(gd, trace) {
+var _$calc_348 = function calc(gd, trace) {
     // ignore as much processing as possible (and including in autorange) if bar is not visible
     if(trace.visible !== true) return;
 
@@ -69860,7 +70036,7 @@ var _$calc_339 = function calc(gd, trace) {
     var cumulativeSpec = trace.cumulative;
     var i;
 
-    _$cleanBins_340(trace, pa, mainData);
+    _$cleanBins_349(trace, pa, mainData);
 
     var binsAndPos = calcAllAutoBins(gd, trace, pa, mainData);
     var binSpec = binsAndPos[0];
@@ -69888,8 +70064,8 @@ var _$calc_339 = function calc(gd, trace) {
 
     var extremeFunc = func === 'max' || func === 'min';
     var sizeInit = extremeFunc ? null : 0;
-    var binFunc = _$bin_functions_337.count;
-    var normFunc = _$norm_functions_345[norm];
+    var binFunc = _$bin_functions_346.count;
+    var normFunc = _$norm_functions_354[norm];
     var isAvg = false;
     var pr2c = function(v) { return pa.r2c(v, 0, calendar); };
     var rawCounterData;
@@ -69897,7 +70073,7 @@ var _$calc_339 = function calc(gd, trace) {
     if(_$lib_171.isArrayOrTypedArray(trace[counterData]) && func !== 'count') {
         rawCounterData = trace[counterData];
         isAvg = func === 'avg';
-        binFunc = _$bin_functions_337[func];
+        binFunc = _$bin_functions_346[func];
     }
 
     // create the bins (and any extra arrays needed)
@@ -69959,11 +70135,11 @@ var _$calc_339 = function calc(gd, trace) {
 
     var roundFn;
     if(!uniqueValsPerBin) {
-        roundFn = _$getBinSpanLabelRound_338(leftGap, rightGap, binEdges, pa, calendar);
+        roundFn = _$getBinSpanLabelRound_347(leftGap, rightGap, binEdges, pa, calendar);
     }
 
     // average and/or normalize the data, if needed
-    if(isAvg) total = _$doAvg_335(size, counts);
+    if(isAvg) total = _$doAvg_344(size, counts);
     if(normFunc) normFunc(size, total, inc);
 
     // after all normalization etc, now we can accumulate if desired
@@ -70282,7 +70458,7 @@ function getMinSize(size1, size2) {
 function numericSize(size) {
     if(_$fastIsnumeric_18(size)) return size;
     if(typeof size === 'string' && size.charAt(0) === 'M') {
-        return __oneMonth_339 * +(size.substr(1));
+        return __oneMonth_348 * +(size.substr(1));
     }
     return Infinity;
 }
@@ -70351,7 +70527,7 @@ function cdf(size, direction, currentBin) {
 'use strict';
 
 
-var _$handleBinDefaults_336 = function handleBinDefaults(traceIn, traceOut, coerce, binDirections) {
+var _$handleBinDefaults_345 = function handleBinDefaults(traceIn, traceOut, coerce, binDirections) {
     coerce('histnorm');
 
     binDirections.forEach(function(binDirection) {
@@ -70387,13 +70563,13 @@ var _$handleBinDefaults_336 = function handleBinDefaults(traceIn, traceOut, coer
 /* removed: var _$lib_171 = require('../../lib'); */;
 /* removed: var _$color_51 = require('../../components/color'); */;
 
-/* removed: var _$handleBinDefaults_336 = require('./bin_defaults'); */;
+/* removed: var _$handleBinDefaults_345 = require('./bin_defaults'); */;
 /* removed: var _$handleStyleDefaults_283 = require('../bar/style_defaults'); */;
-/* removed: var _$attributes_334 = require('./attributes'); */;
+/* removed: var _$attributes_343 = require('./attributes'); */;
 
-var _$supplyDefaults_341 = function supplyDefaults(traceIn, traceOut, defaultColor, layout) {
+var _$supplyDefaults_350 = function supplyDefaults(traceIn, traceOut, defaultColor, layout) {
     function coerce(attr, dflt) {
-        return _$lib_171.coerce(traceIn, traceOut, _$attributes_334, attr, dflt);
+        return _$lib_171.coerce(traceIn, traceOut, _$attributes_343, attr, dflt);
     }
 
     var x = coerce('x'),
@@ -70422,7 +70598,7 @@ var _$supplyDefaults_341 = function supplyDefaults(traceIn, traceOut, defaultCol
     if(hasAggregationData) coerce('histfunc');
 
     var binDirections = (orientation === 'h') ? ['y'] : ['x'];
-    _$handleBinDefaults_336(traceIn, traceOut, coerce, binDirections);
+    _$handleBinDefaults_345(traceIn, traceOut, coerce, binDirections);
 
     _$handleStyleDefaults_283(traceIn, traceOut, coerce, defaultColor, layout);
 
@@ -70444,7 +70620,7 @@ var _$supplyDefaults_341 = function supplyDefaults(traceIn, traceOut, defaultCol
 
 'use strict';
 
-var _$eventData_342 = function eventData(out, pt, trace, cd, pointNumber) {
+var _$eventData_351 = function eventData(out, pt, trace, cd, pointNumber) {
     // standard cartesian event data
     out.x = 'xVal' in pt ? pt.xVal : pt.x;
     out.y = 'yVal' in pt ? pt.yVal : pt.y;
@@ -70493,7 +70669,7 @@ var _$eventData_342 = function eventData(out, pt, trace, cd, pointNumber) {
 /* removed: var _$hoverPoints_274 = require('../bar/hover'); */;
 var hoverLabelText = _$axes_213.hoverLabelText;
 
-var _$hoverPoints_343 = function hoverPoints(pointData, xval, yval, hovermode) {
+var _$hoverPoints_352 = function hoverPoints(pointData, xval, yval, hovermode) {
     var pts = _$hoverPoints_274(pointData, xval, yval, hovermode);
 
     if(!pts) return;
@@ -70538,18 +70714,18 @@ var _$hoverPoints_343 = function hoverPoints(pointData, xval, yval, hovermode) {
 
 var Histogram = {};
 
-Histogram.attributes = _$attributes_334;
+Histogram.attributes = _$attributes_343;
 Histogram.layoutAttributes = _$layout_attributes_276;
-Histogram.supplyDefaults = _$supplyDefaults_341;
+Histogram.supplyDefaults = _$supplyDefaults_350;
 Histogram.supplyLayoutDefaults = _$layout_defaults_277;
-Histogram.calc = _$calc_339;
+Histogram.calc = _$calc_348;
 Histogram.setPositions = _$setPositions_280;
 Histogram.plot = _$plot_278;
 Histogram.style = _$style_282;
 Histogram.colorbar = _$colorbar_372;
-Histogram.hoverPoints = _$hoverPoints_343;
+Histogram.hoverPoints = _$hoverPoints_352;
 Histogram.selectPoints = _$selectPoints_279;
-Histogram.eventData = _$eventData_342;
+Histogram.eventData = _$eventData_351;
 
 Histogram.moduleType = 'trace';
 Histogram.name = 'histogram';
@@ -70559,7 +70735,7 @@ Histogram.meta = {
     
 };
 
-var _$Histogram_344 = Histogram;
+var _$Histogram_353 = Histogram;
 
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -70571,7 +70747,7 @@ var _$Histogram_344 = Histogram;
 
 'use strict';
 
-var _$histogram_8 = _$Histogram_344;
+var _$histogram_8 = _$Histogram_353;
 
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -70583,17 +70759,17 @@ var _$histogram_8 = _$Histogram_344;
 
 'use strict';
 
-/* removed: var _$attributes_334 = require('../histogram/attributes'); */;
+/* removed: var _$attributes_343 = require('../histogram/attributes'); */;
 /* removed: var _$attributes_317 = require('../heatmap/attributes'); */;
 /* removed: var _$attributes_57 = require('../../components/colorscale/attributes'); */;
 /* removed: var _$attributes_52 = require('../../components/colorbar/attributes'); */;
 
-var __extendFlat_346 = _$extend_165.extendFlat;
+var __extendFlat_334 = _$extend_165.extendFlat;
 
-var _$attributes_346 = __extendFlat_346({},
+var _$attributes_334 = __extendFlat_334({},
     {
-        x: _$attributes_334.x,
-        y: _$attributes_334.y,
+        x: _$attributes_343.x,
+        y: _$attributes_343.y,
 
         z: {
             valType: 'data_array',
@@ -70609,14 +70785,14 @@ var _$attributes_346 = __extendFlat_346({},
             editType: 'calc'
         },
 
-        histnorm: _$attributes_334.histnorm,
-        histfunc: _$attributes_334.histfunc,
-        autobinx: _$attributes_334.autobinx,
-        nbinsx: _$attributes_334.nbinsx,
-        xbins: _$attributes_334.xbins,
-        autobiny: _$attributes_334.autobiny,
-        nbinsy: _$attributes_334.nbinsy,
-        ybins: _$attributes_334.ybins,
+        histnorm: _$attributes_343.histnorm,
+        histfunc: _$attributes_343.histfunc,
+        autobinx: _$attributes_343.autobinx,
+        nbinsx: _$attributes_343.nbinsx,
+        xbins: _$attributes_343.xbins,
+        autobiny: _$attributes_343.autobiny,
+        nbinsy: _$attributes_343.nbinsy,
+        ybins: _$attributes_343.ybins,
 
         xgap: _$attributes_317.xgap,
         ygap: _$attributes_317.ygap,
@@ -70624,7 +70800,7 @@ var _$attributes_346 = __extendFlat_346({},
         zhoverformat: _$attributes_317.zhoverformat
     },
     _$attributes_57,
-    { autocolorscale: __extendFlat_346({}, _$attributes_57.autocolorscale, {dflt: false}) },
+    { autocolorscale: __extendFlat_334({}, _$attributes_57.autocolorscale, {dflt: false}) },
     { colorbar: _$attributes_52 }
 );
 
@@ -70640,10 +70816,10 @@ var _$attributes_346 = __extendFlat_346({},
 'use strict';
 
 /* removed: var _$registry_261 = require('../../registry'); */;
-/* removed: var _$handleBinDefaults_336 = require('../histogram/bin_defaults'); */;
+/* removed: var _$handleBinDefaults_345 = require('../histogram/bin_defaults'); */;
 
 
-var _$handleSampleDefaults_351 = function handleSampleDefaults(traceIn, traceOut, coerce, layout) {
+var _$handleSampleDefaults_339 = function handleSampleDefaults(traceIn, traceOut, coerce, layout) {
     var x = coerce('x'),
         y = coerce('y');
 
@@ -70664,7 +70840,7 @@ var _$handleSampleDefaults_351 = function handleSampleDefaults(traceIn, traceOut
     if(hasAggregationData) coerce('histfunc');
 
     var binDirections = ['x', 'y'];
-    _$handleBinDefaults_336(traceIn, traceOut, coerce, binDirections);
+    _$handleBinDefaults_345(traceIn, traceOut, coerce, binDirections);
 };
 
 /**
@@ -70680,18 +70856,18 @@ var _$handleSampleDefaults_351 = function handleSampleDefaults(traceIn, traceOut
 
 /* removed: var _$lib_171 = require('../../lib'); */;
 
-/* removed: var _$handleSampleDefaults_351 = require('./sample_defaults'); */;
+/* removed: var _$handleSampleDefaults_339 = require('./sample_defaults'); */;
 /* removed: var _$handleStyleDefaults_332 = require('../heatmap/style_defaults'); */;
 /* removed: var _$colorScaleDefaults_61 = require('../../components/colorscale/defaults'); */;
-/* removed: var _$attributes_346 = require('./attributes'); */;
+/* removed: var _$attributes_334 = require('./attributes'); */;
 
 
-var _$supplyDefaults_348 = function supplyDefaults(traceIn, traceOut, defaultColor, layout) {
+var _$supplyDefaults_336 = function supplyDefaults(traceIn, traceOut, defaultColor, layout) {
     function coerce(attr, dflt) {
-        return _$lib_171.coerce(traceIn, traceOut, _$attributes_346, attr, dflt);
+        return _$lib_171.coerce(traceIn, traceOut, _$attributes_334, attr, dflt);
     }
 
-    _$handleSampleDefaults_351(traceIn, traceOut, coerce, layout);
+    _$handleSampleDefaults_339(traceIn, traceOut, coerce, layout);
     if(traceOut.visible === false) return;
 
     _$handleStyleDefaults_332(traceIn, traceOut, coerce, layout);
@@ -70712,9 +70888,9 @@ var _$supplyDefaults_348 = function supplyDefaults(traceIn, traceOut, defaultCol
 'use strict';
 
 /* removed: var _$hoverPoints_325 = require('../heatmap/hover'); */;
-var __hoverLabelText_349 = _$axes_213.hoverLabelText;
+var __hoverLabelText_337 = _$axes_213.hoverLabelText;
 
-var _$hoverPoints_349 = function hoverPoints(pointData, xval, yval, hovermode, hoverLayer, contour) {
+var _$hoverPoints_337 = function hoverPoints(pointData, xval, yval, hovermode, hoverLayer, contour) {
     var pts = _$hoverPoints_325(pointData, xval, yval, hovermode, hoverLayer, contour);
 
     if(!pts) return;
@@ -70727,8 +70903,8 @@ var _$hoverPoints_349 = function hoverPoints(pointData, xval, yval, hovermode, h
     var xRange = cd0.xRanges[nx];
     var yRange = cd0.yRanges[ny];
 
-    pointData.xLabel = __hoverLabelText_349(pointData.xa, xRange[0], xRange[1]);
-    pointData.yLabel = __hoverLabelText_349(pointData.ya, yRange[0], yRange[1]);
+    pointData.xLabel = __hoverLabelText_337(pointData.xa, xRange[0], xRange[1]);
+    pointData.yLabel = __hoverLabelText_337(pointData.ya, yRange[0], yRange[1]);
 
     return pts;
 };
@@ -70746,14 +70922,14 @@ var _$hoverPoints_349 = function hoverPoints(pointData, xval, yval, hovermode, h
 
 var Histogram2D = {};
 
-Histogram2D.attributes = _$attributes_346;
-Histogram2D.supplyDefaults = _$supplyDefaults_348;
+Histogram2D.attributes = _$attributes_334;
+Histogram2D.supplyDefaults = _$supplyDefaults_336;
 Histogram2D.calc = _$calc_318;
 Histogram2D.plot = _$plot_330;
 Histogram2D.colorbar = _$colorbar_320;
 Histogram2D.style = _$style_331;
-Histogram2D.hoverPoints = _$hoverPoints_349;
-Histogram2D.eventData = _$eventData_342;
+Histogram2D.hoverPoints = _$hoverPoints_337;
+Histogram2D.eventData = _$eventData_351;
 
 Histogram2D.moduleType = 'trace';
 Histogram2D.name = 'histogram2d';
@@ -70764,7 +70940,7 @@ Histogram2D.meta = {
     
 };
 
-var _$Histogram2D_350 = Histogram2D;
+var _$Histogram2D_338 = Histogram2D;
 
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -70776,7 +70952,7 @@ var _$Histogram2D_350 = Histogram2D;
 
 'use strict';
 
-var _$histogram2d_9 = _$Histogram2D_350;
+var _$histogram2d_9 = _$Histogram2D_338;
 
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -70788,37 +70964,37 @@ var _$histogram2d_9 = _$Histogram2D_350;
 
 'use strict';
 
-/* removed: var _$attributes_346 = require('../histogram2d/attributes'); */;
+/* removed: var _$attributes_334 = require('../histogram2d/attributes'); */;
 /* removed: var _$attributes_295 = require('../contour/attributes'); */;
 /* removed: var _$attributes_57 = require('../../components/colorscale/attributes'); */;
 /* removed: var _$attributes_52 = require('../../components/colorbar/attributes'); */;
 
-var __extendFlat_352 = _$extend_165.extendFlat;
+var __extendFlat_340 = _$extend_165.extendFlat;
 
-var _$attributes_352 = __extendFlat_352({
-    x: _$attributes_346.x,
-    y: _$attributes_346.y,
-    z: _$attributes_346.z,
-    marker: _$attributes_346.marker,
+var _$attributes_340 = __extendFlat_340({
+    x: _$attributes_334.x,
+    y: _$attributes_334.y,
+    z: _$attributes_334.z,
+    marker: _$attributes_334.marker,
 
-    histnorm: _$attributes_346.histnorm,
-    histfunc: _$attributes_346.histfunc,
-    autobinx: _$attributes_346.autobinx,
-    nbinsx: _$attributes_346.nbinsx,
-    xbins: _$attributes_346.xbins,
-    autobiny: _$attributes_346.autobiny,
-    nbinsy: _$attributes_346.nbinsy,
-    ybins: _$attributes_346.ybins,
+    histnorm: _$attributes_334.histnorm,
+    histfunc: _$attributes_334.histfunc,
+    autobinx: _$attributes_334.autobinx,
+    nbinsx: _$attributes_334.nbinsx,
+    xbins: _$attributes_334.xbins,
+    autobiny: _$attributes_334.autobiny,
+    nbinsy: _$attributes_334.nbinsy,
+    ybins: _$attributes_334.ybins,
 
     autocontour: _$attributes_295.autocontour,
     ncontours: _$attributes_295.ncontours,
     contours: _$attributes_295.contours,
     line: _$attributes_295.line,
-    zhoverformat: _$attributes_346.zhoverformat
+    zhoverformat: _$attributes_334.zhoverformat
 },
     _$attributes_57, {
-        zmin: __extendFlat_352({}, _$attributes_57.zmin, {editType: 'calc'}),
-        zmax: __extendFlat_352({}, _$attributes_57.zmax, {editType: 'calc'})
+        zmin: __extendFlat_340({}, _$attributes_57.zmin, {editType: 'calc'}),
+        zmax: __extendFlat_340({}, _$attributes_57.zmax, {editType: 'calc'})
     },
     { colorbar: _$attributes_52 }
 );
@@ -70836,22 +71012,22 @@ var _$attributes_352 = __extendFlat_352({
 
 /* removed: var _$lib_171 = require('../../lib'); */;
 
-/* removed: var _$handleSampleDefaults_351 = require('../histogram2d/sample_defaults'); */;
+/* removed: var _$handleSampleDefaults_339 = require('../histogram2d/sample_defaults'); */;
 /* removed: var _$handleContourDefaults_302 = require('../contour/contours_defaults'); */;
 /* removed: var _$handleStyleDefaults_316 = require('../contour/style_defaults'); */;
-/* removed: var _$attributes_352 = require('./attributes'); */;
+/* removed: var _$attributes_340 = require('./attributes'); */;
 
 
-var _$supplyDefaults_353 = function supplyDefaults(traceIn, traceOut, defaultColor, layout) {
+var _$supplyDefaults_341 = function supplyDefaults(traceIn, traceOut, defaultColor, layout) {
     function coerce(attr, dflt) {
-        return _$lib_171.coerce(traceIn, traceOut, _$attributes_352, attr, dflt);
+        return _$lib_171.coerce(traceIn, traceOut, _$attributes_340, attr, dflt);
     }
 
     function coerce2(attr) {
-        return _$lib_171.coerce2(traceIn, traceOut, _$attributes_352, attr);
+        return _$lib_171.coerce2(traceIn, traceOut, _$attributes_340, attr);
     }
 
-    _$handleSampleDefaults_351(traceIn, traceOut, coerce, layout);
+    _$handleSampleDefaults_339(traceIn, traceOut, coerce, layout);
     if(traceOut.visible === false) return;
 
     _$handleContourDefaults_302(traceIn, traceOut, coerce, coerce2);
@@ -70871,8 +71047,8 @@ var _$supplyDefaults_353 = function supplyDefaults(traceIn, traceOut, defaultCol
 
 var Histogram2dContour = {};
 
-Histogram2dContour.attributes = _$attributes_352;
-Histogram2dContour.supplyDefaults = _$supplyDefaults_353;
+Histogram2dContour.attributes = _$attributes_340;
+Histogram2dContour.supplyDefaults = _$supplyDefaults_341;
 Histogram2dContour.calc = _$calc_296;
 Histogram2dContour.plot = _$plot_313.plot;
 Histogram2dContour.style = _$style_315;
@@ -70888,7 +71064,7 @@ Histogram2dContour.meta = {
     
 };
 
-var _$Histogram2dContour_354 = Histogram2dContour;
+var _$Histogram2dContour_342 = Histogram2dContour;
 
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -70900,7 +71076,7 @@ var _$Histogram2dContour_354 = Histogram2dContour;
 
 'use strict';
 
-var _$histogram2dcontour_10 = _$Histogram2dContour_354;
+var _$histogram2dcontour_10 = _$Histogram2dContour_342;
 
 /**
 * Copyright 2012-2018, Plotly, Inc.

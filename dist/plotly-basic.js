@@ -1,9 +1,3 @@
-/**
-* plotly.js (basic) v1.35.2
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-* Licensed under the MIT license
-*/
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Plotly = f()}})(function(){var define,module,exports;
 var _$d3_7 = { exports: {} };
 !function() {
@@ -13172,9 +13166,11 @@ _$coerce_152.valObjectMeta = {
     info_array: {
         
         
-        // set dimensions=2 for a 2D array
+        // set `dimensions=2` for a 2D array or '1-2' for either
         // `items` may be a single object instead of an array, in which case
         // `freeLength` must be true.
+        // if `dimensions='1-2'` and items is a 1D array, then the value can
+        // either be a matching 1D array or an array of such matching 1D arrays
         
         coerceFunction: function(v, propOut, dflt, opts) {
 
@@ -13190,7 +13186,7 @@ _$coerce_152.valObjectMeta = {
                 return out;
             }
 
-            var twoD = opts.dimensions === 2;
+            var twoD = opts.dimensions === 2 || (opts.dimensions === '1-2' && Array.isArray(v) && Array.isArray(v[0]));
 
             if(!Array.isArray(v)) {
                 propOut.set(dflt);
@@ -13200,19 +13196,28 @@ _$coerce_152.valObjectMeta = {
             var items = opts.items;
             var vOut = [];
             var arrayItems = Array.isArray(items);
-            var len = arrayItems ? items.length : v.length;
+            var arrayItems2D = arrayItems && twoD && Array.isArray(items[0]);
+            var innerItemsOnly = twoD && arrayItems && !arrayItems2D;
+            var len = (arrayItems && !innerItemsOnly) ? items.length : v.length;
 
-            var i, j, len2, vNew;
+            var i, j, row, item, len2, vNew;
 
             dflt = Array.isArray(dflt) ? dflt : [];
 
             if(twoD) {
                 for(i = 0; i < len; i++) {
                     vOut[i] = [];
-                    var row = Array.isArray(v[i]) ? v[i] : [];
-                    len2 = arrayItems ? items[i].length : row.length;
+                    row = Array.isArray(v[i]) ? v[i] : [];
+                    if(innerItemsOnly) len2 = items.length;
+                    else if(arrayItems) len2 = items[i].length;
+                    else len2 = row.length;
+
                     for(j = 0; j < len2; j++) {
-                        vNew = coercePart(row[j], arrayItems ? items[i][j] : items, (dflt[i] || [])[j]);
+                        if(innerItemsOnly) item = items[j];
+                        else if(arrayItems) item = items[i][j];
+                        else item = items;
+
+                        vNew = coercePart(row[j], item, (dflt[i] || [])[j]);
                         if(vNew !== undefined) vOut[i][j] = vNew;
                     }
                 }
@@ -17673,6 +17678,38 @@ var _$setConvert_223 = function setConvert(ax, fullLayout) {
             }
         }
     };
+    /**
+     * 
+     * @param {} ax - Achse, welche gerade resized wird
+     * @param {} axLetter - Startbuchstabe der Achse
+     * @returns {} scaleAxes - Array mit Achsen, deren Labels relevant sind
+     */
+    function getScaleAxes(ax, axLetter) {
+        var scaleAxes = [];
+        var id = ax._id;
+        var idNumber;
+        if (axLetter === 'x') {
+            idNumber = id.replace('x', '') * 1;
+            id = 'y'
+        } else {
+            idNumber = id.replace('y', '') * 1;
+            id = 'x'
+        }
+
+        if (ax.side === 'top' || ax.side === 'right') {
+            idNumber -= 19937;
+        }
+        if (idNumber === 0 || idNumber == 1) idNumber = '';
+        var scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        if (idNumber === '') {
+            idNumber = 1;
+        }
+        idNumber += 19937;
+        scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        return scaleAxes;
+    }
 
     // set scaling to pixels
     ax.setScale = function(usePrivateRange) {
@@ -17701,15 +17738,83 @@ var _$setConvert_223 = function setConvert(ax, fullLayout) {
         var rl0 = ax.r2l(ax[rangeAttr][0], calendar),
             rl1 = ax.r2l(ax[rangeAttr][1], calendar);
 
-        if(axLetter === 'y') {
+        var labelWidth = 0;
+        var labelWidthRight = 0;
+
+        var scaleAxes = getScaleAxes(ax, axLetter);
+
+        // TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier noch angepasst werden
+        if (axLetter === 'y') {
+            var axLength;
+            if (scaleAxes[0]) {
+                var scaleAxis = scaleAxes[0];
+                labelWidth = getLabelWidth(scaleAxis);
+                // Sofern die LabelWidth bereits ermittelt wurde, wird diese verwendet (solange sie kleiner als die aktuelle ist)
+                // dies dient dazu, da ansonsten der Plot zu Beginn eine falsche Gr��e hat
+                if (scaleAxis._lastLabel && scaleAxis._lastLabel.autoangle === scaleAxis._lastangle) {
+                    if (scaleAxis._lastLabel && labelWidth < scaleAxis._lastLabel.lastLabelWidth) {
+                        labelWidth = scaleAxis._lastLabel.lastLabelWidth;
+                    }
+                }
+                var marginBottom = gs.b * 0.7;
+                if (labelWidth <= 1) labelWidth = marginBottom;
+
+                if (scaleAxis._lastangle === 30) marginBottom = gs.b * 0.5;
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + marginBottom;
+                scaleAxis._shortLabel = false;
+                if (!ax._lastangle || (ax._lastangle && ax._lastangle != 0)) {
+                    if (axLength < 100 && labelWidth > 0) {
+                        axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+                        scaleAxis._shortLabel = true;
+                    }
+                }
+            } else {
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+            }
+
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
-            ax._length = gs.h * (ax.domain[1] - ax.domain[0]);
+            ax._length = axLength;
             ax._m = ax._length / (rl0 - rl1);
             ax._b = -ax._m * rl1;
         }
         else {
-            ax._offset = gs.l + ax.domain[0] * gs.w;
-            ax._length = gs.w * (ax.domain[1] - ax.domain[0]);
+            var axLength;
+            var axOffset;
+            if (scaleAxes.length > 0) {
+                var scaleAxis = scaleAxes[0];
+                var scaleAxisRight;
+                labelWidth = getLabelWidth(scaleAxis);
+                var marginLeft = gs.l * 0.5;
+                if (labelWidth <= 1) labelWidth = marginLeft;
+                if (scaleAxes.length > 1) {
+                    scaleAxisRight = scaleAxes[1];
+                    labelWidthRight = getLabelWidth(scaleAxisRight);
+                }
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight) + marginLeft;
+                axOffset = gs.l + ax.domain[0] * gs.w + labelWidth - marginLeft;
+                if (axLength < 100 && labelWidthRight > 0) {
+                    axLength += labelWidthRight;
+                    scaleAxisRight._shortLabel = true;
+                } else if (scaleAxisRight) {
+                    scaleAxisRight._shortLabel = false;
+                }
+                if (axLength < 100 && labelWidth > 0) {
+                    axLength += labelWidth;
+                    axLength -= marginLeft;
+                    axOffset -= labelWidth;
+                    axOffset += marginLeft;
+                    scaleAxis._shortLabel = true;
+                } else if (scaleAxis) {
+                    scaleAxis._shortLabel = false;
+                }
+            } else {
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]);
+                axOffset = gs.l + ax.domain[0] * gs.w;
+            }
+
+            ax._offset = axOffset;
+            ax._length = axLength;
+
             ax._m = ax._length / (rl1 - rl0);
             ax._b = -ax._m * rl0;
         }
@@ -17718,7 +17823,62 @@ var _$setConvert_223 = function setConvert(ax, fullLayout) {
             fullLayout._replotting = false;
             throw new Error('Something went wrong with axis scaling');
         }
-    };
+
+        if (scaleAxes.length > 0) {
+            scaleAxis = scaleAxes[0];
+            var lastLabel = {};
+            if (labelWidth > 1) {
+                lastLabel.lastLabelWidth = labelWidth;
+            }
+
+            if (labelWidthRight > 1) {
+                lastLabel.lastLabelWidthRight = labelWidthRight;
+            }
+
+            lastLabel.autoangle = scaleAxis._lastangle;
+            scaleAxis._lastLabel = lastLabel;
+        }
+
+        function getLabelWidth(scaleAxis) {
+            var highestLabel = 0;
+            var textLabel = '';
+            var sizeLabel = {width: 0, height:0 };
+            var labelWidth = 0;
+            if (scaleAxis._categories) {
+                scaleAxis._categories.forEach(function (d) {
+                    if (d.length > highestLabel) {
+                        highestLabel = d.length;
+                        textLabel = d;
+                    }
+                });
+                sizeLabel = textMeasurement(textLabel, fullLayout.font.size, fullLayout.font.family)
+
+                labelWidth = sizeLabel.width;
+                if (scaleAxis._lastangle === 30) {
+                    labelWidth = labelWidth * Math.sin(0.5235988) / Math.sin(1.5707963);
+                } else if (scaleAxis._lastangle === 0) {
+                    labelWidth = 0;
+                }
+            }
+            
+            return labelWidth;
+        }
+
+        // gets the size of a element
+        function textMeasurement(value, fontSizeString, fontFamily) {
+            var body = $('body');
+            if (fontFamily) {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            } else {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            }
+            var elem = $('#testObjectDashboardUtils');
+            var width = elem.innerWidth() + 1;
+            var height = elem.innerHeight() + 1;
+            elem.remove();
+            return { width: width, height: height }
+            }
+        };
 
     // makeCalcdata: takes an x or y array and converts it
     // to a position on the axis object "ax"
@@ -20698,7 +20858,10 @@ function buildSVGText(containerNode, str) {
                         var dummyAnchor = document.createElement('a');
                         dummyAnchor.href = href;
                         if(PROTOCOLS.indexOf(dummyAnchor.protocol) !== -1) {
-                            nodeSpec.href = encodeURI(href);
+                            // Decode href to allow both already encoded and not encoded
+                            // URIs. Without decoding prior encoding, an already encoded
+                            // URI would be encoded twice producing a semantically different URI.
+                            nodeSpec.href = encodeURI(decodeURI(href));
                             nodeSpec.target = getQuotedMatch(extra, TARGETMATCH) || '_blank';
                             nodeSpec.popup = getQuotedMatch(extra, POPUPMATCH);
                         }
@@ -25519,6 +25682,9 @@ plots.doAutoMargin = function(gd) {
     gs.w = Math.round(fullLayout.width) - gs.l - gs.r;
     gs.h = Math.round(fullLayout.height) - gs.t - gs.b;
 
+	if (gs.w < 0) gs.w = Math.round(fullLayout.width) - fullLayout.margin.l - fullLayout.margin.r;
+	if (gs.h < 0) gs.h = Math.round(fullLayout.height) - fullLayout.margin.t - fullLayout.margin.b;
+	
     // if things changed and we're not already redrawing, trigger a redraw
     if(!fullLayout._replotting && oldmargins !== '{}' &&
             oldmargins !== JSON.stringify(fullLayout._size)) {
@@ -28691,12 +28857,19 @@ axes.doTicks = function(gd, axid, skipTitle) {
                 // alter later
                 .attr('text-anchor', 'middle')
                 .each(function(d) {
+                    var labelText = d.text;
+					if (ax._shortLabel) {
+						if (labelText.length > 9) {
+							labelText = labelText.substring(0, 6);
+							labelText += '...';
+						}
+					}
                     var thisLabel = _$d3_7.select(this),
                         newPromise = gd._promises.length;
                     thisLabel
                         .call(_$svg_text_utils_183.positionText, labelx(d), labely(d))
                         .call(_$drawing_68.font, d.font, d.fontSize, d.fontColor)
-                        .text(d.text)
+                        .text(labelText)
                         .call(_$svg_text_utils_183.convertToTspans, gd);
                     newPromise = gd._promises[newPromise];
                     if(newPromise) {
@@ -28797,7 +28970,7 @@ axes.doTicks = function(gd, axid, skipTitle) {
             // don't auto-angle at all for log axes with
             // base and digit format
             if(axLetter === 'x' && !_$fastIsnumeric_10(ax.tickangle) &&
-                    (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
+                (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
                 var lbbArray = [];
                 tickLabels.each(function(d) {
                     var s = _$d3_7.select(this),
@@ -28818,23 +28991,23 @@ axes.doTicks = function(gd, axid, skipTitle) {
                         width: bb.width + 2
                     });
                 });
-                for(i = 0; i < lbbArray.length - 1; i++) {
-                    if(_$lib_162.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
-                        // any overlap at all - set 30 degrees
-                        autoangle = 30;
-                        break;
-                    }
-                }
-                if(autoangle) {
-                    var tickspacing = Math.abs(
-                            (vals[vals.length - 1].x - vals[0].x) * ax._m
-                        ) / (vals.length - 1);
-                    if(tickspacing < maxFontSize * 2.5) {
-                        autoangle = 90;
-                    }
-                    positionLabels(tickLabels, autoangle);
-                }
-                ax._lastangle = autoangle;
+				for (i = 0; i < lbbArray.length - 1; i++) {
+					if (_$lib_162.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
+						// any overlap at all - set 30 degrees
+						autoangle = 30;
+						break;
+					}
+				}
+				if (autoangle) {
+					var tickspacing = Math.abs(
+							(vals[vals.length - 1].x - vals[0].x) * ax._m
+						) / (vals.length - 1);
+					if (tickspacing < maxFontSize * 2.5) {
+						autoangle = 90;
+					}
+					positionLabels(tickLabels, autoangle);
+				}
+				ax._lastangle = autoangle;
             }
 
             // update the axis title
@@ -37919,7 +38092,7 @@ _$es6Promise_8 = _$es6Promise_8.exports
  * circles, for which it's irrelevant.
  */
 
-var _$arrow_paths_27 = [
+var _$arrow_paths_32 = [
     // no arrow
     {
         path: '',
@@ -37974,12 +38147,12 @@ var _$arrow_paths_27 = [
 
 'use strict';
 
-/* removed: var _$arrow_paths_27 = require('./arrow_paths'); */;
+/* removed: var _$arrow_paths_32 = require('./arrow_paths'); */;
 /* removed: var _$font_attributes_231 = require('../../plots/font_attributes'); */;
 /* removed: var _$constants_209 = require('../../plots/cartesian/constants'); */;
 
 
-var _$attributes_28 = {
+var _$attributes_33 = {
     _isLinkedToArray: 'annotation',
 
     visible: {
@@ -38096,7 +38269,7 @@ var _$attributes_28 = {
     arrowhead: {
         valType: 'integer',
         min: 0,
-        max: _$arrow_paths_27.length,
+        max: _$arrow_paths_32.length,
         dflt: 1,
         
         editType: 'arraydraw',
@@ -38105,7 +38278,7 @@ var _$attributes_28 = {
     startarrowhead: {
         valType: 'integer',
         min: 0,
-        max: _$arrow_paths_27.length,
+        max: _$arrow_paths_32.length,
         dflt: 1,
         
         editType: 'arraydraw',
@@ -38330,11 +38503,398 @@ var _$attributes_28 = {
 
 'use strict';
 
+/* removed: var _$attributes_33 = require('../annotations/attributes'); */;
+var __overrideAll_26 = _$edit_types_189.overrideAll;
+
+var _$attributes_26 = __overrideAll_26({
+    _isLinkedToArray: 'annotation',
+
+    visible: _$attributes_33.visible,
+    x: {
+        valType: 'any',
+        
+        
+    },
+    y: {
+        valType: 'any',
+        
+        
+    },
+    z: {
+        valType: 'any',
+        
+        
+    },
+    ax: {
+        valType: 'number',
+        
+        
+    },
+    ay: {
+        valType: 'number',
+        
+        
+    },
+
+    xanchor: _$attributes_33.xanchor,
+    xshift: _$attributes_33.xshift,
+    yanchor: _$attributes_33.yanchor,
+    yshift: _$attributes_33.yshift,
+
+    text: _$attributes_33.text,
+    textangle: _$attributes_33.textangle,
+    font: _$attributes_33.font,
+    width: _$attributes_33.width,
+    height: _$attributes_33.height,
+    opacity: _$attributes_33.opacity,
+    align: _$attributes_33.align,
+    valign: _$attributes_33.valign,
+    bgcolor: _$attributes_33.bgcolor,
+    bordercolor: _$attributes_33.bordercolor,
+    borderpad: _$attributes_33.borderpad,
+    borderwidth: _$attributes_33.borderwidth,
+    showarrow: _$attributes_33.showarrow,
+    arrowcolor: _$attributes_33.arrowcolor,
+    arrowhead: _$attributes_33.arrowhead,
+    startarrowhead: _$attributes_33.startarrowhead,
+    arrowside: _$attributes_33.arrowside,
+    arrowsize: _$attributes_33.arrowsize,
+    startarrowsize: _$attributes_33.startarrowsize,
+    arrowwidth: _$attributes_33.arrowwidth,
+    standoff: _$attributes_33.standoff,
+    startstandoff: _$attributes_33.startstandoff,
+    hovertext: _$attributes_33.hovertext,
+    hoverlabel: _$attributes_33.hoverlabel,
+    captureevents: _$attributes_33.captureevents,
+
+    // maybes later?
+    // clicktoshow: annAtts.clicktoshow,
+    // xclick: annAtts.xclick,
+    // yclick: annAtts.yclick,
+
+    // not needed!
+    // axref: 'pixel'
+    // ayref: 'pixel'
+    // xref: 'x'
+    // yref: 'y
+    // zref: 'z'
+}, 'calc', 'from-root');
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_162 = require('../../lib'); */;
+/* removed: var _$axes_204 = require('../../plots/cartesian/axes'); */;
+
+var _$convert_27 = function convert(scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var anns = fullSceneLayout.annotations;
+
+    for(var i = 0; i < anns.length; i++) {
+        mockAnnAxes(anns[i], scene);
+    }
+
+    scene.fullLayout._infolayer
+        .selectAll('.annotation-' + scene.id)
+        .remove();
+};
+
+function mockAnnAxes(ann, scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var domain = fullSceneLayout.domain;
+    var size = scene.fullLayout._size;
+
+    var base = {
+        // this gets fill in on render
+        pdata: null,
+
+        // to get setConvert to not execute cleanly
+        type: 'linear',
+
+        // don't try to update them on `editable: true`
+        autorange: false,
+
+        // set infinite range so that annotation draw routine
+        // does not try to remove 'outside-range' annotations,
+        // this case is handled in the render loop
+        range: [-Infinity, Infinity]
+    };
+
+    ann._xa = {};
+    _$lib_162.extendFlat(ann._xa, base);
+    _$axes_204.setConvert(ann._xa);
+    ann._xa._offset = size.l + domain.x[0] * size.w;
+    ann._xa.l2p = function() {
+        return 0.5 * (1 + ann._pdata[0] / ann._pdata[3]) * size.w * (domain.x[1] - domain.x[0]);
+    };
+
+    ann._ya = {};
+    _$lib_162.extendFlat(ann._ya, base);
+    _$axes_204.setConvert(ann._ya);
+    ann._ya._offset = size.t + (1 - domain.y[1]) * size.h;
+    ann._ya.l2p = function() {
+        return 0.5 * (1 - ann._pdata[1] / ann._pdata[3]) * size.h * (domain.y[1] - domain.y[0]);
+    };
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_162 = require('../../lib'); */;
+/* removed: var _$color_43 = require('../color'); */;
+
+// defaults common to 'annotations' and 'annotations3d'
+var _$handleAnnotationCommonDefaults_36 = function handleAnnotationCommonDefaults(annIn, annOut, fullLayout, coerce) {
+    coerce('opacity');
+    var bgColor = coerce('bgcolor');
+
+    var borderColor = coerce('bordercolor');
+    var borderOpacity = _$color_43.opacity(borderColor);
+
+    coerce('borderpad');
+
+    var borderWidth = coerce('borderwidth');
+    var showArrow = coerce('showarrow');
+
+    coerce('text', showArrow ? ' ' : fullLayout._dfltTitle.annotation);
+    coerce('textangle');
+    _$lib_162.coerceFont(coerce, 'font', fullLayout.font);
+
+    coerce('width');
+    coerce('align');
+
+    var h = coerce('height');
+    if(h) coerce('valign');
+
+    if(showArrow) {
+        var arrowside = coerce('arrowside');
+        var arrowhead;
+        var arrowsize;
+
+        if(arrowside.indexOf('end') !== -1) {
+            arrowhead = coerce('arrowhead');
+            arrowsize = coerce('arrowsize');
+        }
+
+        if(arrowside.indexOf('start') !== -1) {
+            coerce('startarrowhead', arrowhead);
+            coerce('startarrowsize', arrowsize);
+        }
+        coerce('arrowcolor', borderOpacity ? annOut.bordercolor : _$color_43.defaultLine);
+        coerce('arrowwidth', ((borderOpacity && borderWidth) || 1) * 2);
+        coerce('standoff');
+        coerce('startstandoff');
+
+    }
+
+    var hoverText = coerce('hovertext');
+    var globalHoverLabel = fullLayout.hoverlabel || {};
+
+    if(hoverText) {
+        var hoverBG = coerce('hoverlabel.bgcolor', globalHoverLabel.bgcolor ||
+            (_$color_43.opacity(bgColor) ? _$color_43.rgb(bgColor) : _$color_43.defaultLine)
+        );
+
+        var hoverBorder = coerce('hoverlabel.bordercolor', globalHoverLabel.bordercolor ||
+            _$color_43.contrast(hoverBG)
+        );
+
+        _$lib_162.coerceFont(coerce, 'hoverlabel.font', {
+            family: globalHoverLabel.font.family,
+            size: globalHoverLabel.font.size,
+            color: globalHoverLabel.font.color || hoverBorder
+        });
+    }
+
+    coerce('captureevents', !!hoverText);
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_162 = require('../lib'); */;
+
+/** Convenience wrapper for making array container logic DRY and consistent
+ *
+ * @param {object} parentObjIn
+ *  user input object where the container in question is linked
+ *  (i.e. either a user trace object or the user layout object)
+ *
+ * @param {object} parentObjOut
+ *  full object where the coerced container will be linked
+ *  (i.e. either a full trace object or the full layout object)
+ *
+ * @param {object} opts
+ *  options object:
+ *   - name {string}
+ *      name of the key linking the container in question
+ *   - handleItemDefaults {function}
+ *      defaults method to be called on each item in the array container in question
+ *
+ *      Its arguments are:
+ *          - itemIn {object} item in user layout
+ *          - itemOut {object} item in full layout
+ *          - parentObj {object} (as in closure)
+ *          - opts {object} (as in closure)
+ *          - itemOpts {object}
+ *              - itemIsNotPlainObject {boolean}
+ * N.B.
+ *
+ *  - opts is passed to handleItemDefaults so it can also store
+ *    links to supplementary data (e.g. fullData for layout components)
+ *
+ */
+var _$handleArrayContainerDefaults_200 = function handleArrayContainerDefaults(parentObjIn, parentObjOut, opts) {
+    var name = opts.name;
+
+    var previousContOut = parentObjOut[name];
+
+    var contIn = _$lib_162.isArrayOrTypedArray(parentObjIn[name]) ? parentObjIn[name] : [],
+        contOut = parentObjOut[name] = [],
+        i;
+
+    for(i = 0; i < contIn.length; i++) {
+        var itemIn = contIn[i],
+            itemOut = {},
+            itemOpts = {};
+
+        if(!_$lib_162.isPlainObject(itemIn)) {
+            itemOpts.itemIsNotPlainObject = true;
+            itemIn = {};
+        }
+
+        opts.handleItemDefaults(itemIn, itemOut, parentObjOut, opts, itemOpts);
+
+        itemOut._input = itemIn;
+        itemOut._index = i;
+
+        contOut.push(itemOut);
+    }
+
+    // in case this array gets its defaults rebuilt independent of the whole layout,
+    // relink the private keys just for this array.
+    if(_$lib_162.isArrayOrTypedArray(previousContOut)) {
+        var len = Math.min(previousContOut.length, contOut.length);
+        for(i = 0; i < len; i++) {
+            _$lib_162.relinkPrivateKeys(contOut[i], previousContOut[i]);
+        }
+    }
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_162 = require('../../lib'); */;
+/* removed: var _$axes_204 = require('../../plots/cartesian/axes'); */;
+/* removed: var _$handleArrayContainerDefaults_200 = require('../../plots/array_container_defaults'); */;
+/* removed: var _$handleAnnotationCommonDefaults_36 = require('../annotations/common_defaults'); */;
+/* removed: var _$attributes_26 = require('./attributes'); */;
+
+var _$handleDefaults_28 = function handleDefaults(sceneLayoutIn, sceneLayoutOut, opts) {
+    _$handleArrayContainerDefaults_200(sceneLayoutIn, sceneLayoutOut, {
+        name: 'annotations',
+        handleItemDefaults: handleAnnotationDefaults,
+        fullLayout: opts.fullLayout
+    });
+};
+
+function handleAnnotationDefaults(annIn, annOut, sceneLayout, opts, itemOpts) {
+    function coerce(attr, dflt) {
+        return _$lib_162.coerce(annIn, annOut, _$attributes_26, attr, dflt);
+    }
+
+    function coercePosition(axLetter) {
+        var axName = axLetter + 'axis';
+
+        // mock in such way that getFromId grabs correct 3D axis
+        var gdMock = { _fullLayout: {} };
+        gdMock._fullLayout[axName] = sceneLayout[axName];
+
+        return _$axes_204.coercePosition(annOut, gdMock, coerce, axLetter, axLetter, 0.5);
+    }
+
+
+    var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
+    if(!visible) return annOut;
+
+    _$handleAnnotationCommonDefaults_36(annIn, annOut, opts.fullLayout, coerce);
+
+    coercePosition('x');
+    coercePosition('y');
+    coercePosition('z');
+
+    // if you have one coordinate you should all three
+    _$lib_162.noneOrAll(annIn, annOut, ['x', 'y', 'z']);
+
+    // hard-set here for completeness
+    annOut.xref = 'x';
+    annOut.yref = 'y';
+    annOut.zref = 'z';
+
+    coerce('xanchor');
+    coerce('yanchor');
+    coerce('xshift');
+    coerce('yshift');
+
+    if(annOut.showarrow) {
+        annOut.axref = 'pixel';
+        annOut.ayref = 'pixel';
+
+        // TODO maybe default values should be bigger than the 2D case?
+        coerce('ax', -10);
+        coerce('ay', -30);
+
+        // if you have one part of arrow length you should have both
+        _$lib_162.noneOrAll(annIn, annOut, ['ax', 'ay']);
+    }
+
+    return annOut;
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
 /* removed: var _$d3_7 = require('d3'); */;
 
 /* removed: var _$color_43 = require('../color'); */;
 
-/* removed: var _$arrow_paths_27 = require('./arrow_paths'); */;
+/* removed: var _$arrow_paths_32 = require('./arrow_paths'); */;
 
 /**
  * Add arrowhead(s) to a path or line element
@@ -38356,10 +38916,10 @@ var _$attributes_28 = {
  *     of both the line and head has opacity applied to it so there isn't greater opacity
  *     where they overlap.
  */
-var _$drawArrowHead_35 = function drawArrowHead(el3, ends, options) {
+var _$drawArrowHead_40 = function drawArrowHead(el3, ends, options) {
     var el = el3.node();
-    var headStyle = _$arrow_paths_27[options.arrowhead || 0];
-    var startHeadStyle = _$arrow_paths_27[options.startarrowhead || 0];
+    var headStyle = _$arrow_paths_32[options.arrowhead || 0];
+    var startHeadStyle = _$arrow_paths_32[options.startarrowhead || 0];
     var scale = (options.arrowwidth || 1) * (options.arrowsize || 1);
     var startScale = (options.arrowwidth || 1) * (options.startarrowsize || 1);
     var doStart = ends.indexOf('start') >= 0;
@@ -38494,7 +39054,7 @@ var _$drawArrowHead_35 = function drawArrowHead(el3, ends, options) {
 /* removed: var _$svg_text_utils_183 = require('../../lib/svg_text_utils'); */;
 /* removed: var _$setCursor_181 = require('../../lib/setcursor'); */;
 /* removed: var _$dragelement_65 = require('../dragelement'); */;
-/* removed: var _$drawArrowHead_35 = require('./draw_arrow_head'); */;
+/* removed: var _$drawArrowHead_40 = require('./draw_arrow_head'); */;
 
 // Annotations are stored in gd.layout.annotations, an array of objects
 // index can point to one item in this array,
@@ -38505,8 +39065,8 @@ var _$drawArrowHead_35 = function drawArrowHead(el3, ends, options) {
 // if opt is blank, val can be 'add' or a full options object to add a new
 //  annotation at that point in the array, or 'remove' to delete this one
 
-var _$draw_34 = {
-    draw: __draw_34,
+var _$draw_39 = {
+    draw: __draw_39,
     drawOne: drawOne,
     drawRaw: drawRaw
 };
@@ -38514,7 +39074,7 @@ var _$draw_34 = {
 /*
  * draw: draw all annotations without any new modifications
  */
-function __draw_34(gd) {
+function __draw_39(gd) {
     var fullLayout = gd._fullLayout;
 
     fullLayout._infolayer.selectAll('.annotation').remove();
@@ -38992,7 +39552,7 @@ function drawRaw(gd, options, index, subplotId, xa, ya) {
                 .style('stroke-width', strokewidth + 'px')
                 .call(_$color_43.stroke, _$color_43.rgb(arrowColor));
 
-            _$drawArrowHead_35(arrow, arrowSide, options);
+            _$drawArrowHead_40(arrow, arrowSide, options);
 
             // the arrow dragger is a small square right at the head, then a line to the tail,
             // all expanded by a stroke width of 6px plus the arrow line width
@@ -39189,13 +39749,144 @@ function drawRaw(gd, options, index, subplotId, xa, ya) {
 
 'use strict';
 
+function xformMatrix(m, v) {
+    var out = [0, 0, 0, 0];
+    var i, j;
+
+    for(i = 0; i < 4; ++i) {
+        for(j = 0; j < 4; ++j) {
+            out[j] += m[4 * i + j] * v[i];
+        }
+    }
+
+    return out;
+}
+
+function project(camera, v) {
+    var p = xformMatrix(camera.projection,
+        xformMatrix(camera.view,
+        xformMatrix(camera.model, [v[0], v[1], v[2], 1])));
+    return p;
+}
+
+var _$project_234 = project;
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+var __drawRaw_29 = _$draw_39.drawRaw;
+/* removed: var _$project_234 = require('../../plots/gl3d/project'); */;
+var axLetters = ['x', 'y', 'z'];
+
+var _$draw_29 = function draw(scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var dataScale = scene.dataScale;
+    var anns = fullSceneLayout.annotations;
+
+    for(var i = 0; i < anns.length; i++) {
+        var ann = anns[i];
+        var annotationIsOffscreen = false;
+
+        for(var j = 0; j < 3; j++) {
+            var axLetter = axLetters[j];
+            var pos = ann[axLetter];
+            var ax = fullSceneLayout[axLetter + 'axis'];
+            var posFraction = ax.r2fraction(pos);
+
+            if(posFraction < 0 || posFraction > 1) {
+                annotationIsOffscreen = true;
+                break;
+            }
+        }
+
+        if(annotationIsOffscreen) {
+            scene.fullLayout._infolayer
+                .select('.annotation-' + scene.id + '[data-index="' + i + '"]')
+                .remove();
+        } else {
+            ann._pdata = _$project_234(scene.glplot.cameraParams, [
+                fullSceneLayout.xaxis.r2l(ann.x) * dataScale[0],
+                fullSceneLayout.yaxis.r2l(ann.y) * dataScale[1],
+                fullSceneLayout.zaxis.r2l(ann.z) * dataScale[2]
+            ]);
+
+            __drawRaw_29(scene.graphDiv, ann, i, scene.id, ann._xa, ann._ya);
+        }
+    }
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$registry_244 = require('../../registry'); */;
+/* removed: var _$lib_162 = require('../../lib'); */;
+
+var _$annotations3d_30 = {
+    moduleType: 'component',
+    name: 'annotations3d',
+
+    schema: {
+        subplots: {
+            scene: {annotations: _$attributes_26}
+        }
+    },
+
+    layoutAttributes: _$attributes_26,
+    handleDefaults: _$handleDefaults_28,
+    includeBasePlot: includeGL3D,
+
+    convert: _$convert_27,
+    draw: _$draw_29
+};
+
+function includeGL3D(layoutIn, layoutOut) {
+    var GL3D = _$registry_244.subplotsRegistry.gl3d;
+    if(!GL3D) return;
+
+    var attrRegex = GL3D.attrRegex;
+
+    var keys = Object.keys(layoutIn);
+    for(var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        if(attrRegex.test(k) && (layoutIn[k].annotations || []).length) {
+            _$lib_162.pushUnique(layoutOut._basePlotModules, GL3D);
+            _$lib_162.pushUnique(layoutOut._subplots.gl3d, k);
+        }
+    }
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
 /* removed: var _$lib_162 = require('../../lib'); */;
 /* removed: var _$axes_204 = require('../../plots/cartesian/axes'); */;
 
-var __draw_29 = _$draw_34.draw;
+var __draw_34 = _$draw_39.draw;
 
 
-var _$calcAutorange_29 = function calcAutorange(gd) {
+var _$calcAutorange_34 = function calcAutorange(gd) {
     var fullLayout = gd._fullLayout,
         annotationList = _$lib_162.filterVisible(fullLayout.annotations);
 
@@ -39211,7 +39902,7 @@ var _$calcAutorange_29 = function calcAutorange(gd) {
         var ax = _$axes_204.getFromId(gd, axId);
         if(ax && ax.autorange) {
             return _$lib_162.syncOrAsync([
-                __draw_29,
+                __draw_34,
                 annAutorange
             ], gd);
         }
@@ -39301,7 +39992,7 @@ function annAutorange(gd) {
 
 /* removed: var _$registry_244 = require('../../registry'); */;
 
-var _$click_30 = {
+var _$click_35 = {
     hasClickToShow: hasClickToShow,
     onClick: onClick
 };
@@ -39447,7 +40138,7 @@ function clickData2r(d, ax) {
  *     Use this to make the changes as it's aware if any other changes in the
  *     same relayout call should override this conversion.
  */
-var _$convertCoords_32 = function convertCoords(gd, ax, newType, doExtra) {
+var _$convertCoords_37 = function convertCoords(gd, ax, newType, doExtra) {
     ax = ax || {};
 
     var toLog = (newType === 'log') && (ax.type === 'linear'),
@@ -39490,100 +40181,21 @@ var _$convertCoords_32 = function convertCoords(gd, ax, newType, doExtra) {
 * LICENSE file in the root directory of this source tree.
 */
 
-'use strict';
-
-/* removed: var _$lib_162 = require('../../lib'); */;
-/* removed: var _$color_43 = require('../color'); */;
-
-// defaults common to 'annotations' and 'annotations3d'
-var _$handleAnnotationCommonDefaults_31 = function handleAnnotationCommonDefaults(annIn, annOut, fullLayout, coerce) {
-    coerce('opacity');
-    var bgColor = coerce('bgcolor');
-
-    var borderColor = coerce('bordercolor');
-    var borderOpacity = _$color_43.opacity(borderColor);
-
-    coerce('borderpad');
-
-    var borderWidth = coerce('borderwidth');
-    var showArrow = coerce('showarrow');
-
-    coerce('text', showArrow ? ' ' : fullLayout._dfltTitle.annotation);
-    coerce('textangle');
-    _$lib_162.coerceFont(coerce, 'font', fullLayout.font);
-
-    coerce('width');
-    coerce('align');
-
-    var h = coerce('height');
-    if(h) coerce('valign');
-
-    if(showArrow) {
-        var arrowside = coerce('arrowside');
-        var arrowhead;
-        var arrowsize;
-
-        if(arrowside.indexOf('end') !== -1) {
-            arrowhead = coerce('arrowhead');
-            arrowsize = coerce('arrowsize');
-        }
-
-        if(arrowside.indexOf('start') !== -1) {
-            coerce('startarrowhead', arrowhead);
-            coerce('startarrowsize', arrowsize);
-        }
-        coerce('arrowcolor', borderOpacity ? annOut.bordercolor : _$color_43.defaultLine);
-        coerce('arrowwidth', ((borderOpacity && borderWidth) || 1) * 2);
-        coerce('standoff');
-        coerce('startstandoff');
-
-    }
-
-    var hoverText = coerce('hovertext');
-    var globalHoverLabel = fullLayout.hoverlabel || {};
-
-    if(hoverText) {
-        var hoverBG = coerce('hoverlabel.bgcolor', globalHoverLabel.bgcolor ||
-            (_$color_43.opacity(bgColor) ? _$color_43.rgb(bgColor) : _$color_43.defaultLine)
-        );
-
-        var hoverBorder = coerce('hoverlabel.bordercolor', globalHoverLabel.bordercolor ||
-            _$color_43.contrast(hoverBG)
-        );
-
-        _$lib_162.coerceFont(coerce, 'hoverlabel.font', {
-            family: globalHoverLabel.font.family,
-            size: globalHoverLabel.font.size,
-            color: globalHoverLabel.font.color || hoverBorder
-        });
-    }
-
-    coerce('captureevents', !!hoverText);
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
 
 'use strict';
 
 /* removed: var _$lib_162 = require('../../lib'); */;
 /* removed: var _$axes_204 = require('../../plots/cartesian/axes'); */;
-/* removed: var _$handleAnnotationCommonDefaults_31 = require('./common_defaults'); */;
-/* removed: var _$attributes_28 = require('./attributes'); */;
+/* removed: var _$handleAnnotationCommonDefaults_36 = require('./common_defaults'); */;
+/* removed: var _$attributes_33 = require('./attributes'); */;
 
 
-var _$handleAnnotationDefaults_26 = function handleAnnotationDefaults(annIn, annOut, fullLayout, opts, itemOpts) {
+var _$handleAnnotationDefaults_31 = function handleAnnotationDefaults(annIn, annOut, fullLayout, opts, itemOpts) {
     opts = opts || {};
     itemOpts = itemOpts || {};
 
     function coerce(attr, dflt) {
-        return _$lib_162.coerce(annIn, annOut, _$attributes_28, attr, dflt);
+        return _$lib_162.coerce(annIn, annOut, _$attributes_33, attr, dflt);
     }
 
     var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
@@ -39591,7 +40203,7 @@ var _$handleAnnotationDefaults_26 = function handleAnnotationDefaults(annIn, ann
 
     if(!(visible || clickToShow)) return annOut;
 
-    _$handleAnnotationCommonDefaults_31(annIn, annOut, fullLayout, coerce);
+    _$handleAnnotationCommonDefaults_36(annIn, annOut, fullLayout, coerce);
 
     var showArrow = annOut.showarrow;
 
@@ -39665,96 +40277,17 @@ var _$handleAnnotationDefaults_26 = function handleAnnotationDefaults(annIn, ann
 * LICENSE file in the root directory of this source tree.
 */
 
-'use strict';
-
-/* removed: var _$lib_162 = require('../lib'); */;
-
-/** Convenience wrapper for making array container logic DRY and consistent
- *
- * @param {object} parentObjIn
- *  user input object where the container in question is linked
- *  (i.e. either a user trace object or the user layout object)
- *
- * @param {object} parentObjOut
- *  full object where the coerced container will be linked
- *  (i.e. either a full trace object or the full layout object)
- *
- * @param {object} opts
- *  options object:
- *   - name {string}
- *      name of the key linking the container in question
- *   - handleItemDefaults {function}
- *      defaults method to be called on each item in the array container in question
- *
- *      Its arguments are:
- *          - itemIn {object} item in user layout
- *          - itemOut {object} item in full layout
- *          - parentObj {object} (as in closure)
- *          - opts {object} (as in closure)
- *          - itemOpts {object}
- *              - itemIsNotPlainObject {boolean}
- * N.B.
- *
- *  - opts is passed to handleItemDefaults so it can also store
- *    links to supplementary data (e.g. fullData for layout components)
- *
- */
-var _$handleArrayContainerDefaults_200 = function handleArrayContainerDefaults(parentObjIn, parentObjOut, opts) {
-    var name = opts.name;
-
-    var previousContOut = parentObjOut[name];
-
-    var contIn = _$lib_162.isArrayOrTypedArray(parentObjIn[name]) ? parentObjIn[name] : [],
-        contOut = parentObjOut[name] = [],
-        i;
-
-    for(i = 0; i < contIn.length; i++) {
-        var itemIn = contIn[i],
-            itemOut = {},
-            itemOpts = {};
-
-        if(!_$lib_162.isPlainObject(itemIn)) {
-            itemOpts.itemIsNotPlainObject = true;
-            itemIn = {};
-        }
-
-        opts.handleItemDefaults(itemIn, itemOut, parentObjOut, opts, itemOpts);
-
-        itemOut._input = itemIn;
-        itemOut._index = i;
-
-        contOut.push(itemOut);
-    }
-
-    // in case this array gets its defaults rebuilt independent of the whole layout,
-    // relink the private keys just for this array.
-    if(_$lib_162.isArrayOrTypedArray(previousContOut)) {
-        var len = Math.min(previousContOut.length, contOut.length);
-        for(i = 0; i < len; i++) {
-            _$lib_162.relinkPrivateKeys(contOut[i], previousContOut[i]);
-        }
-    }
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
 
 'use strict';
 
 /* removed: var _$handleArrayContainerDefaults_200 = require('../../plots/array_container_defaults'); */;
-/* removed: var _$handleAnnotationDefaults_26 = require('./annotation_defaults'); */;
+/* removed: var _$handleAnnotationDefaults_31 = require('./annotation_defaults'); */;
 
 
-var _$supplyLayoutDefaults_33 = function supplyLayoutDefaults(layoutIn, layoutOut) {
+var _$supplyLayoutDefaults_38 = function supplyLayoutDefaults(layoutIn, layoutOut) {
     var opts = {
         name: 'annotations',
-        handleItemDefaults: _$handleAnnotationDefaults_26
+        handleItemDefaults: _$handleAnnotationDefaults_31
     };
 
     _$handleArrayContainerDefaults_200(layoutIn, layoutOut, opts);
@@ -39845,387 +40378,27 @@ var _$makeIncludeComponents_214 = function makeIncludeComponents(containerArrayN
 
 'use strict';
 
-/* removed: var _$draw_34 = require('./draw'); */;
-/* removed: var _$click_30 = require('./click'); */;
+/* removed: var _$draw_39 = require('./draw'); */;
+/* removed: var _$click_35 = require('./click'); */;
 
-var _$annotations_36 = {
+var _$annotations_41 = {
     moduleType: 'component',
     name: 'annotations',
 
-    layoutAttributes: _$attributes_28,
-    supplyLayoutDefaults: _$supplyLayoutDefaults_33,
+    layoutAttributes: _$attributes_33,
+    supplyLayoutDefaults: _$supplyLayoutDefaults_38,
     includeBasePlot: _$makeIncludeComponents_214('annotations'),
 
-    calcAutorange: _$calcAutorange_29,
-    draw: _$draw_34.draw,
-    drawOne: _$draw_34.drawOne,
-    drawRaw: _$draw_34.drawRaw,
+    calcAutorange: _$calcAutorange_34,
+    draw: _$draw_39.draw,
+    drawOne: _$draw_39.drawOne,
+    drawRaw: _$draw_39.drawRaw,
 
-    hasClickToShow: _$click_30.hasClickToShow,
-    onClick: _$click_30.onClick,
+    hasClickToShow: _$click_35.hasClickToShow,
+    onClick: _$click_35.onClick,
 
-    convertCoords: _$convertCoords_32
+    convertCoords: _$convertCoords_37
 };
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-/* removed: var _$attributes_28 = require('../annotations/attributes'); */;
-var __overrideAll_37 = _$edit_types_189.overrideAll;
-
-var _$attributes_37 = __overrideAll_37({
-    _isLinkedToArray: 'annotation',
-
-    visible: _$attributes_28.visible,
-    x: {
-        valType: 'any',
-        
-        
-    },
-    y: {
-        valType: 'any',
-        
-        
-    },
-    z: {
-        valType: 'any',
-        
-        
-    },
-    ax: {
-        valType: 'number',
-        
-        
-    },
-    ay: {
-        valType: 'number',
-        
-        
-    },
-
-    xanchor: _$attributes_28.xanchor,
-    xshift: _$attributes_28.xshift,
-    yanchor: _$attributes_28.yanchor,
-    yshift: _$attributes_28.yshift,
-
-    text: _$attributes_28.text,
-    textangle: _$attributes_28.textangle,
-    font: _$attributes_28.font,
-    width: _$attributes_28.width,
-    height: _$attributes_28.height,
-    opacity: _$attributes_28.opacity,
-    align: _$attributes_28.align,
-    valign: _$attributes_28.valign,
-    bgcolor: _$attributes_28.bgcolor,
-    bordercolor: _$attributes_28.bordercolor,
-    borderpad: _$attributes_28.borderpad,
-    borderwidth: _$attributes_28.borderwidth,
-    showarrow: _$attributes_28.showarrow,
-    arrowcolor: _$attributes_28.arrowcolor,
-    arrowhead: _$attributes_28.arrowhead,
-    startarrowhead: _$attributes_28.startarrowhead,
-    arrowside: _$attributes_28.arrowside,
-    arrowsize: _$attributes_28.arrowsize,
-    startarrowsize: _$attributes_28.startarrowsize,
-    arrowwidth: _$attributes_28.arrowwidth,
-    standoff: _$attributes_28.standoff,
-    startstandoff: _$attributes_28.startstandoff,
-    hovertext: _$attributes_28.hovertext,
-    hoverlabel: _$attributes_28.hoverlabel,
-    captureevents: _$attributes_28.captureevents,
-
-    // maybes later?
-    // clicktoshow: annAtts.clicktoshow,
-    // xclick: annAtts.xclick,
-    // yclick: annAtts.yclick,
-
-    // not needed!
-    // axref: 'pixel'
-    // ayref: 'pixel'
-    // xref: 'x'
-    // yref: 'y
-    // zref: 'z'
-}, 'calc', 'from-root');
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_162 = require('../../lib'); */;
-/* removed: var _$axes_204 = require('../../plots/cartesian/axes'); */;
-
-var _$convert_38 = function convert(scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var anns = fullSceneLayout.annotations;
-
-    for(var i = 0; i < anns.length; i++) {
-        mockAnnAxes(anns[i], scene);
-    }
-
-    scene.fullLayout._infolayer
-        .selectAll('.annotation-' + scene.id)
-        .remove();
-};
-
-function mockAnnAxes(ann, scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var domain = fullSceneLayout.domain;
-    var size = scene.fullLayout._size;
-
-    var base = {
-        // this gets fill in on render
-        pdata: null,
-
-        // to get setConvert to not execute cleanly
-        type: 'linear',
-
-        // don't try to update them on `editable: true`
-        autorange: false,
-
-        // set infinite range so that annotation draw routine
-        // does not try to remove 'outside-range' annotations,
-        // this case is handled in the render loop
-        range: [-Infinity, Infinity]
-    };
-
-    ann._xa = {};
-    _$lib_162.extendFlat(ann._xa, base);
-    _$axes_204.setConvert(ann._xa);
-    ann._xa._offset = size.l + domain.x[0] * size.w;
-    ann._xa.l2p = function() {
-        return 0.5 * (1 + ann._pdata[0] / ann._pdata[3]) * size.w * (domain.x[1] - domain.x[0]);
-    };
-
-    ann._ya = {};
-    _$lib_162.extendFlat(ann._ya, base);
-    _$axes_204.setConvert(ann._ya);
-    ann._ya._offset = size.t + (1 - domain.y[1]) * size.h;
-    ann._ya.l2p = function() {
-        return 0.5 * (1 - ann._pdata[1] / ann._pdata[3]) * size.h * (domain.y[1] - domain.y[0]);
-    };
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_162 = require('../../lib'); */;
-/* removed: var _$axes_204 = require('../../plots/cartesian/axes'); */;
-/* removed: var _$handleArrayContainerDefaults_200 = require('../../plots/array_container_defaults'); */;
-/* removed: var _$handleAnnotationCommonDefaults_31 = require('../annotations/common_defaults'); */;
-/* removed: var _$attributes_37 = require('./attributes'); */;
-
-var _$handleDefaults_39 = function handleDefaults(sceneLayoutIn, sceneLayoutOut, opts) {
-    _$handleArrayContainerDefaults_200(sceneLayoutIn, sceneLayoutOut, {
-        name: 'annotations',
-        handleItemDefaults: __handleAnnotationDefaults_39,
-        fullLayout: opts.fullLayout
-    });
-};
-
-function __handleAnnotationDefaults_39(annIn, annOut, sceneLayout, opts, itemOpts) {
-    function coerce(attr, dflt) {
-        return _$lib_162.coerce(annIn, annOut, _$attributes_37, attr, dflt);
-    }
-
-    function coercePosition(axLetter) {
-        var axName = axLetter + 'axis';
-
-        // mock in such way that getFromId grabs correct 3D axis
-        var gdMock = { _fullLayout: {} };
-        gdMock._fullLayout[axName] = sceneLayout[axName];
-
-        return _$axes_204.coercePosition(annOut, gdMock, coerce, axLetter, axLetter, 0.5);
-    }
-
-
-    var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
-    if(!visible) return annOut;
-
-    _$handleAnnotationCommonDefaults_31(annIn, annOut, opts.fullLayout, coerce);
-
-    coercePosition('x');
-    coercePosition('y');
-    coercePosition('z');
-
-    // if you have one coordinate you should all three
-    _$lib_162.noneOrAll(annIn, annOut, ['x', 'y', 'z']);
-
-    // hard-set here for completeness
-    annOut.xref = 'x';
-    annOut.yref = 'y';
-    annOut.zref = 'z';
-
-    coerce('xanchor');
-    coerce('yanchor');
-    coerce('xshift');
-    coerce('yshift');
-
-    if(annOut.showarrow) {
-        annOut.axref = 'pixel';
-        annOut.ayref = 'pixel';
-
-        // TODO maybe default values should be bigger than the 2D case?
-        coerce('ax', -10);
-        coerce('ay', -30);
-
-        // if you have one part of arrow length you should have both
-        _$lib_162.noneOrAll(annIn, annOut, ['ax', 'ay']);
-    }
-
-    return annOut;
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-function xformMatrix(m, v) {
-    var out = [0, 0, 0, 0];
-    var i, j;
-
-    for(i = 0; i < 4; ++i) {
-        for(j = 0; j < 4; ++j) {
-            out[j] += m[4 * i + j] * v[i];
-        }
-    }
-
-    return out;
-}
-
-function project(camera, v) {
-    var p = xformMatrix(camera.projection,
-        xformMatrix(camera.view,
-        xformMatrix(camera.model, [v[0], v[1], v[2], 1])));
-    return p;
-}
-
-var _$project_234 = project;
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-var __drawRaw_40 = _$draw_34.drawRaw;
-/* removed: var _$project_234 = require('../../plots/gl3d/project'); */;
-var axLetters = ['x', 'y', 'z'];
-
-var _$draw_40 = function draw(scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var dataScale = scene.dataScale;
-    var anns = fullSceneLayout.annotations;
-
-    for(var i = 0; i < anns.length; i++) {
-        var ann = anns[i];
-        var annotationIsOffscreen = false;
-
-        for(var j = 0; j < 3; j++) {
-            var axLetter = axLetters[j];
-            var pos = ann[axLetter];
-            var ax = fullSceneLayout[axLetter + 'axis'];
-            var posFraction = ax.r2fraction(pos);
-
-            if(posFraction < 0 || posFraction > 1) {
-                annotationIsOffscreen = true;
-                break;
-            }
-        }
-
-        if(annotationIsOffscreen) {
-            scene.fullLayout._infolayer
-                .select('.annotation-' + scene.id + '[data-index="' + i + '"]')
-                .remove();
-        } else {
-            ann._pdata = _$project_234(scene.glplot.cameraParams, [
-                fullSceneLayout.xaxis.r2l(ann.x) * dataScale[0],
-                fullSceneLayout.yaxis.r2l(ann.y) * dataScale[1],
-                fullSceneLayout.zaxis.r2l(ann.z) * dataScale[2]
-            ]);
-
-            __drawRaw_40(scene.graphDiv, ann, i, scene.id, ann._xa, ann._ya);
-        }
-    }
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$registry_244 = require('../../registry'); */;
-/* removed: var _$lib_162 = require('../../lib'); */;
-
-var _$annotations3d_41 = {
-    moduleType: 'component',
-    name: 'annotations3d',
-
-    schema: {
-        subplots: {
-            scene: {annotations: _$attributes_37}
-        }
-    },
-
-    layoutAttributes: _$attributes_37,
-    handleDefaults: _$handleDefaults_39,
-    includeBasePlot: includeGL3D,
-
-    convert: _$convert_38,
-    draw: _$draw_40
-};
-
-function includeGL3D(layoutIn, layoutOut) {
-    var GL3D = _$registry_244.subplotsRegistry.gl3d;
-    if(!GL3D) return;
-
-    var attrRegex = GL3D.attrRegex;
-
-    var keys = Object.keys(layoutIn);
-    for(var i = 0; i < keys.length; i++) {
-        var k = keys[i];
-        if(attrRegex.test(k) && (layoutIn[k].annotations || []).length) {
-            _$lib_162.pushUnique(layoutOut._basePlotModules, GL3D);
-            _$lib_162.pushUnique(layoutOut._subplots.gl3d, k);
-        }
-    }
-}
 
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -45129,7 +45302,7 @@ var _$rangeslider_121 = {
 
 'use strict';
 
-/* removed: var _$attributes_28 = require('../annotations/attributes'); */;
+/* removed: var _$attributes_33 = require('../annotations/attributes'); */;
 var scatterLineAttrs = _$attributes_280.line;
 var __dash_123 = _$attributes_67.dash;
 var __extendFlat_123 = _$extend_156.extendFlat;
@@ -45162,7 +45335,7 @@ var _$attributes_123 = {
         
     },
 
-    xref: __extendFlat_123({}, _$attributes_28.xref, {
+    xref: __extendFlat_123({}, _$attributes_33.xref, {
         
     }),
     x0: {
@@ -45178,7 +45351,7 @@ var _$attributes_123 = {
         
     },
 
-    yref: __extendFlat_123({}, _$attributes_28.yref, {
+    yref: __extendFlat_123({}, _$attributes_33.yref, {
         
     }),
     y0: {
@@ -53915,7 +54088,7 @@ function makeDragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             }
         }
 
-        gd.emit('plotly_doubleclick', null);
+        gd.emit('plotly_doubleclick', axList);
         _$registry_244.call('relayout', gd, attrs);
     }
 
@@ -53924,6 +54097,9 @@ function makeDragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         // put the subplot viewboxes back to default (Because we're going to)
         // be repositioning the data in the relayout. But DON'T call
         // ticksAndAnnotations again - it's unnecessary and would overwrite `updates`
+		pw = xa[0]._length;
+		ph = ya[0]._length;
+		
         updateSubplots([0, 0, pw, ph]);
 
         // since we may have been redrawing some things during the drag, we may have
@@ -63591,8 +63767,8 @@ register(_$Scatter_292);
 register([
     _$fx_85,
     _$legend_103,
-    _$annotations_36,
-    _$annotations3d_41,
+    _$annotations_41,
+    _$annotations3d_30,
     _$shapes_129,
     _$images_94,
     _$updatemenus_141,

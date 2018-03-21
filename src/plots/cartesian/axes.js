@@ -1840,7 +1840,7 @@ axes.doTicks = function(gd, axid, skipTitle) {
             // don't auto-angle at all for log axes with
             // base and digit format
             if(axLetter === 'x' && !isNumeric(ax.tickangle) &&
-                && (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
+                (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
                 var lbbArray = [];
                 tickLabels.each(function(d) {
                     var s = d3.select(this),

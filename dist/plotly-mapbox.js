@@ -1,9 +1,3 @@
-/**
-* plotly.js (mapbox) v1.35.2
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-* Licensed under the MIT license
-*/
 (function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.Plotly = f()}})(function(){var define,module,exports;
 var _$d3_6 = { exports: {} };
 !function() {
@@ -13148,9 +13142,11 @@ _$coerce_152.valObjectMeta = {
     info_array: {
         
         
-        // set dimensions=2 for a 2D array
+        // set `dimensions=2` for a 2D array or '1-2' for either
         // `items` may be a single object instead of an array, in which case
         // `freeLength` must be true.
+        // if `dimensions='1-2'` and items is a 1D array, then the value can
+        // either be a matching 1D array or an array of such matching 1D arrays
         
         coerceFunction: function(v, propOut, dflt, opts) {
 
@@ -13166,7 +13162,7 @@ _$coerce_152.valObjectMeta = {
                 return out;
             }
 
-            var twoD = opts.dimensions === 2;
+            var twoD = opts.dimensions === 2 || (opts.dimensions === '1-2' && Array.isArray(v) && Array.isArray(v[0]));
 
             if(!Array.isArray(v)) {
                 propOut.set(dflt);
@@ -13176,19 +13172,28 @@ _$coerce_152.valObjectMeta = {
             var items = opts.items;
             var vOut = [];
             var arrayItems = Array.isArray(items);
-            var len = arrayItems ? items.length : v.length;
+            var arrayItems2D = arrayItems && twoD && Array.isArray(items[0]);
+            var innerItemsOnly = twoD && arrayItems && !arrayItems2D;
+            var len = (arrayItems && !innerItemsOnly) ? items.length : v.length;
 
-            var i, j, len2, vNew;
+            var i, j, row, item, len2, vNew;
 
             dflt = Array.isArray(dflt) ? dflt : [];
 
             if(twoD) {
                 for(i = 0; i < len; i++) {
                     vOut[i] = [];
-                    var row = Array.isArray(v[i]) ? v[i] : [];
-                    len2 = arrayItems ? items[i].length : row.length;
+                    row = Array.isArray(v[i]) ? v[i] : [];
+                    if(innerItemsOnly) len2 = items.length;
+                    else if(arrayItems) len2 = items[i].length;
+                    else len2 = row.length;
+
                     for(j = 0; j < len2; j++) {
-                        vNew = coercePart(row[j], arrayItems ? items[i][j] : items, (dflt[i] || [])[j]);
+                        if(innerItemsOnly) item = items[j];
+                        else if(arrayItems) item = items[i][j];
+                        else item = items;
+
+                        vNew = coercePart(row[j], item, (dflt[i] || [])[j]);
                         if(vNew !== undefined) vOut[i][j] = vNew;
                     }
                 }
@@ -17756,7 +17761,7 @@ _$es6Promise_7 = _$es6Promise_7.exports
  * circles, for which it's irrelevant.
  */
 
-var _$arrow_paths_27 = [
+var _$arrow_paths_32 = [
     // no arrow
     {
         path: '',
@@ -17890,12 +17895,12 @@ var _$constants_210 = {
 
 'use strict';
 
-/* removed: var _$arrow_paths_27 = require('./arrow_paths'); */;
+/* removed: var _$arrow_paths_32 = require('./arrow_paths'); */;
 /* removed: var _$font_attributes_232 = require('../../plots/font_attributes'); */;
 /* removed: var _$constants_210 = require('../../plots/cartesian/constants'); */;
 
 
-var _$attributes_28 = {
+var _$attributes_33 = {
     _isLinkedToArray: 'annotation',
 
     visible: {
@@ -18012,7 +18017,7 @@ var _$attributes_28 = {
     arrowhead: {
         valType: 'integer',
         min: 0,
-        max: _$arrow_paths_27.length,
+        max: _$arrow_paths_32.length,
         dflt: 1,
         
         editType: 'arraydraw',
@@ -18021,7 +18026,7 @@ var _$attributes_28 = {
     startarrowhead: {
         valType: 'integer',
         min: 0,
-        max: _$arrow_paths_27.length,
+        max: _$arrow_paths_32.length,
         dflt: 1,
         
         editType: 'arraydraw',
@@ -18235,6 +18240,219 @@ var _$attributes_28 = {
     }
 };
 
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_163 = require('../lib'); */;
+var __extendFlat_190 = _$lib_163.extendFlat;
+var __isPlainObject_190 = _$lib_163.isPlainObject;
+
+var traceOpts = {
+    valType: 'flaglist',
+    extras: ['none'],
+    flags: ['calc', 'calcIfAutorange', 'clearAxisTypes', 'plot', 'style', 'colorbars'],
+    
+};
+
+var layoutOpts = {
+    valType: 'flaglist',
+    extras: ['none'],
+    flags: [
+        'calc', 'calcIfAutorange', 'plot', 'legend', 'ticks', 'margins',
+        'layoutstyle', 'modebar', 'camera', 'arraydraw'
+    ],
+    
+};
+
+// flags for inside restyle/relayout include a few extras
+// that shouldn't be used in attributes, to deal with certain
+// combinations and conditionals efficiently
+var traceEditTypeFlags = traceOpts.flags.slice()
+    .concat(['clearCalc', 'fullReplot']);
+
+var layoutEditTypeFlags = layoutOpts.flags.slice()
+    .concat('layoutReplot');
+
+var _$edit_types_190 = {
+    traces: traceOpts,
+    layout: layoutOpts,
+    /*
+     * default (all false) edit flags for restyle (traces)
+     * creates a new object each call, so the caller can mutate freely
+     */
+    traceFlags: function() { return falseObj(traceEditTypeFlags); },
+
+    /*
+     * default (all false) edit flags for relayout
+     * creates a new object each call, so the caller can mutate freely
+     */
+    layoutFlags: function() { return falseObj(layoutEditTypeFlags); },
+
+    /*
+     * update `flags` with the `editType` values found in `attr`
+     */
+    update: function(flags, attr) {
+        var editType = attr.editType;
+        if(editType && editType !== 'none') {
+            var editTypeParts = editType.split('+');
+            for(var i = 0; i < editTypeParts.length; i++) {
+                flags[editTypeParts[i]] = true;
+            }
+        }
+    },
+
+    overrideAll: overrideAll
+};
+
+function falseObj(keys) {
+    var out = {};
+    for(var i = 0; i < keys.length; i++) out[keys[i]] = false;
+    return out;
+}
+
+/**
+ * For attributes that are largely copied from elsewhere into a plot type that doesn't
+ * support partial redraws - overrides the editType field of all attributes in the object
+ *
+ * @param {object} attrs: the attributes to override. Will not be mutated.
+ * @param {string} editTypeOverride: the new editType to use
+ * @param {'nested'|'from-root'} overrideContainers:
+ *   - 'nested' will override editType for nested containers but not the root.
+ *   - 'from-root' will also override editType of the root container.
+ *   Containers below the absolute top level (trace or layout root) DO need an
+ *   editType even if they are not `valObject`s themselves (eg `scatter.marker`)
+ *   to handle the case where you edit the whole container.
+ *
+ * @return {object} a new attributes object with `editType` modified as directed
+ */
+function overrideAll(attrs, editTypeOverride, overrideContainers) {
+    var out = __extendFlat_190({}, attrs);
+    for(var key in out) {
+        var attr = out[key];
+        if(__isPlainObject_190(attr)) {
+            out[key] = overrideOne(attr, editTypeOverride, overrideContainers, key);
+        }
+    }
+    if(overrideContainers === 'from-root') out.editType = editTypeOverride;
+
+    return out;
+}
+
+function overrideOne(attr, editTypeOverride, overrideContainers, key) {
+    if(attr.valType) {
+        var out = __extendFlat_190({}, attr);
+        out.editType = editTypeOverride;
+
+        if(Array.isArray(attr.items)) {
+            out.items = new Array(attr.items.length);
+            for(var i = 0; i < attr.items.length; i++) {
+                out.items[i] = overrideOne(attr.items[i], editTypeOverride, 'from-root');
+            }
+        }
+        return out;
+    }
+    else {
+        // don't provide an editType for the _deprecated container
+        return overrideAll(attr, editTypeOverride,
+            (key.charAt(0) === '_') ? 'nested' : 'from-root');
+    }
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+/* removed: var _$attributes_33 = require('../annotations/attributes'); */;
+var __overrideAll_26 = _$edit_types_190.overrideAll;
+
+var _$attributes_26 = __overrideAll_26({
+    _isLinkedToArray: 'annotation',
+
+    visible: _$attributes_33.visible,
+    x: {
+        valType: 'any',
+        
+        
+    },
+    y: {
+        valType: 'any',
+        
+        
+    },
+    z: {
+        valType: 'any',
+        
+        
+    },
+    ax: {
+        valType: 'number',
+        
+        
+    },
+    ay: {
+        valType: 'number',
+        
+        
+    },
+
+    xanchor: _$attributes_33.xanchor,
+    xshift: _$attributes_33.xshift,
+    yanchor: _$attributes_33.yanchor,
+    yshift: _$attributes_33.yshift,
+
+    text: _$attributes_33.text,
+    textangle: _$attributes_33.textangle,
+    font: _$attributes_33.font,
+    width: _$attributes_33.width,
+    height: _$attributes_33.height,
+    opacity: _$attributes_33.opacity,
+    align: _$attributes_33.align,
+    valign: _$attributes_33.valign,
+    bgcolor: _$attributes_33.bgcolor,
+    bordercolor: _$attributes_33.bordercolor,
+    borderpad: _$attributes_33.borderpad,
+    borderwidth: _$attributes_33.borderwidth,
+    showarrow: _$attributes_33.showarrow,
+    arrowcolor: _$attributes_33.arrowcolor,
+    arrowhead: _$attributes_33.arrowhead,
+    startarrowhead: _$attributes_33.startarrowhead,
+    arrowside: _$attributes_33.arrowside,
+    arrowsize: _$attributes_33.arrowsize,
+    startarrowsize: _$attributes_33.startarrowsize,
+    arrowwidth: _$attributes_33.arrowwidth,
+    standoff: _$attributes_33.standoff,
+    startstandoff: _$attributes_33.startstandoff,
+    hovertext: _$attributes_33.hovertext,
+    hoverlabel: _$attributes_33.hoverlabel,
+    captureevents: _$attributes_33.captureevents,
+
+    // maybes later?
+    // clicktoshow: annAtts.clicktoshow,
+    // xclick: annAtts.xclick,
+    // yclick: annAtts.yclick,
+
+    // not needed!
+    // axref: 'pixel'
+    // ayref: 'pixel'
+    // xref: 'x'
+    // yref: 'y
+    // zref: 'z'
+}, 'calc', 'from-root');
+
 var _$color_43 = {};
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -18414,1145 +18632,6 @@ function cleanOne(val) {
 * LICENSE file in the root directory of this source tree.
 */
 
-
-'use strict';
-
-/* removed: var _$d3_6 = require('d3'); */;
-
-/* removed: var _$color_43 = require('../color'); */;
-
-/* removed: var _$arrow_paths_27 = require('./arrow_paths'); */;
-
-/**
- * Add arrowhead(s) to a path or line element
- *
- * @param {d3.selection} el3: a d3-selected line or path element
- *
- * @param {string} ends: 'none', 'start', 'end', or 'start+end' for which ends get arrowheads
- *
- * @param {object} options: style information. Must have all the following:
- * @param {number} options.arrowhead: end head style - see ./arrow_paths
- * @param {number} options.startarrowhead: start head style - see ./arrow_paths
- * @param {number} options.arrowsize: relative size of the end head vs line width
- * @param {number} options.startarrowsize: relative size of the start head vs line width
- * @param {number} options.standoff: distance in px to move the end arrow point from its target
- * @param {number} options.startstandoff: distance in px to move the start arrow point from its target
- * @param {number} options.arrowwidth: width of the arrow line
- * @param {string} options.arrowcolor: color of the arrow line, for the head to match
- *     Note that the opacity of this color is ignored, as it's assumed the container
- *     of both the line and head has opacity applied to it so there isn't greater opacity
- *     where they overlap.
- */
-var _$drawArrowHead_35 = function drawArrowHead(el3, ends, options) {
-    var el = el3.node();
-    var headStyle = _$arrow_paths_27[options.arrowhead || 0];
-    var startHeadStyle = _$arrow_paths_27[options.startarrowhead || 0];
-    var scale = (options.arrowwidth || 1) * (options.arrowsize || 1);
-    var startScale = (options.arrowwidth || 1) * (options.startarrowsize || 1);
-    var doStart = ends.indexOf('start') >= 0;
-    var doEnd = ends.indexOf('end') >= 0;
-    var backOff = headStyle.backoff * scale + options.standoff;
-    var startBackOff = startHeadStyle.backoff * startScale + options.startstandoff;
-
-    var start, end, startRot, endRot;
-
-    if(el.nodeName === 'line') {
-        start = {x: +el3.attr('x1'), y: +el3.attr('y1')};
-        end = {x: +el3.attr('x2'), y: +el3.attr('y2')};
-
-        var dx = start.x - end.x;
-        var dy = start.y - end.y;
-
-        startRot = Math.atan2(dy, dx);
-        endRot = startRot + Math.PI;
-        if(backOff && startBackOff) {
-            if(backOff + startBackOff > Math.sqrt(dx * dx + dy * dy)) {
-                hideLine();
-                return;
-            }
-        }
-
-        if(backOff) {
-            if(backOff * backOff > dx * dx + dy * dy) {
-                hideLine();
-                return;
-            }
-            var backOffX = backOff * Math.cos(startRot),
-                backOffY = backOff * Math.sin(startRot);
-
-            end.x += backOffX;
-            end.y += backOffY;
-            el3.attr({x2: end.x, y2: end.y});
-
-        }
-
-        if(startBackOff) {
-            if(startBackOff * startBackOff > dx * dx + dy * dy) {
-                hideLine();
-                return;
-            }
-            var startBackOffX = startBackOff * Math.cos(startRot),
-                startbackOffY = startBackOff * Math.sin(startRot);
-
-            start.x -= startBackOffX;
-            start.y -= startbackOffY;
-            el3.attr({x1: start.x, y1: start.y});
-
-        }
-    }
-    else if(el.nodeName === 'path') {
-        var pathlen = el.getTotalLength(),
-            // using dash to hide the backOff region of the path.
-            // if we ever allow dash for the arrow we'll have to
-            // do better than this hack... maybe just manually
-            // combine the two
-            dashArray = '';
-
-        if(pathlen < backOff + startBackOff) {
-            hideLine();
-            return;
-        }
-
-
-        var start0 = el.getPointAtLength(0);
-        var dstart = el.getPointAtLength(0.1);
-
-        startRot = Math.atan2(start0.y - dstart.y, start0.x - dstart.x);
-        start = el.getPointAtLength(Math.min(startBackOff, pathlen));
-
-        dashArray = '0px,' + startBackOff + 'px,';
-
-        var end0 = el.getPointAtLength(pathlen);
-        var dend = el.getPointAtLength(pathlen - 0.1);
-
-        endRot = Math.atan2(end0.y - dend.y, end0.x - dend.x);
-        end = el.getPointAtLength(Math.max(0, pathlen - backOff));
-
-        var shortening = dashArray ? startBackOff + backOff : backOff;
-        dashArray += (pathlen - shortening) + 'px,' + pathlen + 'px';
-
-        el3.style('stroke-dasharray', dashArray);
-    }
-
-    function hideLine() { el3.style('stroke-dasharray', '0px,100px'); }
-
-    function drawhead(arrowHeadStyle, p, rot, arrowScale) {
-        if(!arrowHeadStyle.path) return;
-        if(arrowHeadStyle.noRotate) rot = 0;
-
-        _$d3_6.select(el.parentNode).append('path')
-            .attr({
-                'class': el3.attr('class'),
-                d: arrowHeadStyle.path,
-                transform:
-                    'translate(' + p.x + ',' + p.y + ')' +
-                    (rot ? 'rotate(' + (rot * 180 / Math.PI) + ')' : '') +
-                    'scale(' + arrowScale + ')'
-            })
-            .style({
-                fill: _$color_43.rgb(options.arrowcolor),
-                'stroke-width': 0
-            });
-    }
-
-    if(doStart) drawhead(startHeadStyle, start, startRot, startScale);
-    if(doEnd) drawhead(headStyle, end, endRot, scale);
-};
-
-var _$client_13 = true;
-var _$hasHover_11 = {};
-(function (global){
-'use strict'
-
-/* removed: var _$client_13 = require('is-browser') */;
-var hasHover
-
-if (typeof global.matchMedia === 'function') {
-	hasHover = !global.matchMedia('(hover: none)').matches
-}
-else {
-	hasHover = _$client_13
-}
-
-_$hasHover_11 = hasHover
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-'use strict'
-
-/* removed: var _$client_13 = require('is-browser') */;
-
-function detect() {
-	var supported = false
-
-	try {
-		var opts = Object.defineProperty({}, 'passive', {
-			get: function() {
-				supported = true
-			}
-		})
-
-		window.addEventListener('test', null, opts)
-		window.removeEventListener('test', null, opts)
-	} catch(e) {
-		supported = false
-	}
-
-	return supported
-}
-
-var _$hasPassiveEvents_12 = _$client_13 && detect()
-
-var rootPosition = { left: 0, top: 0 }
-
-var _$mouseEventOffset_15 = mouseEventOffset
-function mouseEventOffset (ev, target, out) {
-  target = target || ev.currentTarget || ev.srcElement
-  if (!Array.isArray(out)) {
-    out = [ 0, 0 ]
-  }
-  var cx = ev.clientX || 0
-  var cy = ev.clientY || 0
-  var rect = getBoundingClientOffset(target)
-  out[0] = cx - rect.left
-  out[1] = cy - rect.top
-  return out
-}
-
-function getBoundingClientOffset (element) {
-  if (element === window ||
-      element === document ||
-      element === document.body) {
-    return rootPosition
-  } else {
-    return element.getBoundingClientRect()
-  }
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-
-// for automatic alignment on dragging, <1/3 means left align,
-// >2/3 means right, and between is center. Pick the right fraction
-// based on where you are, and return the fraction corresponding to
-// that position on the object
-var _$align_63 = function align(v, dv, v0, v1, anchor) {
-    var vmin = (v - v0) / (v1 - v0),
-        vmax = vmin + dv / (v1 - v0),
-        vc = (vmin + vmax) / 2;
-
-    // explicitly specified anchor
-    if(anchor === 'left' || anchor === 'bottom') return vmin;
-    if(anchor === 'center' || anchor === 'middle') return vc;
-    if(anchor === 'right' || anchor === 'top') return vmax;
-
-    // automatic based on position
-    if(vmin < (2 / 3) - vc) return vmin;
-    if(vmax > (4 / 3) - vc) return vmax;
-    return vc;
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-/* removed: var _$lib_163 = require('../../lib'); */;
-
-
-// set cursors pointing toward the closest corner/side,
-// to indicate alignment
-// x and y are 0-1, fractions of the plot area
-var cursorset = [
-    ['sw-resize', 's-resize', 'se-resize'],
-    ['w-resize', 'move', 'e-resize'],
-    ['nw-resize', 'n-resize', 'ne-resize']
-];
-
-var _$getCursor_64 = function getCursor(x, y, xanchor, yanchor) {
-    if(xanchor === 'left') x = 0;
-    else if(xanchor === 'center') x = 1;
-    else if(xanchor === 'right') x = 2;
-    else x = _$lib_163.constrain(Math.floor(x * 3), 0, 2);
-
-    if(yanchor === 'bottom') y = 0;
-    else if(yanchor === 'middle') y = 1;
-    else if(yanchor === 'top') y = 2;
-    else y = _$lib_163.constrain(Math.floor(y * 3), 0, 2);
-
-    return cursorset[y][x];
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-var _$constants_80 = {
-    // hover labels for multiple horizontal bars get tilted by this angle
-    YANGLE: 60,
-
-    // size and display constants for hover text
-
-    // pixel size of hover arrows
-    HOVERARROWSIZE: 6,
-    // pixels padding around text
-    HOVERTEXTPAD: 3,
-    // hover font
-    HOVERFONTSIZE: 13,
-    HOVERFONT: 'Arial, sans-serif',
-
-    // minimum time (msec) between hover calls
-    HOVERMINTIME: 50,
-
-    // ID suffix (with fullLayout._uid) for hover events in the throttle cache
-    HOVERID: '-hover'
-};
-
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-function EventEmitter() {
-  this._events = this._events || {};
-  this._maxListeners = this._maxListeners || undefined;
-}
-var _$EventEmitter_8 = EventEmitter;
-
-// Backwards-compat with node 0.10.x
-EventEmitter.EventEmitter = EventEmitter;
-
-EventEmitter.prototype._events = undefined;
-EventEmitter.prototype._maxListeners = undefined;
-
-// By default EventEmitters will print a warning if more than 10 listeners are
-// added to it. This is a useful default which helps finding memory leaks.
-EventEmitter.defaultMaxListeners = 10;
-
-// Obviously not all Emitters should be limited to 10. This function allows
-// that to be increased. Set to zero for unlimited.
-EventEmitter.prototype.setMaxListeners = function(n) {
-  if (!isNumber(n) || n < 0 || isNaN(n))
-    throw TypeError('n must be a positive number');
-  this._maxListeners = n;
-  return this;
-};
-
-EventEmitter.prototype.emit = function(type) {
-  var er, handler, len, args, i, listeners;
-
-  if (!this._events)
-    this._events = {};
-
-  // If there is no 'error' event listener then throw.
-  if (type === 'error') {
-    if (!this._events.error ||
-        (isObject(this._events.error) && !this._events.error.length)) {
-      er = arguments[1];
-      if (er instanceof Error) {
-        throw er; // Unhandled 'error' event
-      } else {
-        // At least give some kind of context to the user
-        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
-        err.context = er;
-        throw err;
-      }
-    }
-  }
-
-  handler = this._events[type];
-
-  if (isUndefined(handler))
-    return false;
-
-  if (isFunction(handler)) {
-    switch (arguments.length) {
-      // fast cases
-      case 1:
-        handler.call(this);
-        break;
-      case 2:
-        handler.call(this, arguments[1]);
-        break;
-      case 3:
-        handler.call(this, arguments[1], arguments[2]);
-        break;
-      // slower
-      default:
-        args = Array.prototype.slice.call(arguments, 1);
-        handler.apply(this, args);
-    }
-  } else if (isObject(handler)) {
-    args = Array.prototype.slice.call(arguments, 1);
-    listeners = handler.slice();
-    len = listeners.length;
-    for (i = 0; i < len; i++)
-      listeners[i].apply(this, args);
-  }
-
-  return true;
-};
-
-EventEmitter.prototype.addListener = function(type, listener) {
-  var m;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events)
-    this._events = {};
-
-  // To avoid recursion in the case that type === "newListener"! Before
-  // adding it to the listeners, first emit "newListener".
-  if (this._events.newListener)
-    this.emit('newListener', type,
-              isFunction(listener.listener) ?
-              listener.listener : listener);
-
-  if (!this._events[type])
-    // Optimize the case of one listener. Don't need the extra array object.
-    this._events[type] = listener;
-  else if (isObject(this._events[type]))
-    // If we've already got an array, just append.
-    this._events[type].push(listener);
-  else
-    // Adding the second element, need to change to array.
-    this._events[type] = [this._events[type], listener];
-
-  // Check for listener leak
-  if (isObject(this._events[type]) && !this._events[type].warned) {
-    if (!isUndefined(this._maxListeners)) {
-      m = this._maxListeners;
-    } else {
-      m = EventEmitter.defaultMaxListeners;
-    }
-
-    if (m && m > 0 && this._events[type].length > m) {
-      this._events[type].warned = true;
-      console.error('(node) warning: possible EventEmitter memory ' +
-                    'leak detected. %d listeners added. ' +
-                    'Use emitter.setMaxListeners() to increase limit.',
-                    this._events[type].length);
-      if (typeof console.trace === 'function') {
-        // not supported in IE 10
-        console.trace();
-      }
-    }
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-EventEmitter.prototype.once = function(type, listener) {
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  var fired = false;
-
-  function g() {
-    this.removeListener(type, g);
-
-    if (!fired) {
-      fired = true;
-      listener.apply(this, arguments);
-    }
-  }
-
-  g.listener = listener;
-  this.on(type, g);
-
-  return this;
-};
-
-// emits a 'removeListener' event iff the listener was removed
-EventEmitter.prototype.removeListener = function(type, listener) {
-  var list, position, length, i;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events || !this._events[type])
-    return this;
-
-  list = this._events[type];
-  length = list.length;
-  position = -1;
-
-  if (list === listener ||
-      (isFunction(list.listener) && list.listener === listener)) {
-    delete this._events[type];
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-
-  } else if (isObject(list)) {
-    for (i = length; i-- > 0;) {
-      if (list[i] === listener ||
-          (list[i].listener && list[i].listener === listener)) {
-        position = i;
-        break;
-      }
-    }
-
-    if (position < 0)
-      return this;
-
-    if (list.length === 1) {
-      list.length = 0;
-      delete this._events[type];
-    } else {
-      list.splice(position, 1);
-    }
-
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.removeAllListeners = function(type) {
-  var key, listeners;
-
-  if (!this._events)
-    return this;
-
-  // not listening for removeListener, no need to emit
-  if (!this._events.removeListener) {
-    if (arguments.length === 0)
-      this._events = {};
-    else if (this._events[type])
-      delete this._events[type];
-    return this;
-  }
-
-  // emit removeListener for all listeners on all events
-  if (arguments.length === 0) {
-    for (key in this._events) {
-      if (key === 'removeListener') continue;
-      this.removeAllListeners(key);
-    }
-    this.removeAllListeners('removeListener');
-    this._events = {};
-    return this;
-  }
-
-  listeners = this._events[type];
-
-  if (isFunction(listeners)) {
-    this.removeListener(type, listeners);
-  } else if (listeners) {
-    // LIFO order
-    while (listeners.length)
-      this.removeListener(type, listeners[listeners.length - 1]);
-  }
-  delete this._events[type];
-
-  return this;
-};
-
-EventEmitter.prototype.listeners = function(type) {
-  var ret;
-  if (!this._events || !this._events[type])
-    ret = [];
-  else if (isFunction(this._events[type]))
-    ret = [this._events[type]];
-  else
-    ret = this._events[type].slice();
-  return ret;
-};
-
-EventEmitter.prototype.listenerCount = function(type) {
-  if (this._events) {
-    var evlistener = this._events[type];
-
-    if (isFunction(evlistener))
-      return 1;
-    else if (evlistener)
-      return evlistener.length;
-  }
-  return 0;
-};
-
-EventEmitter.listenerCount = function(emitter, type) {
-  return emitter.listenerCount(type);
-};
-
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
-
-function isNumber(arg) {
-  return typeof arg === 'number';
-}
-
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-
-function isUndefined(arg) {
-  return arg === void 0;
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-/* global jQuery:false */
-
-var __EventEmitter_155 = _$EventEmitter_8.EventEmitter;
-
-var Events = {
-
-    init: function(plotObj) {
-
-        /*
-         * If we have already instantiated an emitter for this plot
-         * return early.
-         */
-        if(plotObj._ev instanceof __EventEmitter_155) return plotObj;
-
-        var ev = new __EventEmitter_155();
-        var internalEv = new __EventEmitter_155();
-
-        /*
-         * Assign to plot._ev while we still live in a land
-         * where plot is a DOM element with stuff attached to it.
-         * In the future we can make plot the event emitter itself.
-         */
-        plotObj._ev = ev;
-
-        /*
-         * Create a second event handler that will manage events *internally*.
-         * This allows parts of plotly to respond to thing like relayout without
-         * having to use the user-facing event handler. They cannot peacefully
-         * coexist on the same handler because a user invoking
-         * plotObj.removeAllListeners() would detach internal events, breaking
-         * plotly.
-         */
-        plotObj._internalEv = internalEv;
-
-        /*
-         * Assign bound methods from the ev to the plot object. These methods
-         * will reference the 'this' of plot._ev even though they are methods
-         * of plot. This will keep the event machinery away from the plot object
-         * which currently is often a DOM element but presents an API that will
-         * continue to function when plot becomes an emitter. Not all EventEmitter
-         * methods have been bound to `plot` as some do not currently add value to
-         * the Plotly event API.
-         */
-        plotObj.on = ev.on.bind(ev);
-        plotObj.once = ev.once.bind(ev);
-        plotObj.removeListener = ev.removeListener.bind(ev);
-        plotObj.removeAllListeners = ev.removeAllListeners.bind(ev);
-
-        /*
-         * Create funtions for managing internal events. These are *only* triggered
-         * by the mirroring of external events via the emit function.
-         */
-        plotObj._internalOn = internalEv.on.bind(internalEv);
-        plotObj._internalOnce = internalEv.once.bind(internalEv);
-        plotObj._removeInternalListener = internalEv.removeListener.bind(internalEv);
-        plotObj._removeAllInternalListeners = internalEv.removeAllListeners.bind(internalEv);
-
-        /*
-         * We must wrap emit to continue to support JQuery events. The idea
-         * is to check to see if the user is using JQuery events, if they are
-         * we emit JQuery events to trigger user handlers as well as the EventEmitter
-         * events.
-         */
-        plotObj.emit = function(event, data) {
-            if(typeof jQuery !== 'undefined') {
-                jQuery(plotObj).trigger(event, data);
-            }
-
-            ev.emit(event, data);
-            internalEv.emit(event, data);
-        };
-
-        return plotObj;
-    },
-
-    /*
-     * This function behaves like jQueries triggerHandler. It calls
-     * all handlers for a particular event and returns the return value
-     * of the LAST handler. This function also triggers jQuery's
-     * triggerHandler for backwards compatibility.
-     *
-     * Note: triggerHandler has been recommended for deprecation in v2.0.0,
-     * so the additional behavior of triggerHandler triggering internal events
-     * is deliberate excluded in order to avoid reinforcing more usage.
-     */
-    triggerHandler: function(plotObj, event, data) {
-        var jQueryHandlerValue;
-        var nodeEventHandlerValue;
-        /*
-         * If Jquery exists run all its handlers for this event and
-         * collect the return value of the LAST handler function
-         */
-        if(typeof jQuery !== 'undefined') {
-            jQueryHandlerValue = jQuery(plotObj).triggerHandler(event, data);
-        }
-
-        /*
-         * Now run all the node style event handlers
-         */
-        var ev = plotObj._ev;
-        if(!ev) return jQueryHandlerValue;
-
-        var handlers = ev._events[event];
-        if(!handlers) return jQueryHandlerValue;
-
-        /*
-         * handlers can be function or an array of functions
-         */
-        if(typeof handlers === 'function') handlers = [handlers];
-        var lastHandler = handlers.pop();
-
-        /*
-         * Call all the handlers except the last one.
-         */
-        for(var i = 0; i < handlers.length; i++) {
-            handlers[i](data);
-        }
-
-        /*
-         * Now call the final handler and collect its value
-         */
-        nodeEventHandlerValue = lastHandler(data);
-
-        /*
-         * Return either the jquery handler value if it exists or the
-         * nodeEventHandler value. Jquery event value superceeds nodejs
-         * events for backwards compatability reasons.
-         */
-        return jQueryHandlerValue !== undefined ? jQueryHandlerValue :
-            nodeEventHandlerValue;
-    },
-
-    purge: function(plotObj) {
-        delete plotObj._ev;
-        delete plotObj.on;
-        delete plotObj.once;
-        delete plotObj.removeListener;
-        delete plotObj.removeAllListeners;
-        delete plotObj.emit;
-
-        delete plotObj._ev;
-        delete plotObj._internalEv;
-        delete plotObj._internalOn;
-        delete plotObj._internalOnce;
-        delete plotObj._removeInternalListener;
-        delete plotObj._removeAllInternalListeners;
-
-        return plotObj;
-    }
-
-};
-
-var _$Events_155 = Events;
-
-var _$unhover_66 = {};
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-
-/* removed: var _$Events_155 = require('../../lib/events'); */;
-/* removed: var _$throttle_185 = require('../../lib/throttle'); */;
-/* removed: var _$get_graph_div_161 = require('../../lib/get_graph_div'); */;
-
-/* removed: var _$constants_80 = require('../fx/constants'); */;
-
-var unhover = _$unhover_66 = {};
-
-
-unhover.wrapped = function(gd, evt, subplot) {
-    gd = _$get_graph_div_161(gd);
-
-    // Important, clear any queued hovers
-    if(gd._fullLayout) {
-        _$throttle_185.clear(gd._fullLayout._uid + _$constants_80.HOVERID);
-    }
-
-    unhover.raw(gd, evt, subplot);
-};
-
-
-// remove hover effects on mouse out, and emit unhover event
-unhover.raw = function unhoverRaw(gd, evt) {
-    var fullLayout = gd._fullLayout;
-    var oldhoverdata = gd._hoverdata;
-
-    if(!evt) evt = {};
-    if(evt.target &&
-       _$Events_155.triggerHandler(gd, 'plotly_beforehover', evt) === false) {
-        return;
-    }
-
-    fullLayout._hoverlayer.selectAll('g').remove();
-    fullLayout._hoverlayer.selectAll('line').remove();
-    fullLayout._hoverlayer.selectAll('circle').remove();
-    gd._hoverdata = undefined;
-
-    if(evt.target && oldhoverdata) {
-        gd.emit('plotly_unhover', {
-            event: evt,
-            points: oldhoverdata
-        });
-    }
-};
-
-var _$dragelement_65 = {};
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-/* removed: var _$mouseEventOffset_15 = require('mouse-event-offset'); */;
-/* removed: var _$hasHover_11 = require('has-hover'); */;
-/* removed: var _$hasPassiveEvents_12 = require('has-passive-events'); */;
-
-/* removed: var _$registry_253 = require('../../registry'); */;
-/* removed: var _$lib_163 = require('../../lib'); */;
-
-/* removed: var _$constants_210 = require('../../plots/cartesian/constants'); */;
-/* removed: var _$interactions_144 = require('../../constants/interactions'); */;
-
-var dragElement = _$dragelement_65 = {};
-
-dragElement.align = _$align_63;
-dragElement.getCursor = _$getCursor_64;
-
-/* removed: var _$unhover_66 = require('./unhover'); */;
-dragElement.unhover = _$unhover_66.wrapped;
-dragElement.unhoverRaw = _$unhover_66.raw;
-
-
-/**
- * Abstracts click & drag interactions
- *
- * During the interaction, a "coverSlip" element - a transparent
- * div covering the whole page - is created, which has two key effects:
- * - Lets you drag beyond the boundaries of the plot itself without
- *   dropping (but if you drag all the way out of the browser window the
- *   interaction will end)
- * - Freezes the cursor: whatever mouse cursor the drag element had when the
- *   interaction started gets copied to the coverSlip for use until mouseup
- *
- * If the user executes a drag bigger than MINDRAG, callbacks will fire as:
- *      prepFn, moveFn (1 or more times), doneFn
- * If the user does not drag enough, prepFn and clickFn will fire.
- *
- * Note: If you cancel contextmenu, clickFn will fire even with a right click
- * (unlike native events) so you'll get a `plotly_click` event. Cancel context eg:
- *    gd.addEventListener('contextmenu', function(e) { e.preventDefault(); });
- * TODO: we should probably turn this into a `config` parameter, so we can fix it
- * such that if you *don't* cancel contextmenu, we can prevent partial drags, which
- * put you in a weird state.
- *
- * If the user clicks multiple times quickly, clickFn will fire each time
- * but numClicks will increase to help you recognize doubleclicks.
- *
- * @param {object} options with keys:
- *      element (required) the DOM element to drag
- *      prepFn (optional) function(event, startX, startY)
- *          executed on mousedown
- *          startX and startY are the clientX and clientY pixel position
- *          of the mousedown event
- *      moveFn (optional) function(dx, dy)
- *          executed on move, ONLY after we've exceeded MINDRAG
- *          (we keep executing moveFn if you move back to where you started)
- *          dx and dy are the net pixel offset of the drag,
- *          dragged is true/false, has the mouse moved enough to
- *          constitute a drag
- *      doneFn (optional) function(e)
- *          executed on mouseup, ONLY if we exceeded MINDRAG (so you can be
- *          sure that moveFn has been called at least once)
- *          numClicks is how many clicks we've registered within
- *          a doubleclick time
- *          e is the original mouseup event
- *      clickFn (optional) function(numClicks, e)
- *          executed on mouseup if we have NOT exceeded MINDRAG (ie moveFn
- *          has not been called at all)
- *          numClicks is how many clicks we've registered within
- *          a doubleclick time
- *          e is the original mousedown event
- *      clampFn (optional, function(dx, dy) return [dx2, dy2])
- *          Provide custom clamping function for small displacements.
- *          By default, clamping is done using `minDrag` to x and y displacements
- *          independently.
- */
-dragElement.init = function init(options) {
-    var gd = options.gd;
-    var numClicks = 1;
-    var DBLCLICKDELAY = _$interactions_144.DBLCLICKDELAY;
-    var element = options.element;
-
-    var startX,
-        startY,
-        newMouseDownTime,
-        cursor,
-        dragCover,
-        initialEvent,
-        initialTarget,
-        rightClick;
-
-    if(!gd._mouseDownTime) gd._mouseDownTime = 0;
-
-    element.style.pointerEvents = 'all';
-
-    element.onmousedown = onStart;
-
-    if(!_$hasPassiveEvents_12) {
-        element.ontouchstart = onStart;
-    }
-    else {
-        if(element._ontouchstart) {
-            element.removeEventListener('touchstart', element._ontouchstart);
-        }
-        element._ontouchstart = onStart;
-        element.addEventListener('touchstart', onStart, {passive: false});
-    }
-
-    function _clampFn(dx, dy, minDrag) {
-        if(Math.abs(dx) < minDrag) dx = 0;
-        if(Math.abs(dy) < minDrag) dy = 0;
-        return [dx, dy];
-    }
-
-    var clampFn = options.clampFn || _clampFn;
-
-    function onStart(e) {
-        e.preventDefault();
-
-        // make dragging and dragged into properties of gd
-        // so that others can look at and modify them
-        gd._dragged = false;
-        gd._dragging = true;
-        var offset = pointerOffset(e);
-        startX = offset[0];
-        startY = offset[1];
-        initialTarget = e.target;
-        initialEvent = e;
-        rightClick = e.buttons === 2 || e.ctrlKey;
-
-        newMouseDownTime = (new Date()).getTime();
-        if(newMouseDownTime - gd._mouseDownTime < DBLCLICKDELAY) {
-            // in a click train
-            numClicks += 1;
-        }
-        else {
-            // new click train
-            numClicks = 1;
-            gd._mouseDownTime = newMouseDownTime;
-        }
-
-        if(options.prepFn) options.prepFn(e, startX, startY);
-
-        if(_$hasHover_11 && !rightClick) {
-            dragCover = coverSlip();
-            dragCover.style.cursor = window.getComputedStyle(element).cursor;
-        }
-        else if(!_$hasHover_11) {
-            // document acts as a dragcover for mobile, bc we can't create dragcover dynamically
-            dragCover = document;
-            cursor = window.getComputedStyle(document.documentElement).cursor;
-            document.documentElement.style.cursor = window.getComputedStyle(element).cursor;
-        }
-
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onDone);
-        document.addEventListener('touchmove', onMove);
-        document.addEventListener('touchend', onDone);
-
-        return;
-    }
-
-    function onMove(e) {
-        e.preventDefault();
-
-        var offset = pointerOffset(e);
-        var minDrag = options.minDrag || _$constants_210.MINDRAG;
-        var dxdy = clampFn(offset[0] - startX, offset[1] - startY, minDrag);
-        var dx = dxdy[0];
-        var dy = dxdy[1];
-
-        if(dx || dy) {
-            gd._dragged = true;
-            dragElement.unhover(gd);
-        }
-
-        if(gd._dragged && options.moveFn && !rightClick) options.moveFn(dx, dy);
-
-        return;
-    }
-
-    function onDone(e) {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onDone);
-        document.removeEventListener('touchmove', onMove);
-        document.removeEventListener('touchend', onDone);
-
-        e.preventDefault();
-
-        if(_$hasHover_11) {
-            _$lib_163.removeElement(dragCover);
-        }
-        else if(cursor) {
-            dragCover.documentElement.style.cursor = cursor;
-            cursor = null;
-        }
-
-        if(!gd._dragging) {
-            gd._dragged = false;
-            return;
-        }
-        gd._dragging = false;
-
-        // don't count as a dblClick unless the mouseUp is also within
-        // the dblclick delay
-        if((new Date()).getTime() - gd._mouseDownTime > DBLCLICKDELAY) {
-            numClicks = Math.max(numClicks - 1, 1);
-        }
-
-        if(gd._dragged) {
-            if(options.doneFn) options.doneFn(e);
-        }
-        else {
-            if(options.clickFn) options.clickFn(numClicks, initialEvent);
-
-            // If we haven't dragged, this should be a click. But because of the
-            // coverSlip changing the element, the natural system might not generate one,
-            // so we need to make our own. But right clicks don't normally generate
-            // click events, only contextmenu events, which happen on mousedown.
-            if(!rightClick) {
-                var e2;
-
-                try {
-                    e2 = new MouseEvent('click', e);
-                }
-                catch(err) {
-                    var offset = pointerOffset(e);
-                    e2 = document.createEvent('MouseEvents');
-                    e2.initMouseEvent('click',
-                        e.bubbles, e.cancelable,
-                        e.view, e.detail,
-                        e.screenX, e.screenY,
-                        offset[0], offset[1],
-                        e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
-                        e.button, e.relatedTarget);
-                }
-
-                initialTarget.dispatchEvent(e2);
-            }
-        }
-
-        finishDrag(gd);
-
-        gd._dragged = false;
-
-        return;
-    }
-};
-
-function coverSlip() {
-    var cover = document.createElement('div');
-
-    cover.className = 'dragcover';
-    var cStyle = cover.style;
-    cStyle.position = 'fixed';
-    cStyle.left = 0;
-    cStyle.right = 0;
-    cStyle.top = 0;
-    cStyle.bottom = 0;
-    cStyle.zIndex = 999999999;
-    cStyle.background = 'none';
-
-    document.body.appendChild(cover);
-
-    return cover;
-}
-
-dragElement.coverSlip = coverSlip;
-
-function finishDrag(gd) {
-    gd._dragging = false;
-    if(gd._replotPending) _$registry_253.call('plot', gd);
-}
-
-function pointerOffset(e) {
-    return _$mouseEventOffset_15(
-        e.changedTouches ? e.changedTouches[0] : e,
-        document.body
-    );
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
 'use strict';
 
 var _$attributes_49 = {
@@ -19712,131 +18791,6 @@ var _$calc_50 = function calc(trace, vals, containerStr, cLetter) {
         container.colorscale = scl;
     }
 };
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_163 = require('../lib'); */;
-var __extendFlat_190 = _$lib_163.extendFlat;
-var __isPlainObject_190 = _$lib_163.isPlainObject;
-
-var traceOpts = {
-    valType: 'flaglist',
-    extras: ['none'],
-    flags: ['calc', 'calcIfAutorange', 'clearAxisTypes', 'plot', 'style', 'colorbars'],
-    
-};
-
-var layoutOpts = {
-    valType: 'flaglist',
-    extras: ['none'],
-    flags: [
-        'calc', 'calcIfAutorange', 'plot', 'legend', 'ticks', 'margins',
-        'layoutstyle', 'modebar', 'camera', 'arraydraw'
-    ],
-    
-};
-
-// flags for inside restyle/relayout include a few extras
-// that shouldn't be used in attributes, to deal with certain
-// combinations and conditionals efficiently
-var traceEditTypeFlags = traceOpts.flags.slice()
-    .concat(['clearCalc', 'fullReplot']);
-
-var layoutEditTypeFlags = layoutOpts.flags.slice()
-    .concat('layoutReplot');
-
-var _$edit_types_190 = {
-    traces: traceOpts,
-    layout: layoutOpts,
-    /*
-     * default (all false) edit flags for restyle (traces)
-     * creates a new object each call, so the caller can mutate freely
-     */
-    traceFlags: function() { return falseObj(traceEditTypeFlags); },
-
-    /*
-     * default (all false) edit flags for relayout
-     * creates a new object each call, so the caller can mutate freely
-     */
-    layoutFlags: function() { return falseObj(layoutEditTypeFlags); },
-
-    /*
-     * update `flags` with the `editType` values found in `attr`
-     */
-    update: function(flags, attr) {
-        var editType = attr.editType;
-        if(editType && editType !== 'none') {
-            var editTypeParts = editType.split('+');
-            for(var i = 0; i < editTypeParts.length; i++) {
-                flags[editTypeParts[i]] = true;
-            }
-        }
-    },
-
-    overrideAll: overrideAll
-};
-
-function falseObj(keys) {
-    var out = {};
-    for(var i = 0; i < keys.length; i++) out[keys[i]] = false;
-    return out;
-}
-
-/**
- * For attributes that are largely copied from elsewhere into a plot type that doesn't
- * support partial redraws - overrides the editType field of all attributes in the object
- *
- * @param {object} attrs: the attributes to override. Will not be mutated.
- * @param {string} editTypeOverride: the new editType to use
- * @param {'nested'|'from-root'} overrideContainers:
- *   - 'nested' will override editType for nested containers but not the root.
- *   - 'from-root' will also override editType of the root container.
- *   Containers below the absolute top level (trace or layout root) DO need an
- *   editType even if they are not `valObject`s themselves (eg `scatter.marker`)
- *   to handle the case where you edit the whole container.
- *
- * @return {object} a new attributes object with `editType` modified as directed
- */
-function overrideAll(attrs, editTypeOverride, overrideContainers) {
-    var out = __extendFlat_190({}, attrs);
-    for(var key in out) {
-        var attr = out[key];
-        if(__isPlainObject_190(attr)) {
-            out[key] = overrideOne(attr, editTypeOverride, overrideContainers, key);
-        }
-    }
-    if(overrideContainers === 'from-root') out.editType = editTypeOverride;
-
-    return out;
-}
-
-function overrideOne(attr, editTypeOverride, overrideContainers, key) {
-    if(attr.valType) {
-        var out = __extendFlat_190({}, attr);
-        out.editType = editTypeOverride;
-
-        if(Array.isArray(attr.items)) {
-            out.items = new Array(attr.items.length);
-            for(var i = 0; i < attr.items.length; i++) {
-                out.items[i] = overrideOne(attr.items[i], editTypeOverride, 'from-root');
-            }
-        }
-        return out;
-    }
-    else {
-        // don't provide an editType for the _deprecated container
-        return overrideAll(attr, editTypeOverride,
-            (key.charAt(0) === '_') ? 'nested' : 'from-root');
-    }
-}
 
 var _$attributes_67 = {};
 /**
@@ -22206,7 +21160,10 @@ function buildSVGText(containerNode, str) {
                         var dummyAnchor = document.createElement('a');
                         dummyAnchor.href = href;
                         if(PROTOCOLS.indexOf(dummyAnchor.protocol) !== -1) {
-                            nodeSpec.href = encodeURI(href);
+                            // Decode href to allow both already encoded and not encoded
+                            // URIs. Without decoding prior encoding, an already encoded
+                            // URI would be encoded twice producing a semantically different URI.
+                            nodeSpec.href = encodeURI(decodeURI(href));
                             nodeSpec.target = getQuotedMatch(extra, TARGETMATCH) || '_blank';
                             nodeSpec.popup = getQuotedMatch(extra, POPUPMATCH);
                         }
@@ -23548,354 +22505,6 @@ drawing.setTextPointsScale = function(selection, xScale, yScale) {
 
         el.attr('transform', transforms.join(' '));
     });
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_163 = require('../../lib'); */;
-/* removed: var _$registry_253 = require('../../registry'); */;
-
-var _$calc_78 = function calc(gd) {
-    var calcdata = gd.calcdata;
-    var fullLayout = gd._fullLayout;
-
-    function makeCoerceHoverInfo(trace) {
-        return function(val) {
-            return _$lib_163.coerceHoverinfo({hoverinfo: val}, {_module: trace._module}, fullLayout);
-        };
-    }
-
-    for(var i = 0; i < calcdata.length; i++) {
-        var cd = calcdata[i];
-        var trace = cd[0].trace;
-
-        // don't include hover calc fields for pie traces
-        // as calcdata items might be sorted by value and
-        // won't match the data array order.
-        if(_$registry_253.traceIs(trace, 'pie')) continue;
-
-        var fillFn = _$registry_253.traceIs(trace, '2dMap') ? paste : _$lib_163.fillArray;
-
-        fillFn(trace.hoverinfo, cd, 'hi', makeCoerceHoverInfo(trace));
-
-        if(!trace.hoverlabel) continue;
-
-        fillFn(trace.hoverlabel.bgcolor, cd, 'hbg');
-        fillFn(trace.hoverlabel.bordercolor, cd, 'hbc');
-        fillFn(trace.hoverlabel.font.size, cd, 'hts');
-        fillFn(trace.hoverlabel.font.color, cd, 'htc');
-        fillFn(trace.hoverlabel.font.family, cd, 'htf');
-        fillFn(trace.hoverlabel.namelength, cd, 'hnl');
-    }
-};
-
-function paste(traceAttr, cd, cdAttr, fn) {
-    fn = fn || _$lib_163.identity;
-
-    if(Array.isArray(traceAttr)) {
-        cd[0][cdAttr] = fn(traceAttr);
-    }
-}
-
-var _$helpers_82 = {};
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_163 = require('../../lib'); */;
-
-// look for either subplot or xaxis and yaxis attributes
-_$helpers_82.getSubplot = function getSubplot(trace) {
-    return trace.subplot || (trace.xaxis + trace.yaxis) || trace.geo;
-};
-
-// convenience functions for mapping all relevant axes
-_$helpers_82.flat = function flat(subplots, v) {
-    var out = new Array(subplots.length);
-    for(var i = 0; i < subplots.length; i++) {
-        out[i] = v;
-    }
-    return out;
-};
-
-_$helpers_82.p2c = function p2c(axArray, v) {
-    var out = new Array(axArray.length);
-    for(var i = 0; i < axArray.length; i++) {
-        out[i] = axArray[i].p2c(v);
-    }
-    return out;
-};
-
-_$helpers_82.getDistanceFunction = function getDistanceFunction(mode, dx, dy, dxy) {
-    if(mode === 'closest') return dxy || _$helpers_82.quadrature(dx, dy);
-    return mode === 'x' ? dx : dy;
-};
-
-_$helpers_82.getClosest = function getClosest(cd, distfn, pointData) {
-    // do we already have a point number? (array mode only)
-    if(pointData.index !== false) {
-        if(pointData.index >= 0 && pointData.index < cd.length) {
-            pointData.distance = 0;
-        }
-        else pointData.index = false;
-    }
-    else {
-        // apply the distance function to each data point
-        // this is the longest loop... if this bogs down, we may need
-        // to create pre-sorted data (by x or y), not sure how to
-        // do this for 'closest'
-        for(var i = 0; i < cd.length; i++) {
-            var newDistance = distfn(cd[i]);
-            if(newDistance <= pointData.distance) {
-                pointData.index = i;
-                pointData.distance = newDistance;
-            }
-        }
-    }
-    return pointData;
-};
-
-/*
- * pseudo-distance function for hover effects on areas: inside the region
- * distance is finite (`passVal`), outside it's Infinity.
- *
- * @param {number} v0: signed difference between the current position and the left edge
- * @param {number} v1: signed difference between the current position and the right edge
- * @param {number} passVal: the value to return on success
- */
-_$helpers_82.inbox = function inbox(v0, v1, passVal) {
-    return (v0 * v1 < 0 || v0 === 0) ? passVal : Infinity;
-};
-
-_$helpers_82.quadrature = function quadrature(dx, dy) {
-    return function(di) {
-        var x = dx(di),
-            y = dy(di);
-        return Math.sqrt(x * x + y * y);
-    };
-};
-
-/** Fill event data point object for hover and selection.
- *  Invokes _module.eventData if present.
- *
- * N.B. note that point 'index' corresponds to input data array index
- *  whereas 'number' is its post-transform version.
- *
- * If the hovered/selected pt corresponds to an multiple input points
- * (e.g. for histogram and transformed traces), 'pointNumbers` and 'pointIndices'
- * are include in the event data.
- *
- * @param {object} pt
- * @param {object} trace
- * @param {object} cd
- * @return {object}
- */
-_$helpers_82.makeEventData = function makeEventData(pt, trace, cd) {
-    // hover uses 'index', select uses 'pointNumber'
-    var pointNumber = 'index' in pt ? pt.index : pt.pointNumber;
-
-    var out = {
-        data: trace._input,
-        fullData: trace,
-        curveNumber: trace.index,
-        pointNumber: pointNumber
-    };
-
-    if(trace._indexToPoints) {
-        var pointIndices = trace._indexToPoints[pointNumber];
-
-        if(pointIndices.length === 1) {
-            out.pointIndex = pointIndices[0];
-        } else {
-            out.pointIndices = pointIndices;
-        }
-    } else {
-        out.pointIndex = pointNumber;
-    }
-
-    if(trace._module.eventData) {
-        out = trace._module.eventData(out, pt, trace, cd, pointNumber);
-    } else {
-        if('xVal' in pt) out.x = pt.xVal;
-        else if('x' in pt) out.x = pt.x;
-
-        if('yVal' in pt) out.y = pt.yVal;
-        else if('y' in pt) out.y = pt.y;
-
-        if(pt.xa) out.xaxis = pt.xa;
-        if(pt.ya) out.yaxis = pt.ya;
-        if(pt.zLabelVal !== undefined) out.z = pt.zLabelVal;
-    }
-
-    _$helpers_82.appendArrayPointValue(out, trace, pointNumber);
-
-    return out;
-};
-
-/** Appends values inside array attributes corresponding to given point number
- *
- * @param {object} pointData : point data object (gets mutated here)
- * @param {object} trace : full trace object
- * @param {number|Array(number)} pointNumber : point number. May be a length-2 array
- *     [row, col] to dig into 2D arrays
- */
-_$helpers_82.appendArrayPointValue = function(pointData, trace, pointNumber) {
-    var arrayAttrs = trace._arrayAttrs;
-
-    if(!arrayAttrs) {
-        return;
-    }
-
-    for(var i = 0; i < arrayAttrs.length; i++) {
-        var astr = arrayAttrs[i];
-        var key = getPointKey(astr);
-
-        if(pointData[key] === undefined) {
-            var val = _$lib_163.nestedProperty(trace, astr).get();
-            var pointVal = getPointData(val, pointNumber);
-
-            if(pointVal !== undefined) pointData[key] = pointVal;
-        }
-    }
-};
-
-/**
- * Appends values inside array attributes corresponding to given point number array
- * For use when pointData references a plot entity that arose (or potentially arose)
- * from multiple points in the input data
- *
- * @param {object} pointData : point data object (gets mutated here)
- * @param {object} trace : full trace object
- * @param {Array(number)|Array(Array(number))} pointNumbers : Array of point numbers.
- *     Each entry in the array may itself be a length-2 array [row, col] to dig into 2D arrays
- */
-_$helpers_82.appendArrayMultiPointValues = function(pointData, trace, pointNumbers) {
-    var arrayAttrs = trace._arrayAttrs;
-
-    if(!arrayAttrs) {
-        return;
-    }
-
-    for(var i = 0; i < arrayAttrs.length; i++) {
-        var astr = arrayAttrs[i];
-        var key = getPointKey(astr);
-
-        if(pointData[key] === undefined) {
-            var val = _$lib_163.nestedProperty(trace, astr).get();
-            var keyVal = new Array(pointNumbers.length);
-
-            for(var j = 0; j < pointNumbers.length; j++) {
-                keyVal[j] = getPointData(val, pointNumbers[j]);
-            }
-            pointData[key] = keyVal;
-        }
-    }
-};
-
-var pointKeyMap = {
-    ids: 'id',
-    locations: 'location',
-    labels: 'label',
-    values: 'value',
-    'marker.colors': 'color'
-};
-
-function getPointKey(astr) {
-    return pointKeyMap[astr] || astr;
-}
-
-function getPointData(val, pointNumber) {
-    if(Array.isArray(pointNumber)) {
-        if(Array.isArray(val) && Array.isArray(val[pointNumber[0]])) {
-            return val[pointNumber[0]][pointNumber[1]];
-        }
-    } else {
-        return val[pointNumber];
-    }
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-// works with our CSS cursor classes (see css/_cursor.scss)
-// to apply cursors to d3 single-element selections.
-// omit cursor to revert to the default.
-var _$setCursor_182 = function setCursor(el3, csr) {
-    (el3.attr('class') || '').split(' ').forEach(function(cls) {
-        if(cls.indexOf('cursor-') === 0) el3.classed(cls, false);
-    });
-
-    if(csr) el3.classed('cursor-' + csr, true);
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-/* removed: var _$setCursor_182 = require('./setcursor'); */;
-
-var STASHATTR = 'data-savedcursor';
-var NO_CURSOR = '!!';
-
-/*
- * works with our CSS cursor classes (see css/_cursor.scss)
- * to override a previous cursor set on d3 single-element selections,
- * by moving the name of the original cursor to the data-savedcursor attr.
- * omit cursor to revert to the previously set value.
- */
-var _$overrideCursor_174 = function overrideCursor(el3, csr) {
-    var savedCursor = el3.attr(STASHATTR);
-    if(csr) {
-        if(!savedCursor) {
-            var classes = (el3.attr('class') || '').split(' ');
-            for(var i = 0; i < classes.length; i++) {
-                var cls = classes[i];
-                if(cls.indexOf('cursor-') === 0) {
-                    el3.attr(STASHATTR, cls.substr(7))
-                        .classed(cls, false);
-                }
-            }
-            if(!el3.attr(STASHATTR)) {
-                el3.attr(STASHATTR, NO_CURSOR);
-            }
-        }
-        _$setCursor_182(el3, csr);
-    }
-    else if(savedCursor) {
-        el3.attr(STASHATTR, null);
-
-        if(savedCursor === NO_CURSOR) _$setCursor_182(el3);
-        else _$setCursor_182(el3, savedCursor);
-    }
 };
 
 /**
@@ -27493,6 +26102,9 @@ plots.doAutoMargin = function(gd) {
     gs.w = Math.round(fullLayout.width) - gs.l - gs.r;
     gs.h = Math.round(fullLayout.height) - gs.t - gs.b;
 
+	if (gs.w < 0) gs.w = Math.round(fullLayout.width) - fullLayout.margin.l - fullLayout.margin.r;
+	if (gs.h < 0) gs.h = Math.round(fullLayout.height) - fullLayout.margin.t - fullLayout.margin.b;
+	
     // if things changed and we're not already redrawing, trigger a redraw
     if(!fullLayout._replotting && oldmargins !== '{}' &&
             oldmargins !== JSON.stringify(fullLayout._size)) {
@@ -29352,6 +27964,38 @@ var _$setConvert_224 = function setConvert(ax, fullLayout) {
             }
         }
     };
+    /**
+     * 
+     * @param {} ax - Achse, welche gerade resized wird
+     * @param {} axLetter - Startbuchstabe der Achse
+     * @returns {} scaleAxes - Array mit Achsen, deren Labels relevant sind
+     */
+    function getScaleAxes(ax, axLetter) {
+        var scaleAxes = [];
+        var id = ax._id;
+        var idNumber;
+        if (axLetter === 'x') {
+            idNumber = id.replace('x', '') * 1;
+            id = 'y'
+        } else {
+            idNumber = id.replace('y', '') * 1;
+            id = 'x'
+        }
+
+        if (ax.side === 'top' || ax.side === 'right') {
+            idNumber -= 19937;
+        }
+        if (idNumber === 0 || idNumber == 1) idNumber = '';
+        var scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        if (idNumber === '') {
+            idNumber = 1;
+        }
+        idNumber += 19937;
+        scaleAxis = fullLayout[id + 'axis' + idNumber];
+        if (scaleAxis) scaleAxes.push(scaleAxis);
+        return scaleAxes;
+    }
 
     // set scaling to pixels
     ax.setScale = function(usePrivateRange) {
@@ -29380,15 +28024,83 @@ var _$setConvert_224 = function setConvert(ax, fullLayout) {
         var rl0 = ax.r2l(ax[rangeAttr][0], calendar),
             rl1 = ax.r2l(ax[rangeAttr][1], calendar);
 
-        if(axLetter === 'y') {
+        var labelWidth = 0;
+        var labelWidthRight = 0;
+
+        var scaleAxes = getScaleAxes(ax, axLetter);
+
+        // TODO Wenn es mal erlaubt sein sollte, dass man auch eine Achse oberhalb setzt, muss dies hier noch angepasst werden
+        if (axLetter === 'y') {
+            var axLength;
+            if (scaleAxes[0]) {
+                var scaleAxis = scaleAxes[0];
+                labelWidth = getLabelWidth(scaleAxis);
+                // Sofern die LabelWidth bereits ermittelt wurde, wird diese verwendet (solange sie kleiner als die aktuelle ist)
+                // dies dient dazu, da ansonsten der Plot zu Beginn eine falsche Gr��e hat
+                if (scaleAxis._lastLabel && scaleAxis._lastLabel.autoangle === scaleAxis._lastangle) {
+                    if (scaleAxis._lastLabel && labelWidth < scaleAxis._lastLabel.lastLabelWidth) {
+                        labelWidth = scaleAxis._lastLabel.lastLabelWidth;
+                    }
+                }
+                var marginBottom = gs.b * 0.7;
+                if (labelWidth <= 1) labelWidth = marginBottom;
+
+                if (scaleAxis._lastangle === 30) marginBottom = gs.b * 0.5;
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]) - labelWidth + marginBottom;
+                scaleAxis._shortLabel = false;
+                if (!ax._lastangle || (ax._lastangle && ax._lastangle != 0)) {
+                    if (axLength < 100 && labelWidth > 0) {
+                        axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+                        scaleAxis._shortLabel = true;
+                    }
+                }
+            } else {
+                axLength = gs.h * (ax.domain[1] - ax.domain[0]);
+            }
+
             ax._offset = gs.t + (1 - ax.domain[1]) * gs.h;
-            ax._length = gs.h * (ax.domain[1] - ax.domain[0]);
+            ax._length = axLength;
             ax._m = ax._length / (rl0 - rl1);
             ax._b = -ax._m * rl1;
         }
         else {
-            ax._offset = gs.l + ax.domain[0] * gs.w;
-            ax._length = gs.w * (ax.domain[1] - ax.domain[0]);
+            var axLength;
+            var axOffset;
+            if (scaleAxes.length > 0) {
+                var scaleAxis = scaleAxes[0];
+                var scaleAxisRight;
+                labelWidth = getLabelWidth(scaleAxis);
+                var marginLeft = gs.l * 0.5;
+                if (labelWidth <= 1) labelWidth = marginLeft;
+                if (scaleAxes.length > 1) {
+                    scaleAxisRight = scaleAxes[1];
+                    labelWidthRight = getLabelWidth(scaleAxisRight);
+                }
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]) - (labelWidth + labelWidthRight) + marginLeft;
+                axOffset = gs.l + ax.domain[0] * gs.w + labelWidth - marginLeft;
+                if (axLength < 100 && labelWidthRight > 0) {
+                    axLength += labelWidthRight;
+                    scaleAxisRight._shortLabel = true;
+                } else if (scaleAxisRight) {
+                    scaleAxisRight._shortLabel = false;
+                }
+                if (axLength < 100 && labelWidth > 0) {
+                    axLength += labelWidth;
+                    axLength -= marginLeft;
+                    axOffset -= labelWidth;
+                    axOffset += marginLeft;
+                    scaleAxis._shortLabel = true;
+                } else if (scaleAxis) {
+                    scaleAxis._shortLabel = false;
+                }
+            } else {
+                axLength = gs.w * (ax.domain[1] - ax.domain[0]);
+                axOffset = gs.l + ax.domain[0] * gs.w;
+            }
+
+            ax._offset = axOffset;
+            ax._length = axLength;
+
             ax._m = ax._length / (rl1 - rl0);
             ax._b = -ax._m * rl0;
         }
@@ -29397,7 +28109,62 @@ var _$setConvert_224 = function setConvert(ax, fullLayout) {
             fullLayout._replotting = false;
             throw new Error('Something went wrong with axis scaling');
         }
-    };
+
+        if (scaleAxes.length > 0) {
+            scaleAxis = scaleAxes[0];
+            var lastLabel = {};
+            if (labelWidth > 1) {
+                lastLabel.lastLabelWidth = labelWidth;
+            }
+
+            if (labelWidthRight > 1) {
+                lastLabel.lastLabelWidthRight = labelWidthRight;
+            }
+
+            lastLabel.autoangle = scaleAxis._lastangle;
+            scaleAxis._lastLabel = lastLabel;
+        }
+
+        function getLabelWidth(scaleAxis) {
+            var highestLabel = 0;
+            var textLabel = '';
+            var sizeLabel = {width: 0, height:0 };
+            var labelWidth = 0;
+            if (scaleAxis._categories) {
+                scaleAxis._categories.forEach(function (d) {
+                    if (d.length > highestLabel) {
+                        highestLabel = d.length;
+                        textLabel = d;
+                    }
+                });
+                sizeLabel = textMeasurement(textLabel, fullLayout.font.size, fullLayout.font.family)
+
+                labelWidth = sizeLabel.width;
+                if (scaleAxis._lastangle === 30) {
+                    labelWidth = labelWidth * Math.sin(0.5235988) / Math.sin(1.5707963);
+                } else if (scaleAxis._lastangle === 0) {
+                    labelWidth = 0;
+                }
+            }
+            
+            return labelWidth;
+        }
+
+        // gets the size of a element
+        function textMeasurement(value, fontSizeString, fontFamily) {
+            var body = $('body');
+            if (fontFamily) {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto; font-family:' + fontFamily + ';">' + value + '</text>');
+            } else {
+                body.append('<span id="testObjectDashboardUtils" style="font-size: ' + fontSizeString + '; width: auto;">' + value + '</text>');
+            }
+            var elem = $('#testObjectDashboardUtils');
+            var width = elem.innerWidth() + 1;
+            var height = elem.innerHeight() + 1;
+            elem.remove();
+            return { width: width, height: height }
+            }
+        };
 
     // makeCalcdata: takes an x or y array and converts it
     // to a position on the axis object "ax"
@@ -31237,12 +30004,19 @@ axes.doTicks = function(gd, axid, skipTitle) {
                 // alter later
                 .attr('text-anchor', 'middle')
                 .each(function(d) {
+                    var labelText = d.text;
+					if (ax._shortLabel) {
+						if (labelText.length > 9) {
+							labelText = labelText.substring(0, 6);
+							labelText += '...';
+						}
+					}
                     var thisLabel = _$d3_6.select(this),
                         newPromise = gd._promises.length;
                     thisLabel
                         .call(_$svg_text_utils_184.positionText, labelx(d), labely(d))
                         .call(_$drawing_68.font, d.font, d.fontSize, d.fontColor)
-                        .text(d.text)
+                        .text(labelText)
                         .call(_$svg_text_utils_184.convertToTspans, gd);
                     newPromise = gd._promises[newPromise];
                     if(newPromise) {
@@ -31343,7 +30117,7 @@ axes.doTicks = function(gd, axid, skipTitle) {
             // don't auto-angle at all for log axes with
             // base and digit format
             if(axLetter === 'x' && !_$fastIsnumeric_9(ax.tickangle) &&
-                    (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
+                (ax.type !== 'log' || String(ax.dtick).charAt(0) !== 'D')) {
                 var lbbArray = [];
                 tickLabels.each(function(d) {
                     var s = _$d3_6.select(this),
@@ -31364,23 +30138,23 @@ axes.doTicks = function(gd, axid, skipTitle) {
                         width: bb.width + 2
                     });
                 });
-                for(i = 0; i < lbbArray.length - 1; i++) {
-                    if(_$lib_163.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
-                        // any overlap at all - set 30 degrees
-                        autoangle = 30;
-                        break;
-                    }
-                }
-                if(autoangle) {
-                    var tickspacing = Math.abs(
-                            (vals[vals.length - 1].x - vals[0].x) * ax._m
-                        ) / (vals.length - 1);
-                    if(tickspacing < maxFontSize * 2.5) {
-                        autoangle = 90;
-                    }
-                    positionLabels(tickLabels, autoangle);
-                }
-                ax._lastangle = autoangle;
+				for (i = 0; i < lbbArray.length - 1; i++) {
+					if (_$lib_163.bBoxIntersect(lbbArray[i], lbbArray[i + 1])) {
+						// any overlap at all - set 30 degrees
+						autoangle = 30;
+						break;
+					}
+				}
+				if (autoangle) {
+					var tickspacing = Math.abs(
+							(vals[vals.length - 1].x - vals[0].x) * ax._m
+						) / (vals.length - 1);
+					if (tickspacing < maxFontSize * 2.5) {
+						autoangle = 90;
+					}
+					positionLabels(tickLabels, autoangle);
+				}
+				ax._lastangle = autoangle;
             }
 
             // update the axis title
@@ -31870,6 +30644,1792 @@ function swapAxisAttrs(layout, key, xFullAxes, yFullAxes, dfltTitle) {
         np(layout, yFullAxes[i]._name + '.' + key).set(xVal);
     }
 }
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_163 = require('../../lib'); */;
+/* removed: var _$axes_205 = require('../../plots/cartesian/axes'); */;
+
+var _$convert_27 = function convert(scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var anns = fullSceneLayout.annotations;
+
+    for(var i = 0; i < anns.length; i++) {
+        mockAnnAxes(anns[i], scene);
+    }
+
+    scene.fullLayout._infolayer
+        .selectAll('.annotation-' + scene.id)
+        .remove();
+};
+
+function mockAnnAxes(ann, scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var domain = fullSceneLayout.domain;
+    var size = scene.fullLayout._size;
+
+    var base = {
+        // this gets fill in on render
+        pdata: null,
+
+        // to get setConvert to not execute cleanly
+        type: 'linear',
+
+        // don't try to update them on `editable: true`
+        autorange: false,
+
+        // set infinite range so that annotation draw routine
+        // does not try to remove 'outside-range' annotations,
+        // this case is handled in the render loop
+        range: [-Infinity, Infinity]
+    };
+
+    ann._xa = {};
+    _$lib_163.extendFlat(ann._xa, base);
+    _$axes_205.setConvert(ann._xa);
+    ann._xa._offset = size.l + domain.x[0] * size.w;
+    ann._xa.l2p = function() {
+        return 0.5 * (1 + ann._pdata[0] / ann._pdata[3]) * size.w * (domain.x[1] - domain.x[0]);
+    };
+
+    ann._ya = {};
+    _$lib_163.extendFlat(ann._ya, base);
+    _$axes_205.setConvert(ann._ya);
+    ann._ya._offset = size.t + (1 - domain.y[1]) * size.h;
+    ann._ya.l2p = function() {
+        return 0.5 * (1 - ann._pdata[1] / ann._pdata[3]) * size.h * (domain.y[1] - domain.y[0]);
+    };
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_163 = require('../../lib'); */;
+/* removed: var _$color_43 = require('../color'); */;
+
+// defaults common to 'annotations' and 'annotations3d'
+var _$handleAnnotationCommonDefaults_36 = function handleAnnotationCommonDefaults(annIn, annOut, fullLayout, coerce) {
+    coerce('opacity');
+    var bgColor = coerce('bgcolor');
+
+    var borderColor = coerce('bordercolor');
+    var borderOpacity = _$color_43.opacity(borderColor);
+
+    coerce('borderpad');
+
+    var borderWidth = coerce('borderwidth');
+    var showArrow = coerce('showarrow');
+
+    coerce('text', showArrow ? ' ' : fullLayout._dfltTitle.annotation);
+    coerce('textangle');
+    _$lib_163.coerceFont(coerce, 'font', fullLayout.font);
+
+    coerce('width');
+    coerce('align');
+
+    var h = coerce('height');
+    if(h) coerce('valign');
+
+    if(showArrow) {
+        var arrowside = coerce('arrowside');
+        var arrowhead;
+        var arrowsize;
+
+        if(arrowside.indexOf('end') !== -1) {
+            arrowhead = coerce('arrowhead');
+            arrowsize = coerce('arrowsize');
+        }
+
+        if(arrowside.indexOf('start') !== -1) {
+            coerce('startarrowhead', arrowhead);
+            coerce('startarrowsize', arrowsize);
+        }
+        coerce('arrowcolor', borderOpacity ? annOut.bordercolor : _$color_43.defaultLine);
+        coerce('arrowwidth', ((borderOpacity && borderWidth) || 1) * 2);
+        coerce('standoff');
+        coerce('startstandoff');
+
+    }
+
+    var hoverText = coerce('hovertext');
+    var globalHoverLabel = fullLayout.hoverlabel || {};
+
+    if(hoverText) {
+        var hoverBG = coerce('hoverlabel.bgcolor', globalHoverLabel.bgcolor ||
+            (_$color_43.opacity(bgColor) ? _$color_43.rgb(bgColor) : _$color_43.defaultLine)
+        );
+
+        var hoverBorder = coerce('hoverlabel.bordercolor', globalHoverLabel.bordercolor ||
+            _$color_43.contrast(hoverBG)
+        );
+
+        _$lib_163.coerceFont(coerce, 'hoverlabel.font', {
+            family: globalHoverLabel.font.family,
+            size: globalHoverLabel.font.size,
+            color: globalHoverLabel.font.color || hoverBorder
+        });
+    }
+
+    coerce('captureevents', !!hoverText);
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_163 = require('../lib'); */;
+
+/** Convenience wrapper for making array container logic DRY and consistent
+ *
+ * @param {object} parentObjIn
+ *  user input object where the container in question is linked
+ *  (i.e. either a user trace object or the user layout object)
+ *
+ * @param {object} parentObjOut
+ *  full object where the coerced container will be linked
+ *  (i.e. either a full trace object or the full layout object)
+ *
+ * @param {object} opts
+ *  options object:
+ *   - name {string}
+ *      name of the key linking the container in question
+ *   - handleItemDefaults {function}
+ *      defaults method to be called on each item in the array container in question
+ *
+ *      Its arguments are:
+ *          - itemIn {object} item in user layout
+ *          - itemOut {object} item in full layout
+ *          - parentObj {object} (as in closure)
+ *          - opts {object} (as in closure)
+ *          - itemOpts {object}
+ *              - itemIsNotPlainObject {boolean}
+ * N.B.
+ *
+ *  - opts is passed to handleItemDefaults so it can also store
+ *    links to supplementary data (e.g. fullData for layout components)
+ *
+ */
+var _$handleArrayContainerDefaults_201 = function handleArrayContainerDefaults(parentObjIn, parentObjOut, opts) {
+    var name = opts.name;
+
+    var previousContOut = parentObjOut[name];
+
+    var contIn = _$lib_163.isArrayOrTypedArray(parentObjIn[name]) ? parentObjIn[name] : [],
+        contOut = parentObjOut[name] = [],
+        i;
+
+    for(i = 0; i < contIn.length; i++) {
+        var itemIn = contIn[i],
+            itemOut = {},
+            itemOpts = {};
+
+        if(!_$lib_163.isPlainObject(itemIn)) {
+            itemOpts.itemIsNotPlainObject = true;
+            itemIn = {};
+        }
+
+        opts.handleItemDefaults(itemIn, itemOut, parentObjOut, opts, itemOpts);
+
+        itemOut._input = itemIn;
+        itemOut._index = i;
+
+        contOut.push(itemOut);
+    }
+
+    // in case this array gets its defaults rebuilt independent of the whole layout,
+    // relink the private keys just for this array.
+    if(_$lib_163.isArrayOrTypedArray(previousContOut)) {
+        var len = Math.min(previousContOut.length, contOut.length);
+        for(i = 0; i < len; i++) {
+            _$lib_163.relinkPrivateKeys(contOut[i], previousContOut[i]);
+        }
+    }
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_163 = require('../../lib'); */;
+/* removed: var _$axes_205 = require('../../plots/cartesian/axes'); */;
+/* removed: var _$handleArrayContainerDefaults_201 = require('../../plots/array_container_defaults'); */;
+/* removed: var _$handleAnnotationCommonDefaults_36 = require('../annotations/common_defaults'); */;
+/* removed: var _$attributes_26 = require('./attributes'); */;
+
+var _$handleDefaults_28 = function handleDefaults(sceneLayoutIn, sceneLayoutOut, opts) {
+    _$handleArrayContainerDefaults_201(sceneLayoutIn, sceneLayoutOut, {
+        name: 'annotations',
+        handleItemDefaults: handleAnnotationDefaults,
+        fullLayout: opts.fullLayout
+    });
+};
+
+function handleAnnotationDefaults(annIn, annOut, sceneLayout, opts, itemOpts) {
+    function coerce(attr, dflt) {
+        return _$lib_163.coerce(annIn, annOut, _$attributes_26, attr, dflt);
+    }
+
+    function coercePosition(axLetter) {
+        var axName = axLetter + 'axis';
+
+        // mock in such way that getFromId grabs correct 3D axis
+        var gdMock = { _fullLayout: {} };
+        gdMock._fullLayout[axName] = sceneLayout[axName];
+
+        return _$axes_205.coercePosition(annOut, gdMock, coerce, axLetter, axLetter, 0.5);
+    }
+
+
+    var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
+    if(!visible) return annOut;
+
+    _$handleAnnotationCommonDefaults_36(annIn, annOut, opts.fullLayout, coerce);
+
+    coercePosition('x');
+    coercePosition('y');
+    coercePosition('z');
+
+    // if you have one coordinate you should all three
+    _$lib_163.noneOrAll(annIn, annOut, ['x', 'y', 'z']);
+
+    // hard-set here for completeness
+    annOut.xref = 'x';
+    annOut.yref = 'y';
+    annOut.zref = 'z';
+
+    coerce('xanchor');
+    coerce('yanchor');
+    coerce('xshift');
+    coerce('yshift');
+
+    if(annOut.showarrow) {
+        annOut.axref = 'pixel';
+        annOut.ayref = 'pixel';
+
+        // TODO maybe default values should be bigger than the 2D case?
+        coerce('ax', -10);
+        coerce('ay', -30);
+
+        // if you have one part of arrow length you should have both
+        _$lib_163.noneOrAll(annIn, annOut, ['ax', 'ay']);
+    }
+
+    return annOut;
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+/* removed: var _$d3_6 = require('d3'); */;
+
+/* removed: var _$color_43 = require('../color'); */;
+
+/* removed: var _$arrow_paths_32 = require('./arrow_paths'); */;
+
+/**
+ * Add arrowhead(s) to a path or line element
+ *
+ * @param {d3.selection} el3: a d3-selected line or path element
+ *
+ * @param {string} ends: 'none', 'start', 'end', or 'start+end' for which ends get arrowheads
+ *
+ * @param {object} options: style information. Must have all the following:
+ * @param {number} options.arrowhead: end head style - see ./arrow_paths
+ * @param {number} options.startarrowhead: start head style - see ./arrow_paths
+ * @param {number} options.arrowsize: relative size of the end head vs line width
+ * @param {number} options.startarrowsize: relative size of the start head vs line width
+ * @param {number} options.standoff: distance in px to move the end arrow point from its target
+ * @param {number} options.startstandoff: distance in px to move the start arrow point from its target
+ * @param {number} options.arrowwidth: width of the arrow line
+ * @param {string} options.arrowcolor: color of the arrow line, for the head to match
+ *     Note that the opacity of this color is ignored, as it's assumed the container
+ *     of both the line and head has opacity applied to it so there isn't greater opacity
+ *     where they overlap.
+ */
+var _$drawArrowHead_40 = function drawArrowHead(el3, ends, options) {
+    var el = el3.node();
+    var headStyle = _$arrow_paths_32[options.arrowhead || 0];
+    var startHeadStyle = _$arrow_paths_32[options.startarrowhead || 0];
+    var scale = (options.arrowwidth || 1) * (options.arrowsize || 1);
+    var startScale = (options.arrowwidth || 1) * (options.startarrowsize || 1);
+    var doStart = ends.indexOf('start') >= 0;
+    var doEnd = ends.indexOf('end') >= 0;
+    var backOff = headStyle.backoff * scale + options.standoff;
+    var startBackOff = startHeadStyle.backoff * startScale + options.startstandoff;
+
+    var start, end, startRot, endRot;
+
+    if(el.nodeName === 'line') {
+        start = {x: +el3.attr('x1'), y: +el3.attr('y1')};
+        end = {x: +el3.attr('x2'), y: +el3.attr('y2')};
+
+        var dx = start.x - end.x;
+        var dy = start.y - end.y;
+
+        startRot = Math.atan2(dy, dx);
+        endRot = startRot + Math.PI;
+        if(backOff && startBackOff) {
+            if(backOff + startBackOff > Math.sqrt(dx * dx + dy * dy)) {
+                hideLine();
+                return;
+            }
+        }
+
+        if(backOff) {
+            if(backOff * backOff > dx * dx + dy * dy) {
+                hideLine();
+                return;
+            }
+            var backOffX = backOff * Math.cos(startRot),
+                backOffY = backOff * Math.sin(startRot);
+
+            end.x += backOffX;
+            end.y += backOffY;
+            el3.attr({x2: end.x, y2: end.y});
+
+        }
+
+        if(startBackOff) {
+            if(startBackOff * startBackOff > dx * dx + dy * dy) {
+                hideLine();
+                return;
+            }
+            var startBackOffX = startBackOff * Math.cos(startRot),
+                startbackOffY = startBackOff * Math.sin(startRot);
+
+            start.x -= startBackOffX;
+            start.y -= startbackOffY;
+            el3.attr({x1: start.x, y1: start.y});
+
+        }
+    }
+    else if(el.nodeName === 'path') {
+        var pathlen = el.getTotalLength(),
+            // using dash to hide the backOff region of the path.
+            // if we ever allow dash for the arrow we'll have to
+            // do better than this hack... maybe just manually
+            // combine the two
+            dashArray = '';
+
+        if(pathlen < backOff + startBackOff) {
+            hideLine();
+            return;
+        }
+
+
+        var start0 = el.getPointAtLength(0);
+        var dstart = el.getPointAtLength(0.1);
+
+        startRot = Math.atan2(start0.y - dstart.y, start0.x - dstart.x);
+        start = el.getPointAtLength(Math.min(startBackOff, pathlen));
+
+        dashArray = '0px,' + startBackOff + 'px,';
+
+        var end0 = el.getPointAtLength(pathlen);
+        var dend = el.getPointAtLength(pathlen - 0.1);
+
+        endRot = Math.atan2(end0.y - dend.y, end0.x - dend.x);
+        end = el.getPointAtLength(Math.max(0, pathlen - backOff));
+
+        var shortening = dashArray ? startBackOff + backOff : backOff;
+        dashArray += (pathlen - shortening) + 'px,' + pathlen + 'px';
+
+        el3.style('stroke-dasharray', dashArray);
+    }
+
+    function hideLine() { el3.style('stroke-dasharray', '0px,100px'); }
+
+    function drawhead(arrowHeadStyle, p, rot, arrowScale) {
+        if(!arrowHeadStyle.path) return;
+        if(arrowHeadStyle.noRotate) rot = 0;
+
+        _$d3_6.select(el.parentNode).append('path')
+            .attr({
+                'class': el3.attr('class'),
+                d: arrowHeadStyle.path,
+                transform:
+                    'translate(' + p.x + ',' + p.y + ')' +
+                    (rot ? 'rotate(' + (rot * 180 / Math.PI) + ')' : '') +
+                    'scale(' + arrowScale + ')'
+            })
+            .style({
+                fill: _$color_43.rgb(options.arrowcolor),
+                'stroke-width': 0
+            });
+    }
+
+    if(doStart) drawhead(startHeadStyle, start, startRot, startScale);
+    if(doEnd) drawhead(headStyle, end, endRot, scale);
+};
+
+var _$client_13 = true;
+var _$hasHover_11 = {};
+(function (global){
+'use strict'
+
+/* removed: var _$client_13 = require('is-browser') */;
+var hasHover
+
+if (typeof global.matchMedia === 'function') {
+	hasHover = !global.matchMedia('(hover: none)').matches
+}
+else {
+	hasHover = _$client_13
+}
+
+_$hasHover_11 = hasHover
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+'use strict'
+
+/* removed: var _$client_13 = require('is-browser') */;
+
+function detect() {
+	var supported = false
+
+	try {
+		var opts = Object.defineProperty({}, 'passive', {
+			get: function() {
+				supported = true
+			}
+		})
+
+		window.addEventListener('test', null, opts)
+		window.removeEventListener('test', null, opts)
+	} catch(e) {
+		supported = false
+	}
+
+	return supported
+}
+
+var _$hasPassiveEvents_12 = _$client_13 && detect()
+
+var rootPosition = { left: 0, top: 0 }
+
+var _$mouseEventOffset_15 = mouseEventOffset
+function mouseEventOffset (ev, target, out) {
+  target = target || ev.currentTarget || ev.srcElement
+  if (!Array.isArray(out)) {
+    out = [ 0, 0 ]
+  }
+  var cx = ev.clientX || 0
+  var cy = ev.clientY || 0
+  var rect = getBoundingClientOffset(target)
+  out[0] = cx - rect.left
+  out[1] = cy - rect.top
+  return out
+}
+
+function getBoundingClientOffset (element) {
+  if (element === window ||
+      element === document ||
+      element === document.body) {
+    return rootPosition
+  } else {
+    return element.getBoundingClientRect()
+  }
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+
+// for automatic alignment on dragging, <1/3 means left align,
+// >2/3 means right, and between is center. Pick the right fraction
+// based on where you are, and return the fraction corresponding to
+// that position on the object
+var _$align_63 = function align(v, dv, v0, v1, anchor) {
+    var vmin = (v - v0) / (v1 - v0),
+        vmax = vmin + dv / (v1 - v0),
+        vc = (vmin + vmax) / 2;
+
+    // explicitly specified anchor
+    if(anchor === 'left' || anchor === 'bottom') return vmin;
+    if(anchor === 'center' || anchor === 'middle') return vc;
+    if(anchor === 'right' || anchor === 'top') return vmax;
+
+    // automatic based on position
+    if(vmin < (2 / 3) - vc) return vmin;
+    if(vmax > (4 / 3) - vc) return vmax;
+    return vc;
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+/* removed: var _$lib_163 = require('../../lib'); */;
+
+
+// set cursors pointing toward the closest corner/side,
+// to indicate alignment
+// x and y are 0-1, fractions of the plot area
+var cursorset = [
+    ['sw-resize', 's-resize', 'se-resize'],
+    ['w-resize', 'move', 'e-resize'],
+    ['nw-resize', 'n-resize', 'ne-resize']
+];
+
+var _$getCursor_64 = function getCursor(x, y, xanchor, yanchor) {
+    if(xanchor === 'left') x = 0;
+    else if(xanchor === 'center') x = 1;
+    else if(xanchor === 'right') x = 2;
+    else x = _$lib_163.constrain(Math.floor(x * 3), 0, 2);
+
+    if(yanchor === 'bottom') y = 0;
+    else if(yanchor === 'middle') y = 1;
+    else if(yanchor === 'top') y = 2;
+    else y = _$lib_163.constrain(Math.floor(y * 3), 0, 2);
+
+    return cursorset[y][x];
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+var _$constants_80 = {
+    // hover labels for multiple horizontal bars get tilted by this angle
+    YANGLE: 60,
+
+    // size and display constants for hover text
+
+    // pixel size of hover arrows
+    HOVERARROWSIZE: 6,
+    // pixels padding around text
+    HOVERTEXTPAD: 3,
+    // hover font
+    HOVERFONTSIZE: 13,
+    HOVERFONT: 'Arial, sans-serif',
+
+    // minimum time (msec) between hover calls
+    HOVERMINTIME: 50,
+
+    // ID suffix (with fullLayout._uid) for hover events in the throttle cache
+    HOVERID: '-hover'
+};
+
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+var _$EventEmitter_8 = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      } else {
+        // At least give some kind of context to the user
+        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
+        err.context = er;
+        throw err;
+      }
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        args = Array.prototype.slice.call(arguments, 1);
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    args = Array.prototype.slice.call(arguments, 1);
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else if (listeners) {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.prototype.listenerCount = function(type) {
+  if (this._events) {
+    var evlistener = this._events[type];
+
+    if (isFunction(evlistener))
+      return 1;
+    else if (evlistener)
+      return evlistener.length;
+  }
+  return 0;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  return emitter.listenerCount(type);
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+/* global jQuery:false */
+
+var __EventEmitter_155 = _$EventEmitter_8.EventEmitter;
+
+var Events = {
+
+    init: function(plotObj) {
+
+        /*
+         * If we have already instantiated an emitter for this plot
+         * return early.
+         */
+        if(plotObj._ev instanceof __EventEmitter_155) return plotObj;
+
+        var ev = new __EventEmitter_155();
+        var internalEv = new __EventEmitter_155();
+
+        /*
+         * Assign to plot._ev while we still live in a land
+         * where plot is a DOM element with stuff attached to it.
+         * In the future we can make plot the event emitter itself.
+         */
+        plotObj._ev = ev;
+
+        /*
+         * Create a second event handler that will manage events *internally*.
+         * This allows parts of plotly to respond to thing like relayout without
+         * having to use the user-facing event handler. They cannot peacefully
+         * coexist on the same handler because a user invoking
+         * plotObj.removeAllListeners() would detach internal events, breaking
+         * plotly.
+         */
+        plotObj._internalEv = internalEv;
+
+        /*
+         * Assign bound methods from the ev to the plot object. These methods
+         * will reference the 'this' of plot._ev even though they are methods
+         * of plot. This will keep the event machinery away from the plot object
+         * which currently is often a DOM element but presents an API that will
+         * continue to function when plot becomes an emitter. Not all EventEmitter
+         * methods have been bound to `plot` as some do not currently add value to
+         * the Plotly event API.
+         */
+        plotObj.on = ev.on.bind(ev);
+        plotObj.once = ev.once.bind(ev);
+        plotObj.removeListener = ev.removeListener.bind(ev);
+        plotObj.removeAllListeners = ev.removeAllListeners.bind(ev);
+
+        /*
+         * Create funtions for managing internal events. These are *only* triggered
+         * by the mirroring of external events via the emit function.
+         */
+        plotObj._internalOn = internalEv.on.bind(internalEv);
+        plotObj._internalOnce = internalEv.once.bind(internalEv);
+        plotObj._removeInternalListener = internalEv.removeListener.bind(internalEv);
+        plotObj._removeAllInternalListeners = internalEv.removeAllListeners.bind(internalEv);
+
+        /*
+         * We must wrap emit to continue to support JQuery events. The idea
+         * is to check to see if the user is using JQuery events, if they are
+         * we emit JQuery events to trigger user handlers as well as the EventEmitter
+         * events.
+         */
+        plotObj.emit = function(event, data) {
+            if(typeof jQuery !== 'undefined') {
+                jQuery(plotObj).trigger(event, data);
+            }
+
+            ev.emit(event, data);
+            internalEv.emit(event, data);
+        };
+
+        return plotObj;
+    },
+
+    /*
+     * This function behaves like jQueries triggerHandler. It calls
+     * all handlers for a particular event and returns the return value
+     * of the LAST handler. This function also triggers jQuery's
+     * triggerHandler for backwards compatibility.
+     *
+     * Note: triggerHandler has been recommended for deprecation in v2.0.0,
+     * so the additional behavior of triggerHandler triggering internal events
+     * is deliberate excluded in order to avoid reinforcing more usage.
+     */
+    triggerHandler: function(plotObj, event, data) {
+        var jQueryHandlerValue;
+        var nodeEventHandlerValue;
+        /*
+         * If Jquery exists run all its handlers for this event and
+         * collect the return value of the LAST handler function
+         */
+        if(typeof jQuery !== 'undefined') {
+            jQueryHandlerValue = jQuery(plotObj).triggerHandler(event, data);
+        }
+
+        /*
+         * Now run all the node style event handlers
+         */
+        var ev = plotObj._ev;
+        if(!ev) return jQueryHandlerValue;
+
+        var handlers = ev._events[event];
+        if(!handlers) return jQueryHandlerValue;
+
+        /*
+         * handlers can be function or an array of functions
+         */
+        if(typeof handlers === 'function') handlers = [handlers];
+        var lastHandler = handlers.pop();
+
+        /*
+         * Call all the handlers except the last one.
+         */
+        for(var i = 0; i < handlers.length; i++) {
+            handlers[i](data);
+        }
+
+        /*
+         * Now call the final handler and collect its value
+         */
+        nodeEventHandlerValue = lastHandler(data);
+
+        /*
+         * Return either the jquery handler value if it exists or the
+         * nodeEventHandler value. Jquery event value superceeds nodejs
+         * events for backwards compatability reasons.
+         */
+        return jQueryHandlerValue !== undefined ? jQueryHandlerValue :
+            nodeEventHandlerValue;
+    },
+
+    purge: function(plotObj) {
+        delete plotObj._ev;
+        delete plotObj.on;
+        delete plotObj.once;
+        delete plotObj.removeListener;
+        delete plotObj.removeAllListeners;
+        delete plotObj.emit;
+
+        delete plotObj._ev;
+        delete plotObj._internalEv;
+        delete plotObj._internalOn;
+        delete plotObj._internalOnce;
+        delete plotObj._removeInternalListener;
+        delete plotObj._removeAllInternalListeners;
+
+        return plotObj;
+    }
+
+};
+
+var _$Events_155 = Events;
+
+var _$unhover_66 = {};
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+
+/* removed: var _$Events_155 = require('../../lib/events'); */;
+/* removed: var _$throttle_185 = require('../../lib/throttle'); */;
+/* removed: var _$get_graph_div_161 = require('../../lib/get_graph_div'); */;
+
+/* removed: var _$constants_80 = require('../fx/constants'); */;
+
+var unhover = _$unhover_66 = {};
+
+
+unhover.wrapped = function(gd, evt, subplot) {
+    gd = _$get_graph_div_161(gd);
+
+    // Important, clear any queued hovers
+    if(gd._fullLayout) {
+        _$throttle_185.clear(gd._fullLayout._uid + _$constants_80.HOVERID);
+    }
+
+    unhover.raw(gd, evt, subplot);
+};
+
+
+// remove hover effects on mouse out, and emit unhover event
+unhover.raw = function unhoverRaw(gd, evt) {
+    var fullLayout = gd._fullLayout;
+    var oldhoverdata = gd._hoverdata;
+
+    if(!evt) evt = {};
+    if(evt.target &&
+       _$Events_155.triggerHandler(gd, 'plotly_beforehover', evt) === false) {
+        return;
+    }
+
+    fullLayout._hoverlayer.selectAll('g').remove();
+    fullLayout._hoverlayer.selectAll('line').remove();
+    fullLayout._hoverlayer.selectAll('circle').remove();
+    gd._hoverdata = undefined;
+
+    if(evt.target && oldhoverdata) {
+        gd.emit('plotly_unhover', {
+            event: evt,
+            points: oldhoverdata
+        });
+    }
+};
+
+var _$dragelement_65 = {};
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+/* removed: var _$mouseEventOffset_15 = require('mouse-event-offset'); */;
+/* removed: var _$hasHover_11 = require('has-hover'); */;
+/* removed: var _$hasPassiveEvents_12 = require('has-passive-events'); */;
+
+/* removed: var _$registry_253 = require('../../registry'); */;
+/* removed: var _$lib_163 = require('../../lib'); */;
+
+/* removed: var _$constants_210 = require('../../plots/cartesian/constants'); */;
+/* removed: var _$interactions_144 = require('../../constants/interactions'); */;
+
+var dragElement = _$dragelement_65 = {};
+
+dragElement.align = _$align_63;
+dragElement.getCursor = _$getCursor_64;
+
+/* removed: var _$unhover_66 = require('./unhover'); */;
+dragElement.unhover = _$unhover_66.wrapped;
+dragElement.unhoverRaw = _$unhover_66.raw;
+
+
+/**
+ * Abstracts click & drag interactions
+ *
+ * During the interaction, a "coverSlip" element - a transparent
+ * div covering the whole page - is created, which has two key effects:
+ * - Lets you drag beyond the boundaries of the plot itself without
+ *   dropping (but if you drag all the way out of the browser window the
+ *   interaction will end)
+ * - Freezes the cursor: whatever mouse cursor the drag element had when the
+ *   interaction started gets copied to the coverSlip for use until mouseup
+ *
+ * If the user executes a drag bigger than MINDRAG, callbacks will fire as:
+ *      prepFn, moveFn (1 or more times), doneFn
+ * If the user does not drag enough, prepFn and clickFn will fire.
+ *
+ * Note: If you cancel contextmenu, clickFn will fire even with a right click
+ * (unlike native events) so you'll get a `plotly_click` event. Cancel context eg:
+ *    gd.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+ * TODO: we should probably turn this into a `config` parameter, so we can fix it
+ * such that if you *don't* cancel contextmenu, we can prevent partial drags, which
+ * put you in a weird state.
+ *
+ * If the user clicks multiple times quickly, clickFn will fire each time
+ * but numClicks will increase to help you recognize doubleclicks.
+ *
+ * @param {object} options with keys:
+ *      element (required) the DOM element to drag
+ *      prepFn (optional) function(event, startX, startY)
+ *          executed on mousedown
+ *          startX and startY are the clientX and clientY pixel position
+ *          of the mousedown event
+ *      moveFn (optional) function(dx, dy)
+ *          executed on move, ONLY after we've exceeded MINDRAG
+ *          (we keep executing moveFn if you move back to where you started)
+ *          dx and dy are the net pixel offset of the drag,
+ *          dragged is true/false, has the mouse moved enough to
+ *          constitute a drag
+ *      doneFn (optional) function(e)
+ *          executed on mouseup, ONLY if we exceeded MINDRAG (so you can be
+ *          sure that moveFn has been called at least once)
+ *          numClicks is how many clicks we've registered within
+ *          a doubleclick time
+ *          e is the original mouseup event
+ *      clickFn (optional) function(numClicks, e)
+ *          executed on mouseup if we have NOT exceeded MINDRAG (ie moveFn
+ *          has not been called at all)
+ *          numClicks is how many clicks we've registered within
+ *          a doubleclick time
+ *          e is the original mousedown event
+ *      clampFn (optional, function(dx, dy) return [dx2, dy2])
+ *          Provide custom clamping function for small displacements.
+ *          By default, clamping is done using `minDrag` to x and y displacements
+ *          independently.
+ */
+dragElement.init = function init(options) {
+    var gd = options.gd;
+    var numClicks = 1;
+    var DBLCLICKDELAY = _$interactions_144.DBLCLICKDELAY;
+    var element = options.element;
+
+    var startX,
+        startY,
+        newMouseDownTime,
+        cursor,
+        dragCover,
+        initialEvent,
+        initialTarget,
+        rightClick;
+
+    if(!gd._mouseDownTime) gd._mouseDownTime = 0;
+
+    element.style.pointerEvents = 'all';
+
+    element.onmousedown = onStart;
+
+    if(!_$hasPassiveEvents_12) {
+        element.ontouchstart = onStart;
+    }
+    else {
+        if(element._ontouchstart) {
+            element.removeEventListener('touchstart', element._ontouchstart);
+        }
+        element._ontouchstart = onStart;
+        element.addEventListener('touchstart', onStart, {passive: false});
+    }
+
+    function _clampFn(dx, dy, minDrag) {
+        if(Math.abs(dx) < minDrag) dx = 0;
+        if(Math.abs(dy) < minDrag) dy = 0;
+        return [dx, dy];
+    }
+
+    var clampFn = options.clampFn || _clampFn;
+
+    function onStart(e) {
+        e.preventDefault();
+
+        // make dragging and dragged into properties of gd
+        // so that others can look at and modify them
+        gd._dragged = false;
+        gd._dragging = true;
+        var offset = pointerOffset(e);
+        startX = offset[0];
+        startY = offset[1];
+        initialTarget = e.target;
+        initialEvent = e;
+        rightClick = e.buttons === 2 || e.ctrlKey;
+
+        newMouseDownTime = (new Date()).getTime();
+        if(newMouseDownTime - gd._mouseDownTime < DBLCLICKDELAY) {
+            // in a click train
+            numClicks += 1;
+        }
+        else {
+            // new click train
+            numClicks = 1;
+            gd._mouseDownTime = newMouseDownTime;
+        }
+
+        if(options.prepFn) options.prepFn(e, startX, startY);
+
+        if(_$hasHover_11 && !rightClick) {
+            dragCover = coverSlip();
+            dragCover.style.cursor = window.getComputedStyle(element).cursor;
+        }
+        else if(!_$hasHover_11) {
+            // document acts as a dragcover for mobile, bc we can't create dragcover dynamically
+            dragCover = document;
+            cursor = window.getComputedStyle(document.documentElement).cursor;
+            document.documentElement.style.cursor = window.getComputedStyle(element).cursor;
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onDone);
+        document.addEventListener('touchmove', onMove);
+        document.addEventListener('touchend', onDone);
+
+        return;
+    }
+
+    function onMove(e) {
+        e.preventDefault();
+
+        var offset = pointerOffset(e);
+        var minDrag = options.minDrag || _$constants_210.MINDRAG;
+        var dxdy = clampFn(offset[0] - startX, offset[1] - startY, minDrag);
+        var dx = dxdy[0];
+        var dy = dxdy[1];
+
+        if(dx || dy) {
+            gd._dragged = true;
+            dragElement.unhover(gd);
+        }
+
+        if(gd._dragged && options.moveFn && !rightClick) options.moveFn(dx, dy);
+
+        return;
+    }
+
+    function onDone(e) {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onDone);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onDone);
+
+        e.preventDefault();
+
+        if(_$hasHover_11) {
+            _$lib_163.removeElement(dragCover);
+        }
+        else if(cursor) {
+            dragCover.documentElement.style.cursor = cursor;
+            cursor = null;
+        }
+
+        if(!gd._dragging) {
+            gd._dragged = false;
+            return;
+        }
+        gd._dragging = false;
+
+        // don't count as a dblClick unless the mouseUp is also within
+        // the dblclick delay
+        if((new Date()).getTime() - gd._mouseDownTime > DBLCLICKDELAY) {
+            numClicks = Math.max(numClicks - 1, 1);
+        }
+
+        if(gd._dragged) {
+            if(options.doneFn) options.doneFn(e);
+        }
+        else {
+            if(options.clickFn) options.clickFn(numClicks, initialEvent);
+
+            // If we haven't dragged, this should be a click. But because of the
+            // coverSlip changing the element, the natural system might not generate one,
+            // so we need to make our own. But right clicks don't normally generate
+            // click events, only contextmenu events, which happen on mousedown.
+            if(!rightClick) {
+                var e2;
+
+                try {
+                    e2 = new MouseEvent('click', e);
+                }
+                catch(err) {
+                    var offset = pointerOffset(e);
+                    e2 = document.createEvent('MouseEvents');
+                    e2.initMouseEvent('click',
+                        e.bubbles, e.cancelable,
+                        e.view, e.detail,
+                        e.screenX, e.screenY,
+                        offset[0], offset[1],
+                        e.ctrlKey, e.altKey, e.shiftKey, e.metaKey,
+                        e.button, e.relatedTarget);
+                }
+
+                initialTarget.dispatchEvent(e2);
+            }
+        }
+
+        finishDrag(gd);
+
+        gd._dragged = false;
+
+        return;
+    }
+};
+
+function coverSlip() {
+    var cover = document.createElement('div');
+
+    cover.className = 'dragcover';
+    var cStyle = cover.style;
+    cStyle.position = 'fixed';
+    cStyle.left = 0;
+    cStyle.right = 0;
+    cStyle.top = 0;
+    cStyle.bottom = 0;
+    cStyle.zIndex = 999999999;
+    cStyle.background = 'none';
+
+    document.body.appendChild(cover);
+
+    return cover;
+}
+
+dragElement.coverSlip = coverSlip;
+
+function finishDrag(gd) {
+    gd._dragging = false;
+    if(gd._replotPending) _$registry_253.call('plot', gd);
+}
+
+function pointerOffset(e) {
+    return _$mouseEventOffset_15(
+        e.changedTouches ? e.changedTouches[0] : e,
+        document.body
+    );
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_163 = require('../../lib'); */;
+/* removed: var _$registry_253 = require('../../registry'); */;
+
+var _$calc_78 = function calc(gd) {
+    var calcdata = gd.calcdata;
+    var fullLayout = gd._fullLayout;
+
+    function makeCoerceHoverInfo(trace) {
+        return function(val) {
+            return _$lib_163.coerceHoverinfo({hoverinfo: val}, {_module: trace._module}, fullLayout);
+        };
+    }
+
+    for(var i = 0; i < calcdata.length; i++) {
+        var cd = calcdata[i];
+        var trace = cd[0].trace;
+
+        // don't include hover calc fields for pie traces
+        // as calcdata items might be sorted by value and
+        // won't match the data array order.
+        if(_$registry_253.traceIs(trace, 'pie')) continue;
+
+        var fillFn = _$registry_253.traceIs(trace, '2dMap') ? paste : _$lib_163.fillArray;
+
+        fillFn(trace.hoverinfo, cd, 'hi', makeCoerceHoverInfo(trace));
+
+        if(!trace.hoverlabel) continue;
+
+        fillFn(trace.hoverlabel.bgcolor, cd, 'hbg');
+        fillFn(trace.hoverlabel.bordercolor, cd, 'hbc');
+        fillFn(trace.hoverlabel.font.size, cd, 'hts');
+        fillFn(trace.hoverlabel.font.color, cd, 'htc');
+        fillFn(trace.hoverlabel.font.family, cd, 'htf');
+        fillFn(trace.hoverlabel.namelength, cd, 'hnl');
+    }
+};
+
+function paste(traceAttr, cd, cdAttr, fn) {
+    fn = fn || _$lib_163.identity;
+
+    if(Array.isArray(traceAttr)) {
+        cd[0][cdAttr] = fn(traceAttr);
+    }
+}
+
+var _$helpers_82 = {};
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$lib_163 = require('../../lib'); */;
+
+// look for either subplot or xaxis and yaxis attributes
+_$helpers_82.getSubplot = function getSubplot(trace) {
+    return trace.subplot || (trace.xaxis + trace.yaxis) || trace.geo;
+};
+
+// convenience functions for mapping all relevant axes
+_$helpers_82.flat = function flat(subplots, v) {
+    var out = new Array(subplots.length);
+    for(var i = 0; i < subplots.length; i++) {
+        out[i] = v;
+    }
+    return out;
+};
+
+_$helpers_82.p2c = function p2c(axArray, v) {
+    var out = new Array(axArray.length);
+    for(var i = 0; i < axArray.length; i++) {
+        out[i] = axArray[i].p2c(v);
+    }
+    return out;
+};
+
+_$helpers_82.getDistanceFunction = function getDistanceFunction(mode, dx, dy, dxy) {
+    if(mode === 'closest') return dxy || _$helpers_82.quadrature(dx, dy);
+    return mode === 'x' ? dx : dy;
+};
+
+_$helpers_82.getClosest = function getClosest(cd, distfn, pointData) {
+    // do we already have a point number? (array mode only)
+    if(pointData.index !== false) {
+        if(pointData.index >= 0 && pointData.index < cd.length) {
+            pointData.distance = 0;
+        }
+        else pointData.index = false;
+    }
+    else {
+        // apply the distance function to each data point
+        // this is the longest loop... if this bogs down, we may need
+        // to create pre-sorted data (by x or y), not sure how to
+        // do this for 'closest'
+        for(var i = 0; i < cd.length; i++) {
+            var newDistance = distfn(cd[i]);
+            if(newDistance <= pointData.distance) {
+                pointData.index = i;
+                pointData.distance = newDistance;
+            }
+        }
+    }
+    return pointData;
+};
+
+/*
+ * pseudo-distance function for hover effects on areas: inside the region
+ * distance is finite (`passVal`), outside it's Infinity.
+ *
+ * @param {number} v0: signed difference between the current position and the left edge
+ * @param {number} v1: signed difference between the current position and the right edge
+ * @param {number} passVal: the value to return on success
+ */
+_$helpers_82.inbox = function inbox(v0, v1, passVal) {
+    return (v0 * v1 < 0 || v0 === 0) ? passVal : Infinity;
+};
+
+_$helpers_82.quadrature = function quadrature(dx, dy) {
+    return function(di) {
+        var x = dx(di),
+            y = dy(di);
+        return Math.sqrt(x * x + y * y);
+    };
+};
+
+/** Fill event data point object for hover and selection.
+ *  Invokes _module.eventData if present.
+ *
+ * N.B. note that point 'index' corresponds to input data array index
+ *  whereas 'number' is its post-transform version.
+ *
+ * If the hovered/selected pt corresponds to an multiple input points
+ * (e.g. for histogram and transformed traces), 'pointNumbers` and 'pointIndices'
+ * are include in the event data.
+ *
+ * @param {object} pt
+ * @param {object} trace
+ * @param {object} cd
+ * @return {object}
+ */
+_$helpers_82.makeEventData = function makeEventData(pt, trace, cd) {
+    // hover uses 'index', select uses 'pointNumber'
+    var pointNumber = 'index' in pt ? pt.index : pt.pointNumber;
+
+    var out = {
+        data: trace._input,
+        fullData: trace,
+        curveNumber: trace.index,
+        pointNumber: pointNumber
+    };
+
+    if(trace._indexToPoints) {
+        var pointIndices = trace._indexToPoints[pointNumber];
+
+        if(pointIndices.length === 1) {
+            out.pointIndex = pointIndices[0];
+        } else {
+            out.pointIndices = pointIndices;
+        }
+    } else {
+        out.pointIndex = pointNumber;
+    }
+
+    if(trace._module.eventData) {
+        out = trace._module.eventData(out, pt, trace, cd, pointNumber);
+    } else {
+        if('xVal' in pt) out.x = pt.xVal;
+        else if('x' in pt) out.x = pt.x;
+
+        if('yVal' in pt) out.y = pt.yVal;
+        else if('y' in pt) out.y = pt.y;
+
+        if(pt.xa) out.xaxis = pt.xa;
+        if(pt.ya) out.yaxis = pt.ya;
+        if(pt.zLabelVal !== undefined) out.z = pt.zLabelVal;
+    }
+
+    _$helpers_82.appendArrayPointValue(out, trace, pointNumber);
+
+    return out;
+};
+
+/** Appends values inside array attributes corresponding to given point number
+ *
+ * @param {object} pointData : point data object (gets mutated here)
+ * @param {object} trace : full trace object
+ * @param {number|Array(number)} pointNumber : point number. May be a length-2 array
+ *     [row, col] to dig into 2D arrays
+ */
+_$helpers_82.appendArrayPointValue = function(pointData, trace, pointNumber) {
+    var arrayAttrs = trace._arrayAttrs;
+
+    if(!arrayAttrs) {
+        return;
+    }
+
+    for(var i = 0; i < arrayAttrs.length; i++) {
+        var astr = arrayAttrs[i];
+        var key = getPointKey(astr);
+
+        if(pointData[key] === undefined) {
+            var val = _$lib_163.nestedProperty(trace, astr).get();
+            var pointVal = getPointData(val, pointNumber);
+
+            if(pointVal !== undefined) pointData[key] = pointVal;
+        }
+    }
+};
+
+/**
+ * Appends values inside array attributes corresponding to given point number array
+ * For use when pointData references a plot entity that arose (or potentially arose)
+ * from multiple points in the input data
+ *
+ * @param {object} pointData : point data object (gets mutated here)
+ * @param {object} trace : full trace object
+ * @param {Array(number)|Array(Array(number))} pointNumbers : Array of point numbers.
+ *     Each entry in the array may itself be a length-2 array [row, col] to dig into 2D arrays
+ */
+_$helpers_82.appendArrayMultiPointValues = function(pointData, trace, pointNumbers) {
+    var arrayAttrs = trace._arrayAttrs;
+
+    if(!arrayAttrs) {
+        return;
+    }
+
+    for(var i = 0; i < arrayAttrs.length; i++) {
+        var astr = arrayAttrs[i];
+        var key = getPointKey(astr);
+
+        if(pointData[key] === undefined) {
+            var val = _$lib_163.nestedProperty(trace, astr).get();
+            var keyVal = new Array(pointNumbers.length);
+
+            for(var j = 0; j < pointNumbers.length; j++) {
+                keyVal[j] = getPointData(val, pointNumbers[j]);
+            }
+            pointData[key] = keyVal;
+        }
+    }
+};
+
+var pointKeyMap = {
+    ids: 'id',
+    locations: 'location',
+    labels: 'label',
+    values: 'value',
+    'marker.colors': 'color'
+};
+
+function getPointKey(astr) {
+    return pointKeyMap[astr] || astr;
+}
+
+function getPointData(val, pointNumber) {
+    if(Array.isArray(pointNumber)) {
+        if(Array.isArray(val) && Array.isArray(val[pointNumber[0]])) {
+            return val[pointNumber[0]][pointNumber[1]];
+        }
+    } else {
+        return val[pointNumber];
+    }
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+// works with our CSS cursor classes (see css/_cursor.scss)
+// to apply cursors to d3 single-element selections.
+// omit cursor to revert to the default.
+var _$setCursor_182 = function setCursor(el3, csr) {
+    (el3.attr('class') || '').split(' ').forEach(function(cls) {
+        if(cls.indexOf('cursor-') === 0) el3.classed(cls, false);
+    });
+
+    if(csr) el3.classed('cursor-' + csr, true);
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
+/* removed: var _$setCursor_182 = require('./setcursor'); */;
+
+var STASHATTR = 'data-savedcursor';
+var NO_CURSOR = '!!';
+
+/*
+ * works with our CSS cursor classes (see css/_cursor.scss)
+ * to override a previous cursor set on d3 single-element selections,
+ * by moving the name of the original cursor to the data-savedcursor attr.
+ * omit cursor to revert to the previously set value.
+ */
+var _$overrideCursor_174 = function overrideCursor(el3, csr) {
+    var savedCursor = el3.attr(STASHATTR);
+    if(csr) {
+        if(!savedCursor) {
+            var classes = (el3.attr('class') || '').split(' ');
+            for(var i = 0; i < classes.length; i++) {
+                var cls = classes[i];
+                if(cls.indexOf('cursor-') === 0) {
+                    el3.attr(STASHATTR, cls.substr(7))
+                        .classed(cls, false);
+                }
+            }
+            if(!el3.attr(STASHATTR)) {
+                el3.attr(STASHATTR, NO_CURSOR);
+            }
+        }
+        _$setCursor_182(el3, csr);
+    }
+    else if(savedCursor) {
+        el3.attr(STASHATTR, null);
+
+        if(savedCursor === NO_CURSOR) _$setCursor_182(el3);
+        else _$setCursor_182(el3, savedCursor);
+    }
+};
 
 var _$hover_83 = {};
 /**
@@ -33667,7 +34227,7 @@ function castHoverinfo(trace, fullLayout, ptNumber) {
 /* removed: var _$svg_text_utils_184 = require('../../lib/svg_text_utils'); */;
 /* removed: var _$setCursor_182 = require('../../lib/setcursor'); */;
 /* removed: var _$dragelement_65 = require('../dragelement'); */;
-/* removed: var _$drawArrowHead_35 = require('./draw_arrow_head'); */;
+/* removed: var _$drawArrowHead_40 = require('./draw_arrow_head'); */;
 
 // Annotations are stored in gd.layout.annotations, an array of objects
 // index can point to one item in this array,
@@ -33678,8 +34238,8 @@ function castHoverinfo(trace, fullLayout, ptNumber) {
 // if opt is blank, val can be 'add' or a full options object to add a new
 //  annotation at that point in the array, or 'remove' to delete this one
 
-var _$draw_34 = {
-    draw: __draw_34,
+var _$draw_39 = {
+    draw: __draw_39,
     drawOne: drawOne,
     drawRaw: drawRaw
 };
@@ -33687,7 +34247,7 @@ var _$draw_34 = {
 /*
  * draw: draw all annotations without any new modifications
  */
-function __draw_34(gd) {
+function __draw_39(gd) {
     var fullLayout = gd._fullLayout;
 
     fullLayout._infolayer.selectAll('.annotation').remove();
@@ -34165,7 +34725,7 @@ function drawRaw(gd, options, index, subplotId, xa, ya) {
                 .style('stroke-width', strokewidth + 'px')
                 .call(_$color_43.stroke, _$color_43.rgb(arrowColor));
 
-            _$drawArrowHead_35(arrow, arrowSide, options);
+            _$drawArrowHead_40(arrow, arrowSide, options);
 
             // the arrow dragger is a small square right at the head, then a line to the tail,
             // all expanded by a stroke width of 6px plus the arrow line width
@@ -34362,13 +34922,144 @@ function drawRaw(gd, options, index, subplotId, xa, ya) {
 
 'use strict';
 
+function xformMatrix(m, v) {
+    var out = [0, 0, 0, 0];
+    var i, j;
+
+    for(i = 0; i < 4; ++i) {
+        for(j = 0; j < 4; ++j) {
+            out[j] += m[4 * i + j] * v[i];
+        }
+    }
+
+    return out;
+}
+
+function project(camera, v) {
+    var p = xformMatrix(camera.projection,
+        xformMatrix(camera.view,
+        xformMatrix(camera.model, [v[0], v[1], v[2], 1])));
+    return p;
+}
+
+var _$project_235 = project;
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+var __drawRaw_29 = _$draw_39.drawRaw;
+/* removed: var _$project_235 = require('../../plots/gl3d/project'); */;
+var axLetters = ['x', 'y', 'z'];
+
+var _$draw_29 = function draw(scene) {
+    var fullSceneLayout = scene.fullSceneLayout;
+    var dataScale = scene.dataScale;
+    var anns = fullSceneLayout.annotations;
+
+    for(var i = 0; i < anns.length; i++) {
+        var ann = anns[i];
+        var annotationIsOffscreen = false;
+
+        for(var j = 0; j < 3; j++) {
+            var axLetter = axLetters[j];
+            var pos = ann[axLetter];
+            var ax = fullSceneLayout[axLetter + 'axis'];
+            var posFraction = ax.r2fraction(pos);
+
+            if(posFraction < 0 || posFraction > 1) {
+                annotationIsOffscreen = true;
+                break;
+            }
+        }
+
+        if(annotationIsOffscreen) {
+            scene.fullLayout._infolayer
+                .select('.annotation-' + scene.id + '[data-index="' + i + '"]')
+                .remove();
+        } else {
+            ann._pdata = _$project_235(scene.glplot.cameraParams, [
+                fullSceneLayout.xaxis.r2l(ann.x) * dataScale[0],
+                fullSceneLayout.yaxis.r2l(ann.y) * dataScale[1],
+                fullSceneLayout.zaxis.r2l(ann.z) * dataScale[2]
+            ]);
+
+            __drawRaw_29(scene.graphDiv, ann, i, scene.id, ann._xa, ann._ya);
+        }
+    }
+};
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+'use strict';
+
+/* removed: var _$registry_253 = require('../../registry'); */;
+/* removed: var _$lib_163 = require('../../lib'); */;
+
+var _$annotations3d_30 = {
+    moduleType: 'component',
+    name: 'annotations3d',
+
+    schema: {
+        subplots: {
+            scene: {annotations: _$attributes_26}
+        }
+    },
+
+    layoutAttributes: _$attributes_26,
+    handleDefaults: _$handleDefaults_28,
+    includeBasePlot: includeGL3D,
+
+    convert: _$convert_27,
+    draw: _$draw_29
+};
+
+function includeGL3D(layoutIn, layoutOut) {
+    var GL3D = _$registry_253.subplotsRegistry.gl3d;
+    if(!GL3D) return;
+
+    var attrRegex = GL3D.attrRegex;
+
+    var keys = Object.keys(layoutIn);
+    for(var i = 0; i < keys.length; i++) {
+        var k = keys[i];
+        if(attrRegex.test(k) && (layoutIn[k].annotations || []).length) {
+            _$lib_163.pushUnique(layoutOut._basePlotModules, GL3D);
+            _$lib_163.pushUnique(layoutOut._subplots.gl3d, k);
+        }
+    }
+}
+
+/**
+* Copyright 2012-2018, Plotly, Inc.
+* All rights reserved.
+*
+* This source code is licensed under the MIT license found in the
+* LICENSE file in the root directory of this source tree.
+*/
+
+
+'use strict';
+
 /* removed: var _$lib_163 = require('../../lib'); */;
 /* removed: var _$axes_205 = require('../../plots/cartesian/axes'); */;
 
-var __draw_29 = _$draw_34.draw;
+var __draw_34 = _$draw_39.draw;
 
 
-var _$calcAutorange_29 = function calcAutorange(gd) {
+var _$calcAutorange_34 = function calcAutorange(gd) {
     var fullLayout = gd._fullLayout,
         annotationList = _$lib_163.filterVisible(fullLayout.annotations);
 
@@ -34384,7 +35075,7 @@ var _$calcAutorange_29 = function calcAutorange(gd) {
         var ax = _$axes_205.getFromId(gd, axId);
         if(ax && ax.autorange) {
             return _$lib_163.syncOrAsync([
-                __draw_29,
+                __draw_34,
                 annAutorange
             ], gd);
         }
@@ -34474,7 +35165,7 @@ function annAutorange(gd) {
 
 /* removed: var _$registry_253 = require('../../registry'); */;
 
-var _$click_30 = {
+var _$click_35 = {
     hasClickToShow: hasClickToShow,
     onClick: onClick
 };
@@ -34620,7 +35311,7 @@ function clickData2r(d, ax) {
  *     Use this to make the changes as it's aware if any other changes in the
  *     same relayout call should override this conversion.
  */
-var _$convertCoords_32 = function convertCoords(gd, ax, newType, doExtra) {
+var _$convertCoords_37 = function convertCoords(gd, ax, newType, doExtra) {
     ax = ax || {};
 
     var toLog = (newType === 'log') && (ax.type === 'linear'),
@@ -34663,100 +35354,21 @@ var _$convertCoords_32 = function convertCoords(gd, ax, newType, doExtra) {
 * LICENSE file in the root directory of this source tree.
 */
 
-'use strict';
-
-/* removed: var _$lib_163 = require('../../lib'); */;
-/* removed: var _$color_43 = require('../color'); */;
-
-// defaults common to 'annotations' and 'annotations3d'
-var _$handleAnnotationCommonDefaults_31 = function handleAnnotationCommonDefaults(annIn, annOut, fullLayout, coerce) {
-    coerce('opacity');
-    var bgColor = coerce('bgcolor');
-
-    var borderColor = coerce('bordercolor');
-    var borderOpacity = _$color_43.opacity(borderColor);
-
-    coerce('borderpad');
-
-    var borderWidth = coerce('borderwidth');
-    var showArrow = coerce('showarrow');
-
-    coerce('text', showArrow ? ' ' : fullLayout._dfltTitle.annotation);
-    coerce('textangle');
-    _$lib_163.coerceFont(coerce, 'font', fullLayout.font);
-
-    coerce('width');
-    coerce('align');
-
-    var h = coerce('height');
-    if(h) coerce('valign');
-
-    if(showArrow) {
-        var arrowside = coerce('arrowside');
-        var arrowhead;
-        var arrowsize;
-
-        if(arrowside.indexOf('end') !== -1) {
-            arrowhead = coerce('arrowhead');
-            arrowsize = coerce('arrowsize');
-        }
-
-        if(arrowside.indexOf('start') !== -1) {
-            coerce('startarrowhead', arrowhead);
-            coerce('startarrowsize', arrowsize);
-        }
-        coerce('arrowcolor', borderOpacity ? annOut.bordercolor : _$color_43.defaultLine);
-        coerce('arrowwidth', ((borderOpacity && borderWidth) || 1) * 2);
-        coerce('standoff');
-        coerce('startstandoff');
-
-    }
-
-    var hoverText = coerce('hovertext');
-    var globalHoverLabel = fullLayout.hoverlabel || {};
-
-    if(hoverText) {
-        var hoverBG = coerce('hoverlabel.bgcolor', globalHoverLabel.bgcolor ||
-            (_$color_43.opacity(bgColor) ? _$color_43.rgb(bgColor) : _$color_43.defaultLine)
-        );
-
-        var hoverBorder = coerce('hoverlabel.bordercolor', globalHoverLabel.bordercolor ||
-            _$color_43.contrast(hoverBG)
-        );
-
-        _$lib_163.coerceFont(coerce, 'hoverlabel.font', {
-            family: globalHoverLabel.font.family,
-            size: globalHoverLabel.font.size,
-            color: globalHoverLabel.font.color || hoverBorder
-        });
-    }
-
-    coerce('captureevents', !!hoverText);
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
 
 'use strict';
 
 /* removed: var _$lib_163 = require('../../lib'); */;
 /* removed: var _$axes_205 = require('../../plots/cartesian/axes'); */;
-/* removed: var _$handleAnnotationCommonDefaults_31 = require('./common_defaults'); */;
-/* removed: var _$attributes_28 = require('./attributes'); */;
+/* removed: var _$handleAnnotationCommonDefaults_36 = require('./common_defaults'); */;
+/* removed: var _$attributes_33 = require('./attributes'); */;
 
 
-var _$handleAnnotationDefaults_26 = function handleAnnotationDefaults(annIn, annOut, fullLayout, opts, itemOpts) {
+var _$handleAnnotationDefaults_31 = function handleAnnotationDefaults(annIn, annOut, fullLayout, opts, itemOpts) {
     opts = opts || {};
     itemOpts = itemOpts || {};
 
     function coerce(attr, dflt) {
-        return _$lib_163.coerce(annIn, annOut, _$attributes_28, attr, dflt);
+        return _$lib_163.coerce(annIn, annOut, _$attributes_33, attr, dflt);
     }
 
     var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
@@ -34764,7 +35376,7 @@ var _$handleAnnotationDefaults_26 = function handleAnnotationDefaults(annIn, ann
 
     if(!(visible || clickToShow)) return annOut;
 
-    _$handleAnnotationCommonDefaults_31(annIn, annOut, fullLayout, coerce);
+    _$handleAnnotationCommonDefaults_36(annIn, annOut, fullLayout, coerce);
 
     var showArrow = annOut.showarrow;
 
@@ -34838,96 +35450,17 @@ var _$handleAnnotationDefaults_26 = function handleAnnotationDefaults(annIn, ann
 * LICENSE file in the root directory of this source tree.
 */
 
-'use strict';
-
-/* removed: var _$lib_163 = require('../lib'); */;
-
-/** Convenience wrapper for making array container logic DRY and consistent
- *
- * @param {object} parentObjIn
- *  user input object where the container in question is linked
- *  (i.e. either a user trace object or the user layout object)
- *
- * @param {object} parentObjOut
- *  full object where the coerced container will be linked
- *  (i.e. either a full trace object or the full layout object)
- *
- * @param {object} opts
- *  options object:
- *   - name {string}
- *      name of the key linking the container in question
- *   - handleItemDefaults {function}
- *      defaults method to be called on each item in the array container in question
- *
- *      Its arguments are:
- *          - itemIn {object} item in user layout
- *          - itemOut {object} item in full layout
- *          - parentObj {object} (as in closure)
- *          - opts {object} (as in closure)
- *          - itemOpts {object}
- *              - itemIsNotPlainObject {boolean}
- * N.B.
- *
- *  - opts is passed to handleItemDefaults so it can also store
- *    links to supplementary data (e.g. fullData for layout components)
- *
- */
-var _$handleArrayContainerDefaults_201 = function handleArrayContainerDefaults(parentObjIn, parentObjOut, opts) {
-    var name = opts.name;
-
-    var previousContOut = parentObjOut[name];
-
-    var contIn = _$lib_163.isArrayOrTypedArray(parentObjIn[name]) ? parentObjIn[name] : [],
-        contOut = parentObjOut[name] = [],
-        i;
-
-    for(i = 0; i < contIn.length; i++) {
-        var itemIn = contIn[i],
-            itemOut = {},
-            itemOpts = {};
-
-        if(!_$lib_163.isPlainObject(itemIn)) {
-            itemOpts.itemIsNotPlainObject = true;
-            itemIn = {};
-        }
-
-        opts.handleItemDefaults(itemIn, itemOut, parentObjOut, opts, itemOpts);
-
-        itemOut._input = itemIn;
-        itemOut._index = i;
-
-        contOut.push(itemOut);
-    }
-
-    // in case this array gets its defaults rebuilt independent of the whole layout,
-    // relink the private keys just for this array.
-    if(_$lib_163.isArrayOrTypedArray(previousContOut)) {
-        var len = Math.min(previousContOut.length, contOut.length);
-        for(i = 0; i < len; i++) {
-            _$lib_163.relinkPrivateKeys(contOut[i], previousContOut[i]);
-        }
-    }
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
 
 'use strict';
 
 /* removed: var _$handleArrayContainerDefaults_201 = require('../../plots/array_container_defaults'); */;
-/* removed: var _$handleAnnotationDefaults_26 = require('./annotation_defaults'); */;
+/* removed: var _$handleAnnotationDefaults_31 = require('./annotation_defaults'); */;
 
 
-var _$supplyLayoutDefaults_33 = function supplyLayoutDefaults(layoutIn, layoutOut) {
+var _$supplyLayoutDefaults_38 = function supplyLayoutDefaults(layoutIn, layoutOut) {
     var opts = {
         name: 'annotations',
-        handleItemDefaults: _$handleAnnotationDefaults_26
+        handleItemDefaults: _$handleAnnotationDefaults_31
     };
 
     _$handleArrayContainerDefaults_201(layoutIn, layoutOut, opts);
@@ -35018,387 +35551,27 @@ var _$makeIncludeComponents_215 = function makeIncludeComponents(containerArrayN
 
 'use strict';
 
-/* removed: var _$draw_34 = require('./draw'); */;
-/* removed: var _$click_30 = require('./click'); */;
+/* removed: var _$draw_39 = require('./draw'); */;
+/* removed: var _$click_35 = require('./click'); */;
 
-var _$annotations_36 = {
+var _$annotations_41 = {
     moduleType: 'component',
     name: 'annotations',
 
-    layoutAttributes: _$attributes_28,
-    supplyLayoutDefaults: _$supplyLayoutDefaults_33,
+    layoutAttributes: _$attributes_33,
+    supplyLayoutDefaults: _$supplyLayoutDefaults_38,
     includeBasePlot: _$makeIncludeComponents_215('annotations'),
 
-    calcAutorange: _$calcAutorange_29,
-    draw: _$draw_34.draw,
-    drawOne: _$draw_34.drawOne,
-    drawRaw: _$draw_34.drawRaw,
+    calcAutorange: _$calcAutorange_34,
+    draw: _$draw_39.draw,
+    drawOne: _$draw_39.drawOne,
+    drawRaw: _$draw_39.drawRaw,
 
-    hasClickToShow: _$click_30.hasClickToShow,
-    onClick: _$click_30.onClick,
+    hasClickToShow: _$click_35.hasClickToShow,
+    onClick: _$click_35.onClick,
 
-    convertCoords: _$convertCoords_32
+    convertCoords: _$convertCoords_37
 };
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-/* removed: var _$attributes_28 = require('../annotations/attributes'); */;
-var __overrideAll_37 = _$edit_types_190.overrideAll;
-
-var _$attributes_37 = __overrideAll_37({
-    _isLinkedToArray: 'annotation',
-
-    visible: _$attributes_28.visible,
-    x: {
-        valType: 'any',
-        
-        
-    },
-    y: {
-        valType: 'any',
-        
-        
-    },
-    z: {
-        valType: 'any',
-        
-        
-    },
-    ax: {
-        valType: 'number',
-        
-        
-    },
-    ay: {
-        valType: 'number',
-        
-        
-    },
-
-    xanchor: _$attributes_28.xanchor,
-    xshift: _$attributes_28.xshift,
-    yanchor: _$attributes_28.yanchor,
-    yshift: _$attributes_28.yshift,
-
-    text: _$attributes_28.text,
-    textangle: _$attributes_28.textangle,
-    font: _$attributes_28.font,
-    width: _$attributes_28.width,
-    height: _$attributes_28.height,
-    opacity: _$attributes_28.opacity,
-    align: _$attributes_28.align,
-    valign: _$attributes_28.valign,
-    bgcolor: _$attributes_28.bgcolor,
-    bordercolor: _$attributes_28.bordercolor,
-    borderpad: _$attributes_28.borderpad,
-    borderwidth: _$attributes_28.borderwidth,
-    showarrow: _$attributes_28.showarrow,
-    arrowcolor: _$attributes_28.arrowcolor,
-    arrowhead: _$attributes_28.arrowhead,
-    startarrowhead: _$attributes_28.startarrowhead,
-    arrowside: _$attributes_28.arrowside,
-    arrowsize: _$attributes_28.arrowsize,
-    startarrowsize: _$attributes_28.startarrowsize,
-    arrowwidth: _$attributes_28.arrowwidth,
-    standoff: _$attributes_28.standoff,
-    startstandoff: _$attributes_28.startstandoff,
-    hovertext: _$attributes_28.hovertext,
-    hoverlabel: _$attributes_28.hoverlabel,
-    captureevents: _$attributes_28.captureevents,
-
-    // maybes later?
-    // clicktoshow: annAtts.clicktoshow,
-    // xclick: annAtts.xclick,
-    // yclick: annAtts.yclick,
-
-    // not needed!
-    // axref: 'pixel'
-    // ayref: 'pixel'
-    // xref: 'x'
-    // yref: 'y
-    // zref: 'z'
-}, 'calc', 'from-root');
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_163 = require('../../lib'); */;
-/* removed: var _$axes_205 = require('../../plots/cartesian/axes'); */;
-
-var _$convert_38 = function convert(scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var anns = fullSceneLayout.annotations;
-
-    for(var i = 0; i < anns.length; i++) {
-        mockAnnAxes(anns[i], scene);
-    }
-
-    scene.fullLayout._infolayer
-        .selectAll('.annotation-' + scene.id)
-        .remove();
-};
-
-function mockAnnAxes(ann, scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var domain = fullSceneLayout.domain;
-    var size = scene.fullLayout._size;
-
-    var base = {
-        // this gets fill in on render
-        pdata: null,
-
-        // to get setConvert to not execute cleanly
-        type: 'linear',
-
-        // don't try to update them on `editable: true`
-        autorange: false,
-
-        // set infinite range so that annotation draw routine
-        // does not try to remove 'outside-range' annotations,
-        // this case is handled in the render loop
-        range: [-Infinity, Infinity]
-    };
-
-    ann._xa = {};
-    _$lib_163.extendFlat(ann._xa, base);
-    _$axes_205.setConvert(ann._xa);
-    ann._xa._offset = size.l + domain.x[0] * size.w;
-    ann._xa.l2p = function() {
-        return 0.5 * (1 + ann._pdata[0] / ann._pdata[3]) * size.w * (domain.x[1] - domain.x[0]);
-    };
-
-    ann._ya = {};
-    _$lib_163.extendFlat(ann._ya, base);
-    _$axes_205.setConvert(ann._ya);
-    ann._ya._offset = size.t + (1 - domain.y[1]) * size.h;
-    ann._ya.l2p = function() {
-        return 0.5 * (1 - ann._pdata[1] / ann._pdata[3]) * size.h * (domain.y[1] - domain.y[0]);
-    };
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$lib_163 = require('../../lib'); */;
-/* removed: var _$axes_205 = require('../../plots/cartesian/axes'); */;
-/* removed: var _$handleArrayContainerDefaults_201 = require('../../plots/array_container_defaults'); */;
-/* removed: var _$handleAnnotationCommonDefaults_31 = require('../annotations/common_defaults'); */;
-/* removed: var _$attributes_37 = require('./attributes'); */;
-
-var _$handleDefaults_39 = function handleDefaults(sceneLayoutIn, sceneLayoutOut, opts) {
-    _$handleArrayContainerDefaults_201(sceneLayoutIn, sceneLayoutOut, {
-        name: 'annotations',
-        handleItemDefaults: __handleAnnotationDefaults_39,
-        fullLayout: opts.fullLayout
-    });
-};
-
-function __handleAnnotationDefaults_39(annIn, annOut, sceneLayout, opts, itemOpts) {
-    function coerce(attr, dflt) {
-        return _$lib_163.coerce(annIn, annOut, _$attributes_37, attr, dflt);
-    }
-
-    function coercePosition(axLetter) {
-        var axName = axLetter + 'axis';
-
-        // mock in such way that getFromId grabs correct 3D axis
-        var gdMock = { _fullLayout: {} };
-        gdMock._fullLayout[axName] = sceneLayout[axName];
-
-        return _$axes_205.coercePosition(annOut, gdMock, coerce, axLetter, axLetter, 0.5);
-    }
-
-
-    var visible = coerce('visible', !itemOpts.itemIsNotPlainObject);
-    if(!visible) return annOut;
-
-    _$handleAnnotationCommonDefaults_31(annIn, annOut, opts.fullLayout, coerce);
-
-    coercePosition('x');
-    coercePosition('y');
-    coercePosition('z');
-
-    // if you have one coordinate you should all three
-    _$lib_163.noneOrAll(annIn, annOut, ['x', 'y', 'z']);
-
-    // hard-set here for completeness
-    annOut.xref = 'x';
-    annOut.yref = 'y';
-    annOut.zref = 'z';
-
-    coerce('xanchor');
-    coerce('yanchor');
-    coerce('xshift');
-    coerce('yshift');
-
-    if(annOut.showarrow) {
-        annOut.axref = 'pixel';
-        annOut.ayref = 'pixel';
-
-        // TODO maybe default values should be bigger than the 2D case?
-        coerce('ax', -10);
-        coerce('ay', -30);
-
-        // if you have one part of arrow length you should have both
-        _$lib_163.noneOrAll(annIn, annOut, ['ax', 'ay']);
-    }
-
-    return annOut;
-}
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-
-'use strict';
-
-function xformMatrix(m, v) {
-    var out = [0, 0, 0, 0];
-    var i, j;
-
-    for(i = 0; i < 4; ++i) {
-        for(j = 0; j < 4; ++j) {
-            out[j] += m[4 * i + j] * v[i];
-        }
-    }
-
-    return out;
-}
-
-function project(camera, v) {
-    var p = xformMatrix(camera.projection,
-        xformMatrix(camera.view,
-        xformMatrix(camera.model, [v[0], v[1], v[2], 1])));
-    return p;
-}
-
-var _$project_235 = project;
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-var __drawRaw_40 = _$draw_34.drawRaw;
-/* removed: var _$project_235 = require('../../plots/gl3d/project'); */;
-var axLetters = ['x', 'y', 'z'];
-
-var _$draw_40 = function draw(scene) {
-    var fullSceneLayout = scene.fullSceneLayout;
-    var dataScale = scene.dataScale;
-    var anns = fullSceneLayout.annotations;
-
-    for(var i = 0; i < anns.length; i++) {
-        var ann = anns[i];
-        var annotationIsOffscreen = false;
-
-        for(var j = 0; j < 3; j++) {
-            var axLetter = axLetters[j];
-            var pos = ann[axLetter];
-            var ax = fullSceneLayout[axLetter + 'axis'];
-            var posFraction = ax.r2fraction(pos);
-
-            if(posFraction < 0 || posFraction > 1) {
-                annotationIsOffscreen = true;
-                break;
-            }
-        }
-
-        if(annotationIsOffscreen) {
-            scene.fullLayout._infolayer
-                .select('.annotation-' + scene.id + '[data-index="' + i + '"]')
-                .remove();
-        } else {
-            ann._pdata = _$project_235(scene.glplot.cameraParams, [
-                fullSceneLayout.xaxis.r2l(ann.x) * dataScale[0],
-                fullSceneLayout.yaxis.r2l(ann.y) * dataScale[1],
-                fullSceneLayout.zaxis.r2l(ann.z) * dataScale[2]
-            ]);
-
-            __drawRaw_40(scene.graphDiv, ann, i, scene.id, ann._xa, ann._ya);
-        }
-    }
-};
-
-/**
-* Copyright 2012-2018, Plotly, Inc.
-* All rights reserved.
-*
-* This source code is licensed under the MIT license found in the
-* LICENSE file in the root directory of this source tree.
-*/
-
-'use strict';
-
-/* removed: var _$registry_253 = require('../../registry'); */;
-/* removed: var _$lib_163 = require('../../lib'); */;
-
-var _$annotations3d_41 = {
-    moduleType: 'component',
-    name: 'annotations3d',
-
-    schema: {
-        subplots: {
-            scene: {annotations: _$attributes_37}
-        }
-    },
-
-    layoutAttributes: _$attributes_37,
-    handleDefaults: _$handleDefaults_39,
-    includeBasePlot: includeGL3D,
-
-    convert: _$convert_38,
-    draw: _$draw_40
-};
-
-function includeGL3D(layoutIn, layoutOut) {
-    var GL3D = _$registry_253.subplotsRegistry.gl3d;
-    if(!GL3D) return;
-
-    var attrRegex = GL3D.attrRegex;
-
-    var keys = Object.keys(layoutIn);
-    for(var i = 0; i < keys.length; i++) {
-        var k = keys[i];
-        if(attrRegex.test(k) && (layoutIn[k].annotations || []).length) {
-            _$lib_163.pushUnique(layoutOut._basePlotModules, GL3D);
-            _$lib_163.pushUnique(layoutOut._subplots.gl3d, k);
-        }
-    }
-}
 
 /**
 * Copyright 2012-2018, Plotly, Inc.
@@ -42177,7 +42350,7 @@ var _$rangeslider_121 = {
 
 'use strict';
 
-/* removed: var _$attributes_28 = require('../annotations/attributes'); */;
+/* removed: var _$attributes_33 = require('../annotations/attributes'); */;
 var scatterLineAttrs = _$attributes_265.line;
 var __dash_123 = _$attributes_67.dash;
 var __extendFlat_123 = _$extend_156.extendFlat;
@@ -42210,7 +42383,7 @@ var _$attributes_123 = {
         
     },
 
-    xref: __extendFlat_123({}, _$attributes_28.xref, {
+    xref: __extendFlat_123({}, _$attributes_33.xref, {
         
     }),
     x0: {
@@ -42226,7 +42399,7 @@ var _$attributes_123 = {
         
     },
 
-    yref: __extendFlat_123({}, _$attributes_28.yref, {
+    yref: __extendFlat_123({}, _$attributes_33.yref, {
         
     }),
     y0: {
@@ -50963,7 +51136,7 @@ function makeDragBox(gd, plotinfo, x, y, w, h, ns, ew) {
             }
         }
 
-        gd.emit('plotly_doubleclick', null);
+        gd.emit('plotly_doubleclick', axList);
         _$registry_253.call('relayout', gd, attrs);
     }
 
@@ -50972,6 +51145,9 @@ function makeDragBox(gd, plotinfo, x, y, w, h, ns, ew) {
         // put the subplot viewboxes back to default (Because we're going to)
         // be repositioning the data in the relayout. But DON'T call
         // ticksAndAnnotations again - it's unnecessary and would overwrite `updates`
+		pw = xa[0]._length;
+		ph = ya[0]._length;
+		
         updateSubplots([0, 0, pw, ph]);
 
         // since we may have been redrawing some things during the drag, we may have
@@ -61470,8 +61646,8 @@ register(_$Scatter_277);
 register([
     _$fx_85,
     _$legend_103,
-    _$annotations_36,
-    _$annotations3d_41,
+    _$annotations_41,
+    _$annotations3d_30,
     _$shapes_129,
     _$images_94,
     _$updatemenus_141,

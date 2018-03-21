@@ -1005,7 +1005,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -2888,7 +2888,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -4394,7 +4394,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -5409,7 +5409,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -6825,7 +6825,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -7865,7 +7865,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -9028,7 +9028,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -10711,7 +10711,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -13183,7 +13183,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -21188,7 +21188,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -21550,7 +21550,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -22411,7 +22411,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -22852,6 +22852,8 @@
                             "constraintrange": {
                                 "valType": "info_array",
                                 "role": "info",
+                                "freeLength": true,
+                                "dimensions": "1-2",
                                 "items": [
                                     {
                                         "valType": "number",
@@ -22863,7 +22865,14 @@
                                     }
                                 ],
                                 "editType": "calc",
-                                "description": "The domain range to which the filter on the dimension is constrained. Must be an array of `[fromValue, toValue]` with finite numbers as elements."
+                                "description": "The domain range to which the filter on the dimension is constrained. Must be an array of `[fromValue, toValue]` with `fromValue <= toValue`, or if `multiselect` is not disabled, you may give an array of arrays, where each inner array is `[fromValue, toValue]`."
+                            },
+                            "multiselect": {
+                                "valType": "boolean",
+                                "dflt": true,
+                                "role": "info",
+                                "editType": "calc",
+                                "description": "Do we allow multiple selection ranges or just a single range?"
                             },
                             "values": {
                                 "valType": "data_array",
@@ -27034,7 +27043,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -28553,7 +28562,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -29603,7 +29612,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -30067,7 +30076,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
@@ -30510,7 +30519,7 @@
                     "role": "info",
                     "dflt": "y",
                     "editType": "calc+clearAxisTypes",
-                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.xaxis2`, and so on."
+                    "description": "Sets a reference between this trace's y coordinates and a 2D cartesian y axis. If *y* (the default value), the y coordinates refer to `layout.yaxis`. If *y2*, the y coordinates refer to `layout.yaxis2`, and so on."
                 },
                 "idssrc": {
                     "valType": "string",
