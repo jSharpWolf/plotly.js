@@ -1,10 +1,13 @@
 var Plotly = require('@lib/index');
 var Plots = require('@src/plots/plots');
+var Lib = require('@src/lib');
 
 var d3 = require('d3');
 var createGraphDiv = require('../assets/create_graph_div');
 var destroyGraphDiv = require('../assets/destroy_graph_div');
-
+var fail = require('../assets/fail_test');
+var supplyAllDefaults = require('../assets/supply_defaults');
+var failTest = require('../assets/fail_test');
 
 describe('Test Plots', function() {
     'use strict';
@@ -19,7 +22,7 @@ describe('Test Plots', function() {
                     }
                 };
 
-            Plots.supplyDefaults(gd);
+            supplyAllDefaults(gd);
             expect(gd.layout.height).toBe(height);
             expect(gd._fullLayout).toBeDefined();
             expect(gd._fullLayout.height).toBe(height);
@@ -38,12 +41,17 @@ describe('Test Plots', function() {
 
             var oldFullLayout = {
                 _plots: { xy: { plot: {} } },
-                xaxis: { c2p: function() {} },
-                yaxis: { _m: 20 },
+                xaxis: { c2p: function() {}, layer: 'above traces' },
+                yaxis: { _m: 20, layer: 'above traces' },
                 scene: { _scene: {} },
                 annotations: [{ _min: 10, }, { _max: 20 }],
                 someFunc: function() {}
             };
+
+            Lib.extendFlat(oldFullLayout._plots.xy, {
+                xaxis: oldFullLayout.xaxis,
+                yaxis: oldFullLayout.yaxis
+            });
 
             var newData = [{
                 type: 'scatter3d',
@@ -64,7 +72,7 @@ describe('Test Plots', function() {
                 layout: newLayout
             };
 
-            Plots.supplyDefaults(gd);
+            supplyAllDefaults(gd);
 
             expect(gd._fullData[0].z).toBe(newData[0].z);
             expect(gd._fullData[1].z).toBe(newData[1].z);
@@ -88,7 +96,7 @@ describe('Test Plots', function() {
             var data = [trace0, trace1];
             var gd = { data: data };
 
-            Plots.supplyDefaults(gd);
+            supplyAllDefaults(gd);
 
             expect(gd.data).toBe(data);
 
@@ -110,7 +118,7 @@ describe('Test Plots', function() {
 
         function testSanitizeMarginsHasBeenCalledOnlyOnce(gd) {
             spyOn(Plots, 'sanitizeMargins').and.callThrough();
-            Plots.supplyDefaults(gd);
+            supplyAllDefaults(gd);
             expect(Plots.sanitizeMargins).toHaveBeenCalledTimes(1);
         }
 
@@ -153,7 +161,14 @@ describe('Test Plots', function() {
             layoutOut,
             expected;
 
-        var supplyLayoutDefaults = Plots.supplyLayoutGlobalDefaults;
+        var formatObj = require('@src/locale-en').format;
+
+        function supplyLayoutDefaults(layoutIn, layoutOut) {
+            layoutOut._dfltTitle = {
+                plot: 'ppplot'
+            };
+            return Plots.supplyLayoutGlobalDefaults(layoutIn, layoutOut, formatObj);
+        }
 
         beforeEach(function() {
             layoutOut = {};
@@ -209,7 +224,7 @@ describe('Test Plots', function() {
 
     describe('Plots.supplyTraceDefaults', function() {
         var supplyTraceDefaults = Plots.supplyTraceDefaults,
-            layout = {};
+            layout = {_subplots: {cartesian: ['xy'], xaxis: ['x'], yaxis: ['y']}};
 
         var traceIn, traceOut;
 
@@ -254,93 +269,6 @@ describe('Test Plots', function() {
         });
     });
 
-    describe('Plots.getSubplotIds', function() {
-        var getSubplotIds = Plots.getSubplotIds;
-
-        it('returns scene ids in order', function() {
-            var layout = {
-                scene2: {},
-                scene: {},
-                scene3: {}
-            };
-
-            expect(getSubplotIds(layout, 'gl3d'))
-                .toEqual(['scene', 'scene2', 'scene3']);
-
-            expect(getSubplotIds(layout, 'cartesian'))
-                .toEqual([]);
-            expect(getSubplotIds(layout, 'geo'))
-                .toEqual([]);
-            expect(getSubplotIds(layout, 'no-valid-subplot-type'))
-                .toEqual([]);
-        });
-
-        it('returns geo ids in order', function() {
-            var layout = {
-                geo2: {},
-                geo: {},
-                geo3: {}
-            };
-
-            expect(getSubplotIds(layout, 'geo'))
-                .toEqual(['geo', 'geo2', 'geo3']);
-
-            expect(getSubplotIds(layout, 'cartesian'))
-                .toEqual([]);
-            expect(getSubplotIds(layout, 'gl3d'))
-                .toEqual([]);
-            expect(getSubplotIds(layout, 'no-valid-subplot-type'))
-                .toEqual([]);
-        });
-
-        it('returns cartesian ids', function() {
-            var layout = {
-                _has: Plots._hasPlotType,
-                _plots: { xy: {}, x2y2: {} }
-            };
-
-            expect(getSubplotIds(layout, 'cartesian'))
-                .toEqual([]);
-
-            layout._basePlotModules = [{ name: 'cartesian' }];
-            expect(getSubplotIds(layout, 'cartesian'))
-                .toEqual(['xy', 'x2y2']);
-            expect(getSubplotIds(layout, 'gl2d'))
-                .toEqual([]);
-
-            layout._basePlotModules = [{ name: 'gl2d' }];
-            expect(getSubplotIds(layout, 'gl2d'))
-                .toEqual(['xy', 'x2y2']);
-            expect(getSubplotIds(layout, 'cartesian'))
-                .toEqual([]);
-
-        });
-    });
-
-    describe('Plots.findSubplotIds', function() {
-        var findSubplotIds = Plots.findSubplotIds;
-        var ids;
-
-        it('should return subplots ids found in the data', function() {
-            var data = [{
-                type: 'scatter3d',
-                scene: 'scene'
-            }, {
-                type: 'surface',
-                scene: 'scene2'
-            }, {
-                type: 'choropleth',
-                geo: 'geo'
-            }];
-
-            ids = findSubplotIds(data, 'geo');
-            expect(ids).toEqual(['geo']);
-
-            ids = findSubplotIds(data, 'gl3d');
-            expect(ids).toEqual(['scene', 'scene2']);
-        });
-    });
-
     describe('Plots.resize', function() {
         var gd;
 
@@ -357,7 +285,7 @@ describe('Test Plots', function() {
                 .then(done);
         });
 
-        afterEach(destroyGraphDiv);
+        afterAll(destroyGraphDiv);
 
         it('should resize the plot clip', function() {
             var uid = gd._fullLayout._uid;
@@ -373,6 +301,7 @@ describe('Test Plots', function() {
 
         it('should resize the main svgs', function() {
             var mainSvgs = document.getElementsByClassName('main-svg');
+            expect(mainSvgs.length).toBe(2);
 
             for(var i = 0; i < mainSvgs.length; i++) {
                 var svg = mainSvgs[i],
@@ -385,6 +314,9 @@ describe('Test Plots', function() {
         });
 
         it('should update the axis scales', function() {
+            var mainSvgs = document.getElementsByClassName('main-svg');
+            expect(mainSvgs.length).toBe(2);
+
             var fullLayout = gd._fullLayout,
                 plotinfo = fullLayout._plots.xy;
 
@@ -394,6 +326,18 @@ describe('Test Plots', function() {
             expect(plotinfo.xaxis._length).toEqual(240);
             expect(plotinfo.yaxis._length).toEqual(220);
         });
+
+        it('should allow resizing by plot ID', function(done) {
+            var mainSvgs = document.getElementsByClassName('main-svg');
+            expect(mainSvgs.length).toBe(2);
+
+            expect(typeof gd.id).toBe('string');
+            expect(gd.id).toBeTruthy();
+
+            Plotly.Plots.resize(gd.id)
+            .catch(failTest)
+            .then(done);
+        });
     });
 
     describe('Plots.purge', function() {
@@ -402,6 +346,19 @@ describe('Test Plots', function() {
         beforeEach(function(done) {
             gd = createGraphDiv();
             Plotly.plot(gd, [{ x: [1, 2, 3], y: [2, 3, 4] }], {}).then(done);
+
+            // hacky: simulate getting stuck with these flags due to an error
+            // see #2055 and commit 6a44a9a - before fixing that error, we would
+            // end up in an inconsistent state that prevented future Plotly.newPlot
+            // because _dragging and _dragged were not cleared by purge.
+            gd._dragging = true;
+            gd._dragged = true;
+            gd._hoverdata = true;
+            gd._snapshotInProgress = true;
+            gd._editing = true;
+            gd._replotPending = true;
+            gd._mouseDownTime = true;
+            gd._legendMouseDownTime = true;
         });
 
         afterEach(destroyGraphDiv);
@@ -410,36 +367,23 @@ describe('Test Plots', function() {
             var expectedKeys = [
                 '_ev', '_internalEv', 'on', 'once', 'removeListener', 'removeAllListeners',
                 '_internalOn', '_internalOnce', '_removeInternalListener',
-                '_removeAllInternalListeners', 'emit', '_context', '_replotPending',
-                '_hmpixcount', '_hmlumcount', '_mouseDownTime', '_legendMouseDownTime',
+                '_removeAllInternalListeners', 'emit', '_context'
+            ];
+
+            var expectedUndefined = [
+                'data', 'layout', '_fullData', '_fullLayout', 'calcdata', 'framework',
+                'empty', 'fid', 'undoqueue', 'undonum', 'autoplay', 'changed',
+                '_promises', '_redrawTimer', 'firstscatter',
+                '_transitionData', '_transitioning', '_hmpixcount', '_hmlumcount',
+                '_dragging', '_dragged', '_hoverdata', '_snapshotInProgress', '_editing',
+                '_replotPending', '_mouseDownTime', '_legendMouseDownTime'
             ];
 
             Plots.purge(gd);
-            expect(Object.keys(gd)).toEqual(expectedKeys);
-            expect(gd.data).toBeUndefined();
-            expect(gd.layout).toBeUndefined();
-            expect(gd._fullData).toBeUndefined();
-            expect(gd._fullLayout).toBeUndefined();
-            expect(gd.calcdata).toBeUndefined();
-            expect(gd.framework).toBeUndefined();
-            expect(gd.empty).toBeUndefined();
-            expect(gd.fid).toBeUndefined();
-            expect(gd.undoqueue).toBeUndefined();
-            expect(gd.undonum).toBeUndefined();
-            expect(gd.autoplay).toBeUndefined();
-            expect(gd.changed).toBeUndefined();
-            expect(gd._tester).toBeUndefined();
-            expect(gd._testref).toBeUndefined();
-            expect(gd._promises).toBeUndefined();
-            expect(gd._redrawTimer).toBeUndefined();
-            expect(gd.firstscatter).toBeUndefined();
-            expect(gd.hmlumcount).toBeUndefined();
-            expect(gd.hmpixcount).toBeUndefined();
-            expect(gd.numboxes).toBeUndefined();
-            expect(gd._hoverTimer).toBeUndefined();
-            expect(gd._lastHoverTime).toBeUndefined();
-            expect(gd._transitionData).toBeUndefined();
-            expect(gd._transitioning).toBeUndefined();
+            expect(Object.keys(gd).sort()).toEqual(expectedKeys.sort());
+            expectedUndefined.forEach(function(key) {
+                expect(gd[key]).toBeUndefined(key);
+            });
         });
     });
 
@@ -565,7 +509,9 @@ describe('Test Plots', function() {
         });
     });
 
-    describe('Plots.getSubplotCalcData', function() {
+    describe('getSubplotCalcData', function() {
+        var getSubplotCalcData = require('@src/plots/get_data').getSubplotCalcData;
+
         var trace0 = { geo: 'geo2' };
         var trace1 = { subplot: 'ternary10' };
         var trace2 = { subplot: 'ternary10' };
@@ -577,22 +523,22 @@ describe('Test Plots', function() {
         ];
 
         it('should extract calcdata traces associated with subplot (1)', function() {
-            var out = Plots.getSubplotCalcData(cd, 'geo', 'geo2');
+            var out = getSubplotCalcData(cd, 'geo', 'geo2');
             expect(out).toEqual([[{ trace: trace0 }]]);
         });
 
         it('should extract calcdata traces associated with subplot (2)', function() {
-            var out = Plots.getSubplotCalcData(cd, 'ternary', 'ternary10');
+            var out = getSubplotCalcData(cd, 'ternary', 'ternary10');
             expect(out).toEqual([[{ trace: trace1 }], [{ trace: trace2 }]]);
         });
 
         it('should return [] when no calcdata traces where found', function() {
-            var out = Plots.getSubplotCalcData(cd, 'geo', 'geo');
+            var out = getSubplotCalcData(cd, 'geo', 'geo');
             expect(out).toEqual([]);
         });
 
         it('should return [] when subplot type is invalid', function() {
-            var out = Plots.getSubplotCalcData(cd, 'non-sense', 'geo2');
+            var out = getSubplotCalcData(cd, 'non-sense', 'geo2');
             expect(out).toEqual([]);
         });
     });
@@ -600,10 +546,11 @@ describe('Test Plots', function() {
     describe('Plots.generalUpdatePerTraceModule', function() {
 
         function _update(subplotCalcData, traceHashOld) {
+            var gd = {};
             var subplot = { traceHash: traceHashOld || {} };
             var calcDataPerModule = [];
 
-            var plot = function(_, moduleCalcData) {
+            var plot = function(gd, subplot, moduleCalcData) {
                 calcDataPerModule.push(moduleCalcData);
             };
 
@@ -611,7 +558,7 @@ describe('Test Plots', function() {
                 calcTrace[0].trace._module = { plot: plot };
             });
 
-            Plots.generalUpdatePerTraceModule(subplot, subplotCalcData, {});
+            Plots.generalUpdatePerTraceModule(gd, subplot, subplotCalcData, {});
 
             return {
                 traceHash: subplot.traceHash,
@@ -724,5 +671,440 @@ describe('Test Plots', function() {
                 done();
             });
         });
+    });
+
+    describe('Plots.style', function() {
+        var gd;
+
+        beforeEach(function() {
+            gd = createGraphDiv();
+        });
+
+        afterEach(destroyGraphDiv);
+
+        it('should call reused style modules only once per graph', function(done) {
+            var Drawing = require('@src/components/drawing');
+
+            Plotly.plot(gd, [{
+                mode: 'markers',
+                y: [1, 2, 1]
+            }, {
+                type: 'scatterternary',
+                mode: 'markers',
+                a: [1, 2, 3],
+                b: [2, 1, 3],
+                c: [3, 2, 1]
+            }, {
+                type: 'scatterpolar',
+                mode: 'markers',
+                r: [1, 2, 3],
+                theta: [0, 90, 120]
+            }])
+            .then(function() {
+                expect(gd._fullLayout._modules.length).toBe(3);
+
+                // A routine that gets called inside Scatter.style,
+                // once per trace.
+                //
+                // Start spying on it here, so that calls outside of
+                // Plots.style are ignored.
+                spyOn(Drawing, 'pointStyle');
+
+                return Plots.style(gd);
+            })
+            .then(function() {
+                // N.B. Drawing.pointStyle would be called 9 times w/o
+                // some special Plots.style logic.
+                expect(Drawing.pointStyle).toHaveBeenCalledTimes(3);
+            })
+            .catch(fail)
+            .then(done);
+        });
+    });
+
+    describe('subplot cleaning logic', function() {
+        var gd;
+
+        beforeEach(function() { gd = createGraphDiv(); });
+
+        afterEach(destroyGraphDiv);
+
+        function assertCartesian(subplotsSVG, subplotsGL2D, msg) {
+            var subplotsAll = subplotsSVG.concat(subplotsGL2D);
+            var subplots3 = d3.select(gd).selectAll('.cartesianlayer .subplot');
+            expect(subplots3.size()).toBe(subplotsAll.length, msg);
+
+            subplotsAll.forEach(function(subplot) {
+                expect(d3.select(gd).selectAll('.cartesianlayer .subplot.' + subplot).size())
+                    .toBe(1, msg + ' - ' + subplot);
+            });
+
+            subplotsSVG.forEach(function(subplot) {
+                expect((gd._fullLayout._plots[subplot] || {})._scene2d)
+                    .toBeUndefined(msg + ' - cartesian ' + subplot);
+            });
+
+            subplotsGL2D.forEach(function(subplot) {
+                expect((gd._fullLayout._plots[subplot] || {})._scene2d)
+                    .toBeDefined(msg + ' - gl2d ' + subplot);
+            });
+        }
+
+        var subplotSelectors = {
+            gl3d: '.gl-container>div[id^="scene"]',
+            geo: '.geolayer>g',
+            mapbox: '.mapboxgl-map',
+            parcoords: '.parcoords-line-layers',
+            pie: '.pielayer .trace',
+            sankey: '.sankey',
+            ternary: '.ternarylayer>g'
+        };
+
+        function assertSubplot(type, n, msg) {
+            expect(d3.select(gd).selectAll(subplotSelectors[type]).size())
+                .toBe(n, msg + ' - ' + type);
+        }
+
+        // opts.cartesian and opts.gl2d should be arrays of subplot ids ('xy', 'x2y2' etc)
+        // others should be counts: gl3d, geo, mapbox, parcoords, pie, ternary
+        // if omitted, that subplot type is assumed to not exist
+        function assertSubplots(opts, msg) {
+            msg = msg || '';
+            assertCartesian(opts.cartesian || [], opts.gl2d || [], msg);
+            Object.keys(subplotSelectors).forEach(function(type) {
+                assertSubplot(type, opts[type] || 0, msg);
+            });
+        }
+
+        var jsLogo = 'https://images.plot.ly/language-icons/api-home/js-logo.png';
+
+        it('makes at least a blank cartesian subplot', function(done) {
+            Plotly.newPlot(gd, [], {})
+            .then(function() {
+                assertSubplots({cartesian: ['xy']}, 'totally blank');
+            })
+            .catch(fail)
+            .then(done);
+        });
+
+        it('uses the first x & y axes it finds in making a blank cartesian subplot', function(done) {
+            Plotly.newPlot(gd, [], {xaxis3: {}, yaxis4: {}})
+            .then(function() {
+                assertSubplots({cartesian: ['x3y4']}, 'blank with axis objects');
+            })
+            .catch(fail)
+            .then(done);
+        });
+
+        it('shows expected cartesian subplots from visible traces and components', function(done) {
+            Plotly.newPlot(gd, [
+                {y: [1, 2]}
+            ], {
+                // strange case: x2 is anchored to y2, so we show y2
+                // even though no trace or component references it, only x2
+                annotations: [{xref: 'x2', yref: 'paper'}],
+                xaxis2: {anchor: 'y2'},
+                images: [{xref: 'x3', yref: 'y3', source: jsLogo}],
+                shapes: [{xref: 'x5', yref: 'y5'}]
+            })
+            .then(function() {
+                assertSubplots({cartesian: ['xy', 'x2y2', 'x3y3', 'x5y5']}, 'visible components');
+            })
+            .catch(fail)
+            .then(done);
+        });
+
+        it('shows expected cartesian subplots from invisible traces and components', function(done) {
+            Plotly.newPlot(gd, [
+                {y: [1, 2], visible: false}
+            ], {
+                // strange case: x2 is anchored to y2, so we show y2
+                // even though no trace or component references it, only x2
+                annotations: [{xref: 'x2', yref: 'paper', visible: false}],
+                xaxis2: {anchor: 'y2'},
+                images: [{xref: 'x3', yref: 'y3', source: jsLogo, visible: false}],
+                shapes: [{xref: 'x5', yref: 'y5', visible: false}]
+            })
+            .then(function() {
+                assertSubplots({cartesian: ['xy', 'x2y2', 'x3y3', 'x5y5']}, 'invisible components');
+            })
+            .catch(fail)
+            .then(done);
+        });
+
+        it('ignores unused axis and subplot objects', function(done) {
+            Plotly.plot('graph', [{
+                type: 'pie',
+                values: [1]
+            }], {
+                xaxis: {},
+                yaxis: {},
+                scene: {},
+                geo: {},
+                ternary: {},
+                mapbox: {}
+            })
+            .then(function() {
+                assertSubplots({pie: 1}, 'just pie');
+            })
+            .catch(fail)
+            .then(done);
+        });
+    });
+});
+
+describe('grids', function() {
+    var gd;
+
+    beforeEach(function() {
+        gd = createGraphDiv();
+    });
+
+    afterEach(destroyGraphDiv);
+
+    function makeData(subplots) {
+        var data = [];
+        for(var i = 0; i < subplots.length; i++) {
+            var subplot = subplots[i];
+            var yPos = subplot.indexOf('y');
+            data.push({
+                y: [1, 2],
+                xaxis: subplot.slice(0, yPos),
+                yaxis: subplot.slice(yPos)
+            });
+        }
+        return data;
+    }
+
+    function _assertDomains(domains) {
+        for(var axName in domains) {
+            expect(gd._fullLayout[axName].domain)
+                .toBeCloseToArray(domains[axName], 3, axName);
+        }
+    }
+
+    function _assertMissing(axList) {
+        axList.forEach(function(axName) {
+            expect(gd._fullLayout[axName]).toBeUndefined(axName);
+        });
+    }
+
+    it('defaults to a coupled layout', function(done) {
+        Plotly.newPlot(gd,
+            // leave some empty rows/columns
+            makeData(['x2y2', 'x3y3']),
+            {grid: {rows: 4, columns: 4}}
+        )
+        .then(function() {
+            _assertDomains({
+                xaxis2: [1 / 3.9, 1.9 / 3.9],
+                yaxis2: [2 / 3.9, 2.9 / 3.9],
+                xaxis3: [2 / 3.9, 2.9 / 3.9],
+                yaxis3: [1 / 3.9, 1.9 / 3.9]
+            });
+            _assertMissing(['xaxis', 'yaxis', 'xaxis4', 'yaxis4']);
+
+            return Plotly.relayout(gd, {
+                'grid.xaxes': ['x2', 'x', '', 'x3'],
+                'grid.yaxes': ['y3', '', 'y', 'y2']
+            });
+        })
+        .then(function() {
+            _assertDomains({
+                xaxis2: [0, 0.9 / 3.9],
+                yaxis2: [0, 0.9 / 3.9],
+                xaxis3: [3 / 3.9, 1],
+                yaxis3: [3 / 3.9, 1]
+            });
+            _assertMissing(['xaxis', 'yaxis', 'xaxis4', 'yaxis4']);
+
+            return Plotly.relayout(gd, {'grid.roworder': 'bottom to top'});
+        })
+        .then(function() {
+            _assertDomains({
+                xaxis2: [0, 0.9 / 3.9],
+                yaxis2: [3 / 3.9, 1],
+                xaxis3: [3 / 3.9, 1],
+                yaxis3: [0, 0.9 / 3.9]
+            });
+            _assertMissing(['xaxis', 'yaxis', 'xaxis4', 'yaxis4']);
+        })
+        .catch(failTest)
+        .then(done);
+    });
+
+    it('has a bigger default gap with independent layout', function(done) {
+        Plotly.newPlot(gd,
+            makeData(['x2y2', 'x3y3', 'x4y4']),
+            {grid: {rows: 3, columns: 3, pattern: 'independent'}}
+        )
+        .then(function() {
+            _assertDomains({
+                xaxis2: [1 / 2.8, 1.8 / 2.8],
+                yaxis2: [2 / 2.7, 1],
+                xaxis3: [2 / 2.8, 1],
+                yaxis3: [2 / 2.7, 1],
+                xaxis4: [0, 0.8 / 2.8],
+                yaxis4: [1 / 2.7, 1.7 / 2.7]
+            });
+            _assertMissing(['xaxis', 'yaxis']);
+
+            return Plotly.relayout(gd, {
+                'grid.subplots': [['x4y4', '', 'x3y3'], [], ['', 'x2y2']]
+            });
+        })
+        .then(function() {
+            _assertDomains({
+                xaxis2: [1 / 2.8, 1.8 / 2.8],
+                yaxis2: [0, 0.7 / 2.7],
+                xaxis3: [2 / 2.8, 1],
+                yaxis3: [2 / 2.7, 1],
+                xaxis4: [0, 0.8 / 2.8],
+                yaxis4: [2 / 2.7, 1]
+            });
+            _assertMissing(['xaxis', 'yaxis']);
+
+            return Plotly.relayout(gd, {'grid.roworder': 'bottom to top'});
+        })
+        .then(function() {
+            _assertDomains({
+                xaxis2: [1 / 2.8, 1.8 / 2.8],
+                yaxis2: [2 / 2.7, 1],
+                xaxis3: [2 / 2.8, 1],
+                yaxis3: [0, 0.7 / 2.7],
+                xaxis4: [0, 0.8 / 2.8],
+                yaxis4: [0, 0.7 / 2.7]
+            });
+            _assertMissing(['xaxis', 'yaxis']);
+        })
+        .catch(failTest)
+        .then(done);
+    });
+
+    it('can set x and y gaps and change domain', function(done) {
+        Plotly.newPlot(gd,
+            // leave some empty rows/columns
+            makeData(['xy', 'x2y2']),
+            {grid: {rows: 2, columns: 2}}
+        )
+        .then(function() {
+            _assertDomains({
+                xaxis: [0, 0.9 / 1.9],
+                yaxis: [1 / 1.9, 1],
+                xaxis2: [1 / 1.9, 1],
+                yaxis2: [0, 0.9 / 1.9]
+            });
+
+            return Plotly.relayout(gd, {'grid.xgap': 0.2});
+        })
+        .then(function() {
+            _assertDomains({
+                xaxis: [0, 0.8 / 1.8],
+                yaxis: [1 / 1.9, 1],
+                xaxis2: [1 / 1.8, 1],
+                yaxis2: [0, 0.9 / 1.9]
+            });
+
+            return Plotly.relayout(gd, {'grid.ygap': 0.3});
+        })
+        .then(function() {
+            _assertDomains({
+                xaxis: [0, 0.8 / 1.8],
+                yaxis: [1 / 1.7, 1],
+                xaxis2: [1 / 1.8, 1],
+                yaxis2: [0, 0.7 / 1.7]
+            });
+
+            return Plotly.relayout(gd, {'grid.domain': {x: [0.2, 0.7], y: [0, 0.5]}});
+        })
+        .then(function() {
+            _assertDomains({
+                xaxis: [0.2, 0.2 + 0.4 / 1.8],
+                yaxis: [0.5 / 1.7, 0.5],
+                xaxis2: [0.2 + 0.5 / 1.8, 0.7],
+                yaxis2: [0, 0.35 / 1.7]
+            });
+        })
+        .catch(failTest)
+        .then(done);
+    });
+
+    it('responds to xside and yside', function(done) {
+        function checkAxis(axName, anchor, side, position) {
+            var ax = gd._fullLayout[axName];
+            expect(ax.anchor).toBe(anchor, axName);
+            expect(ax.side).toBe(side, axName);
+            expect(ax.position).toBe(position, axName);
+        }
+
+        Plotly.newPlot(gd,
+            // leave some empty rows/columns
+            makeData(['xy', 'x2y2']),
+            {grid: {rows: 2, columns: 2}}
+        )
+        .then(function() {
+            checkAxis('xaxis', 'y', 'bottom');
+            checkAxis('yaxis', 'x', 'left');
+            checkAxis('xaxis2', 'y2', 'bottom');
+            checkAxis('yaxis2', 'x2', 'left');
+
+            return Plotly.relayout(gd, {'grid.xside': 'top plot', 'grid.yside': 'right plot'});
+        })
+        .then(function() {
+            checkAxis('xaxis', 'y', 'top');
+            checkAxis('yaxis', 'x', 'right');
+            checkAxis('xaxis2', 'y2', 'top');
+            checkAxis('yaxis2', 'x2', 'right');
+
+            return Plotly.relayout(gd, {'grid.xside': 'top', 'grid.yside': 'right'});
+        })
+        .then(function() {
+            checkAxis('xaxis', 'free', 'top', 1);
+            checkAxis('yaxis', 'free', 'right', 1);
+            checkAxis('xaxis2', 'free', 'top', 1);
+            checkAxis('yaxis2', 'free', 'right', 1);
+
+            return Plotly.relayout(gd, {'grid.xside': 'bottom', 'grid.yside': 'left'});
+        })
+        .then(function() {
+            checkAxis('xaxis', 'free', 'bottom', 0);
+            checkAxis('yaxis', 'free', 'left', 0);
+            checkAxis('xaxis2', 'free', 'bottom', 0);
+            checkAxis('yaxis2', 'free', 'left', 0);
+        })
+        .catch(failTest)
+        .then(done);
+    });
+
+    it('places other subplots in the grid by default', function(done) {
+        function checkDomain(container, column, row, x, y) {
+            var domain = container.domain;
+            expect(domain.row).toBe(row);
+            expect(domain.column).toBe(column);
+            expect(domain.x).toBeCloseToArray(x, 3);
+            expect(domain.y).toBeCloseToArray(y, 3);
+        }
+        Plotly.newPlot(gd, [{
+            type: 'pie', labels: ['a', 'b'], values: [1, 2]
+        }, {
+            type: 'scattergeo', lon: [10, 20], lat: [20, 10]
+        }], {
+            grid: {rows: 2, columns: 2, xgap: 1 / 3, ygap: 1 / 3}
+        })
+        .then(function() {
+            // defaults to cell (0, 0)
+            // we're not smart enough to keep them from overlapping each other... should we try?
+            checkDomain(gd._fullData[0], 0, 0, [0, 0.4], [0.6, 1]);
+            checkDomain(gd._fullLayout.geo, 0, 0, [0, 0.4], [0.6, 1]);
+
+            return Plotly.update(gd, {'domain.column': 1}, {'geo.domain.row': 1}, [0]);
+        })
+        .then(function() {
+            // change row OR column, the other keeps its previous default
+            checkDomain(gd._fullData[0], 1, 0, [0.6, 1], [0.6, 1]);
+            checkDomain(gd._fullLayout.geo, 0, 1, [0, 0.4], [0, 0.4]);
+        })
+        .catch(failTest)
+        .then(done);
     });
 });

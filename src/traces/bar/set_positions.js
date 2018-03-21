@@ -1,5 +1,5 @@
 /**
-* Copyright 2012-2017, Plotly, Inc.
+* Copyright 2012-2018, Plotly, Inc.
 * All rights reserved.
 *
 * This source code is licensed under the MIT license found in the
@@ -10,6 +10,7 @@
 'use strict';
 
 var isNumeric = require('fast-isnumeric');
+var isArrayOrTypedArray = require('../../lib').isArrayOrTypedArray;
 var BADNUM = require('../../constants/numerical').BADNUM;
 
 var Registry = require('../../registry');
@@ -105,6 +106,8 @@ function setGroupPositions(gd, pa, sa, calcTraces) {
             setGroupPositionsInOverlayMode(gd, pa, sa, excluded);
         }
     }
+
+    collectExtents(calcTraces, pa);
 }
 
 
@@ -227,6 +230,7 @@ function setOffsetAndWidth(gd, pa, sieve) {
         t.barwidth = barWidth;
         t.poffset = offsetFromCenter;
         t.bargroupwidth = barGroupWidth;
+        t.bardelta = minDiff;
     }
 
     // stack bars that only differ by rounding
@@ -277,6 +281,7 @@ function setOffsetAndWidthInGroupMode(gd, pa, sieve) {
         t.barwidth = barWidth;
         t.poffset = offsetFromCenter;
         t.bargroupwidth = barGroupWidth;
+        t.bardelta = minDiff;
     }
 
     // stack bars that only differ by rounding
@@ -309,7 +314,7 @@ function applyAttributes(sieve) {
             initialPoffset = t.poffset,
             newPoffset;
 
-        if(Array.isArray(offset)) {
+        if(isArrayOrTypedArray(offset)) {
             // if offset is an array, then clone it into t.poffset.
             newPoffset = offset.slice(0, calcTrace.length);
 
@@ -335,7 +340,7 @@ function applyAttributes(sieve) {
         var width = fullTrace.width,
             initialBarwidth = t.barwidth;
 
-        if(Array.isArray(width)) {
+        if(isArrayOrTypedArray(width)) {
             // if width is an array, then clone it into t.barwidth.
             var newBarwidth = width.slice(0, calcTrace.length);
 
@@ -467,8 +472,7 @@ function setBaseAndTop(gd, sa, sieve) {
     // along with the bases and tops of each bar.
     var traces = sieve.traces,
         sLetter = getAxisLetter(sa),
-        s0 = sa.l2c(sa.c2l(0)),
-        sRange = [s0, s0];
+        sRange = [null, null];
 
     for(var i = 0; i < traces.length; i++) {
         var trace = traces[i];
@@ -481,7 +485,7 @@ function setBaseAndTop(gd, sa, sieve) {
             bar[sLetter] = barTop;
 
             if(isNumeric(sa.c2l(barTop))) expandRange(sRange, barTop);
-            if(isNumeric(sa.c2l(barBase))) expandRange(sRange, barBase);
+            if(bar.hasB && isNumeric(sa.c2l(barBase))) expandRange(sRange, barBase);
         }
     }
 
@@ -497,8 +501,7 @@ function stackBars(gd, sa, sieve) {
         i, trace,
         j, bar;
 
-    var s0 = sa.l2c(sa.c2l(0)),
-        sRange = [s0, s0];
+    var sRange = [null, null];
 
     for(i = 0; i < traces.length; i++) {
         trace = traces[i];
@@ -518,7 +521,7 @@ function stackBars(gd, sa, sieve) {
 
             if(!barnorm) {
                 if(isNumeric(sa.c2l(barTop))) expandRange(sRange, barTop);
-                if(isNumeric(sa.c2l(barBase))) expandRange(sRange, barBase);
+                if(bar.hasB && isNumeric(sa.c2l(barBase))) expandRange(sRange, barBase);
             }
         }
     }
@@ -584,7 +587,7 @@ function normalizeBars(gd, sa, sieve) {
             bar[sLetter] = barTop;
 
             maybeExpand(barTop);
-            maybeExpand(barBase);
+            if(bar.hasB) maybeExpand(barBase);
         }
     }
 
@@ -595,4 +598,55 @@ function normalizeBars(gd, sa, sieve) {
 
 function getAxisLetter(ax) {
     return ax._id.charAt(0);
+}
+
+// find the full position span of bars at each position
+// for use by hover, to ensure labels move in if bars are
+// narrower than the space they're in.
+// run once per trace group (subplot & direction) and
+// the same mapping is attached to all calcdata traces
+function collectExtents(calcTraces, pa) {
+    var posLetter = pa._id.charAt(0);
+    var extents = {};
+    var pMin = Infinity;
+    var pMax = -Infinity;
+
+    var i, j, cd;
+    for(i = 0; i < calcTraces.length; i++) {
+        cd = calcTraces[i];
+        for(j = 0; j < cd.length; j++) {
+            var p = cd[j].p;
+            if(isNumeric(p)) {
+                pMin = Math.min(pMin, p);
+                pMax = Math.max(pMax, p);
+            }
+        }
+    }
+
+    // this is just for positioning of hover labels, and nobody will care if
+    // the label is 1px too far out; so round positions to 1/10K in case
+    // position values don't exactly match from trace to trace
+    var roundFactor = 10000 / (pMax - pMin);
+    var round = extents.round = function(p) {
+        return String(Math.round(roundFactor * (p - pMin)));
+    };
+
+    for(i = 0; i < calcTraces.length; i++) {
+        cd = calcTraces[i];
+        cd[0].t.extents = extents;
+        for(j = 0; j < cd.length; j++) {
+            var di = cd[j];
+            var p0 = di[posLetter] - di.w / 2;
+            if(isNumeric(p0)) {
+                var p1 = di[posLetter] + di.w / 2;
+                var pVal = round(di.p);
+                if(extents[pVal]) {
+                    extents[pVal] = [Math.min(p0, extents[pVal][0]), Math.max(p1, extents[pVal][1])];
+                }
+                else {
+                    extents[pVal] = [p0, p1];
+                }
+            }
+        }
+    }
 }

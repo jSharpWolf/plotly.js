@@ -1,5 +1,5 @@
 var Plotly = require('@lib/index');
-var PlotlyInternal = require('@src/plotly');
+var Registry = require('@src/registry');
 var Plots = Plotly.Plots;
 var createGraphDiv = require('../assets/create_graph_div');
 var destroyGraphDiv = require('../assets/destroy_graph_div');
@@ -21,14 +21,14 @@ describe('Plots.executeAPICommand', function() {
 
     describe('with a successful API command', function() {
         beforeEach(function() {
-            spyOn(PlotlyInternal, 'restyle').and.callFake(function() {
+            spyOn(Registry.apiMethodRegistry, 'restyle').and.callFake(function() {
                 return Promise.resolve('resolution');
             });
         });
 
         it('calls the API method and resolves', function(done) {
             Plots.executeAPICommand(gd, 'restyle', ['foo', 'bar']).then(function(value) {
-                var m = PlotlyInternal.restyle;
+                var m = Registry.apiMethodRegistry.restyle;
                 expect(m).toHaveBeenCalled();
                 expect(m.calls.count()).toEqual(1);
                 expect(m.calls.argsFor(0)).toEqual([gd, 'foo', 'bar']);
@@ -41,14 +41,14 @@ describe('Plots.executeAPICommand', function() {
 
     describe('with an unsuccessful command', function() {
         beforeEach(function() {
-            spyOn(PlotlyInternal, 'restyle').and.callFake(function() {
+            spyOn(Registry.apiMethodRegistry, 'restyle').and.callFake(function() {
                 return Promise.reject('rejection');
             });
         });
 
         it('calls the API method and rejects', function(done) {
             Plots.executeAPICommand(gd, 'restyle', ['foo', 'bar']).then(fail, function(value) {
-                var m = PlotlyInternal.restyle;
+                var m = Registry.apiMethodRegistry.restyle;
                 expect(m).toHaveBeenCalled();
                 expect(m.calls.count()).toEqual(1);
                 expect(m.calls.argsFor(0)).toEqual([gd, 'foo', 'bar']);
@@ -57,6 +57,13 @@ describe('Plots.executeAPICommand', function() {
             }).catch(fail).then(done);
         });
 
+    });
+
+    describe('with the skip command', function() {
+        it('resolves immediately', function(done) {
+            Plots.executeAPICommand(gd, 'skip')
+                .catch(fail).then(done);
+        });
     });
 });
 
@@ -91,6 +98,14 @@ describe('Plots.hasSimpleAPICommandBindings', function() {
             traces: null,
             value: 10
         });
+    });
+
+    it('the skip method returns false', function() {
+        var isSimple = Plots.hasSimpleAPICommandBindings(gd, [{
+            method: 'skip',
+        }]);
+
+        expect(isSimple).toEqual(false);
     });
 
     it('return false when properties are not the same', function() {
@@ -185,6 +200,11 @@ describe('Plots.computeAPICommandBindings', function() {
 
     afterEach(function() {
         destroyGraphDiv(gd);
+    });
+
+    it('the skip method returns no bindings', function() {
+        var result = Plots.computeAPICommandBindings(gd, 'skip', ['marker.size', 7]);
+        expect(result).toEqual([]);
     });
 
     describe('restyle', function() {
@@ -499,7 +519,7 @@ describe('component bindings', function() {
 
     it('logs a warning if unable to create an observer', function() {
         var warnings = 0;
-        spyOn(Lib, 'warn').and.callFake(function() {
+        spyOn(Lib, 'log').and.callFake(function() {
             warnings++;
         });
 

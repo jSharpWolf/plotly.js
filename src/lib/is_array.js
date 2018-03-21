@@ -1,5 +1,5 @@
 /**
-* Copyright 2012-2017, Plotly, Inc.
+* Copyright 2012-2018, Plotly, Inc.
 * All rights reserved.
 *
 * This source code is licensed under the MIT license found in the
@@ -8,15 +8,20 @@
 
 'use strict';
 
-/**
- * Return true for arrays, whether they're untyped or not.
- */
+// IE9 fallbacks
 
-// IE9 fallback
 var ab = (typeof ArrayBuffer === 'undefined' || !ArrayBuffer.isView) ?
     {isView: function() { return false; }} :
     ArrayBuffer;
 
-module.exports = function isArray(a) {
-    return Array.isArray(a) || ab.isView(a);
+var dv = (typeof DataView === 'undefined') ?
+    function() {} :
+    DataView;
+
+exports.isTypedArray = function(a) {
+    return ab.isView(a) && !(a instanceof dv);
+};
+
+exports.isArrayOrTypedArray = function(a) {
+    return Array.isArray(a) || exports.isTypedArray(a);
 };

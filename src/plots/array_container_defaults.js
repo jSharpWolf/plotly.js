@@ -1,5 +1,5 @@
 /**
-* Copyright 2012-2017, Plotly, Inc.
+* Copyright 2012-2018, Plotly, Inc.
 * All rights reserved.
 *
 * This source code is licensed under the MIT license found in the
@@ -9,7 +9,6 @@
 'use strict';
 
 var Lib = require('../lib');
-
 
 /** Convenience wrapper for making array container logic DRY and consistent
  *
@@ -46,7 +45,7 @@ module.exports = function handleArrayContainerDefaults(parentObjIn, parentObjOut
 
     var previousContOut = parentObjOut[name];
 
-    var contIn = Lib.isArray(parentObjIn[name]) ? parentObjIn[name] : [],
+    var contIn = Lib.isArrayOrTypedArray(parentObjIn[name]) ? parentObjIn[name] : [],
         contOut = parentObjOut[name] = [],
         i;
 
@@ -70,7 +69,7 @@ module.exports = function handleArrayContainerDefaults(parentObjIn, parentObjOut
 
     // in case this array gets its defaults rebuilt independent of the whole layout,
     // relink the private keys just for this array.
-    if(Lib.isArray(previousContOut)) {
+    if(Lib.isArrayOrTypedArray(previousContOut)) {
         var len = Math.min(previousContOut.length, contOut.length);
         for(i = 0; i < len; i++) {
             Lib.relinkPrivateKeys(contOut[i], previousContOut[i]);
