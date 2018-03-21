@@ -63,7 +63,7 @@ module.exports = {
     frameMargins: 0,
 
     // mousewheel or two-finger scroll zooms the plot
-    scrollZoom: false,
+    scrollZoom: true,
 
     // double click interaction (false, 'reset', 'autosize' or 'reset+autosize')
     doubleClick: 'reset+autosize',

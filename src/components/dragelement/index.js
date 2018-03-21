@@ -20,6 +20,12 @@ var constants = require('../../plots/cartesian/constants');
 var interactConstants = require('../../constants/interactions');
 
 var dragElement = module.exports = {};
+var mousePos1;
+var mousePos2;
+var doubleTouch;
+var doubleMove;
+var clickTimer = null;
+
 
 dragElement.align = require('./align');
 dragElement.getCursor = require('./cursor');
@@ -97,7 +103,6 @@ dragElement.init = function init(options) {
         initialEvent,
         initialTarget,
         rightClick;
-
     if(!gd._mouseDownTime) gd._mouseDownTime = 0;
 
     element.style.pointerEvents = 'all';
@@ -169,6 +174,86 @@ dragElement.init = function init(options) {
         return;
     }
 
+    function touchstart(e) {
+      if(!mousePos1){
+        if (clickTimer == null) {
+          clickTimer = setTimeout(function () {
+              clickTimer = null;
+
+          }, 200)
+        } else {
+          clearTimeout(clickTimer);
+          clickTimer = null;
+          doubleTouch = true;
+        }
+         mousePos1 = [
+                           e.changedTouches[0].pageX,
+                           e.changedTouches[0].pageY
+                         ];
+        gd._dragged = false;
+      //  gd._dragging = true;
+        startX = mousePos1[0];
+        startY = mousePos1[1];
+        initialTarget = e.target;
+      //  dragCover = coverSlip();
+
+        if(options.prepFn) options.prepFn(e, startX, startY);
+        return Lib.pauseEvent(e);
+      }
+    }
+
+    function touchmove(e) {
+      if(e.touches.length <= 1){
+        //gd._fullLayout.dragmode = 'pan';
+        if(mousePos1){
+           mousePos2 = [
+                             e.changedTouches[0].pageX,
+                             e.changedTouches[0].pageY
+                           ];
+        }
+        var dx, dy;
+        if(mousePos1 && mousePos2){
+          dx = mousePos2[0] - mousePos1[0];
+          dy = mousePos2[1] - mousePos1[1];
+        }
+        if(Math.abs(dx)  >= 10 || Math.abs(dy) >= 10) {
+            gd._dragged = true;
+            dragElement.unhover(gd);
+        }else{
+          dx = 0;
+          dy = 0;
+        }
+        gd._dragging = true;
+        if(options.moveFn) options.moveFn(dx, dy, gd._dragged);
+      }
+    }
+
+    function touchend(e) {
+      if(mousePos1 || mousePos2) {
+        mousePos1 = null;
+        mousePos2 = null;
+        if(doubleTouch){
+          numClicks = 2;
+          gd._dragged = false;
+          if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
+          numClicks = 1;
+          doubleTouch = false;
+          gd._dragging = false;
+        }else{
+          if(!gd._dragging) {
+              gd._dragged = false;
+              return;
+          }
+          gd._dragging = false;
+          if(options.doneFn) options.doneFn(gd._dragged, numClicks, e);
+          Lib.removeElement(dragCover);
+          finishDrag(gd);
+          gd._dragged = false;
+          return Lib.pauseEvent(e);
+        }
+      }
+    }
+
     function onMove(e) {
         e.preventDefault();
 
@@ -182,9 +267,7 @@ dragElement.init = function init(options) {
             gd._dragged = true;
             dragElement.unhover(gd);
         }
-
         if(gd._dragged && options.moveFn && !rightClick) options.moveFn(dx, dy);
-
         return;
     }
 

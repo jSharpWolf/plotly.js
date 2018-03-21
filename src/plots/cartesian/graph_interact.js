@@ -1,4 +1,4 @@
-/**
+ /**
 * Copyright 2012-2018, Plotly, Inc.
 * All rights reserved.
 *
@@ -54,8 +54,11 @@ module.exports = function initInteractions(gd) {
         if(!plotinfo.mainplot) {
             // main dragger goes over the grids and data, so we use its
             // mousemove events for all data hover effects
-            var maindrag = makeDragBox(gd, plotinfo, xa._offset, ya._offset,
-                xa._length, ya._length, 'ns', 'ew');
+            var move = true;
+            var maindrag = makeDragBox(gd, plotinfo, xa._offset, ya._offset,xa._length, ya._length, 'ns', 'ew');
+
+            var tapped = false;
+               
 
             maindrag.onmousemove = function(evt) {
                 // This is on `gd._fullLayout`, *not* fullLayout because the reference
@@ -73,6 +76,37 @@ module.exports = function initInteractions(gd) {
                 gd._fullLayout._lasthover = maindrag;
                 gd._fullLayout._hoversubplot = subplot;
             };
+
+            var result = document.getElementsByClassName("nsewdrag");
+            for(var i = 0;i< result.length;i++){
+              if(!result[i].ontouchselect){
+                maindrag.addEventListener('touchstart', function(evt){
+                    if(!tapped){ //if tap is not set, set up single tap
+                      tapped=setTimeout(function(){
+                        tapped=null
+                        if(move){
+                          fx.hover(gd, evt, subplot);
+                        }
+                        //insert things you want to do when single tapped
+                      },200);   //wait 300ms then run single click code
+                    } else {    //tapped within 300ms of last tap. double tap
+                      clearTimeout(tapped); //stop single tap callback
+                      tapped=null
+                      dragElement.unhover(gd, evt);
+                      //insert things you want to do when double tapped
+                    }
+                    //evt.preventDefault()
+                })
+                maindrag.addEventListener('touchmove', function(evt){
+                  move = false;
+                  dragElement.unhover(gd, evt);
+                })
+                maindrag.addEventListener('touchend', function(evt){
+                  move = true;
+                })
+                maindrag.ontouchselect = true;
+              }
+            }
 
             /*
              * IMPORTANT:
@@ -153,3 +187,9 @@ module.exports = function initInteractions(gd) {
         fullLayout._lasthover.onmousedown(evt);
     };
 };
+
+            if(evt.touches){
+              xpx = evt.touches[0].clientX - dbb.left;
+              ypx = evt.touches[0].clientY - dbb.top;
+            }else{
+            }
